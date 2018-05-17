@@ -1,0 +1,33 @@
+{
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "extends": [
+    "prettier",
+    "eslint:recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:jest/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react/recommended"
+  ],
+  "globals": {
+    "overwolf": true
+  },
+  "parserOptions": {
+    "sourceType": "module",
+    "jsx": true
+  },
+  "rules": {
+    "no-console": "off",
+    "react/jsx-sort-props": [
+      2,
+      {
+        "ignoreCase": true
+      }
+    ]
+  }
+}

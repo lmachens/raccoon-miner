@@ -1,0 +1,63 @@
+{
+  "manifest_version": "1",
+  "type": "WebApp",
+  "meta": {
+    "name": "Raccoon Miner - DEV",
+    "version": "0.1.0",
+    "minimum-overwolf-version": "0.85.0.0",
+    "author": "Leon Machens",
+    "icon": "assets/icon.png",
+    "icon_gray": "assets/icon_gray.png",
+    "launcher_icon": "assets/launcher_icon.ico",
+    "description": "Use your PC to mine crypto"
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:35729"
+    ]
+  },
+  "permissions": [],
+  "data": {
+    "start_window": "main",
+    "windows": {
+      "main": {
+        "file": "main.html",
+        "transparent": false,
+        "resizable": false,
+        "show_in_taskbar": true,
+        "desktop_only": true,
+        "size": {
+          "width": 680,
+          "height": 420
+        },
+        "min_size": {
+          "width": 680,
+          "height": 420
+        },
+        "start_position": {
+          "Top": 100,
+          "Left": 300
+        }
+      }
+    },
+    "extra-objects": {
+      "process-manager-plugin": {
+        "file": "plugins/process_manager.dll",
+        "class": "com.overwolf.net.ProcessManager"
+      },
+      "simple-io-plugin": {
+        "file": "plugins/simple-io-plugin.dll",
+        "class": "overwolf.plugins.SimpleIOPlugin"
+      }
+    },
+    "externally_connectable": {
+      "matches": [
+        "https://*.google-analytics.com",
+        "https://www.google-analytics.com",
+        "http://localhost:3000",
+        "https://raccoon-miner.now.sh"
+      ]
+    }
+  },
+  "version": "0.1.0"
+}

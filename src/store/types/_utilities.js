@@ -1,0 +1,1 @@
+export const RECEIVE_VERSION = 'RECEIVE_VERSION';

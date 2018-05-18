@@ -645,6 +645,7 @@
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
 
+	const RECEIVE_OVERWOLF_USER = 'RECEIVE_OVERWOLF_USER';
 	const RECEIVE_VERSION = 'RECEIVE_VERSION';
 
 	const closeDialog = () => {
@@ -2044,6 +2045,20 @@
 	  });
 	};
 
+	const getOverwolfUser = async function () {
+	  const currentUser = await callOverwolfWithPromise(overwolf.profile.getCurrentUser);
+	  const manifest = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
+	  return {
+	    overwolfVersion: overwolf.version,
+	    appVersion: manifest.meta.version,
+	    channel: currentUser.channel,
+	    userId: currentUser.userId,
+	    username: currentUser.username,
+	    partnerId: currentUser.partnerId,
+	    machineId: currentUser.machineId
+	  };
+	};
+
 	const getVersion = () => {
 	  return new Promise(async resolve => {
 	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
@@ -2184,7 +2199,6 @@
 	      apiParser
 	    } = getMiner(minerIdentifier);
 	    fetch(api(address)).then(response => response.json()).then(result => {
-	      console.log(minerIdentifier, result);
 	      dispatch({
 	        type: RECEIVE_WORKER_STATS,
 	        data: {
@@ -2309,6 +2323,17 @@
 	  };
 	};
 
+	const fetchOverwolfUser = () => {
+	  return dispatch => {
+	    getOverwolfUser().then(overwolfUser => {
+	      dispatch({
+	        type: RECEIVE_OVERWOLF_USER,
+	        data: overwolfUser
+	      });
+	      Raven.setUserContext(overwolfUser);
+	    });
+	  };
+	};
 	const fetchVersion = () => {
 	  return dispatch => {
 	    getVersion().then(version => {
@@ -2316,6 +2341,7 @@
 	        type: RECEIVE_VERSION,
 	        data: version
 	      });
+	      Raven.setRelease(version);
 	    });
 	  };
 	};
@@ -2733,6 +2759,71 @@
 	  return persistor;
 	}
 
+	var identity = function identity(x) {
+	  return x;
+	};
+	var getUndefined = function getUndefined() {};
+	var filter = function filter() {
+	  return true;
+	};
+	function createRavenMiddleware(Raven) {
+	  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+	  // TODO: Validate options.
+	  var _options$breadcrumbDa = options.breadcrumbDataFromAction,
+	      breadcrumbDataFromAction = _options$breadcrumbDa === undefined ? getUndefined : _options$breadcrumbDa,
+	      _options$actionTransf = options.actionTransformer,
+	      actionTransformer = _options$actionTransf === undefined ? identity : _options$actionTransf,
+	      _options$stateTransfo = options.stateTransformer,
+	      stateTransformer = _options$stateTransfo === undefined ? identity : _options$stateTransfo,
+	      _options$breadcrumbCa = options.breadcrumbCategory,
+	      breadcrumbCategory = _options$breadcrumbCa === undefined ? "redux-action" : _options$breadcrumbCa,
+	      _options$filterBreadc = options.filterBreadcrumbActions,
+	      filterBreadcrumbActions = _options$filterBreadc === undefined ? filter : _options$filterBreadc,
+	      getUserContext = options.getUserContext,
+	      getTags = options.getTags;
+
+
+	  return function (store) {
+	    var lastAction = void 0;
+
+	    Raven.setDataCallback(function (data, original) {
+	      var state = store.getState();
+	      var reduxExtra = {
+	        lastAction: actionTransformer(lastAction),
+	        state: stateTransformer(state)
+	      };
+	      data.extra = Object.assign(reduxExtra, data.extra);
+	      if (getUserContext) {
+	        data.user = getUserContext(state);
+	      }
+	      if (getTags) {
+	        data.tags = getTags(state);
+	      }
+	      return original ? original(data) : data;
+	    });
+
+	    return function (next) {
+	      return function (action) {
+	        // Log the action taken to Raven so that we have narrative context in our
+	        // error report.
+	        if (filterBreadcrumbActions(action)) {
+	          Raven.captureBreadcrumb({
+	            category: breadcrumbCategory,
+	            message: action.type,
+	            data: breadcrumbDataFromAction(action)
+	          });
+	        }
+
+	        lastAction = action;
+	        return next(action);
+	      };
+	    };
+	  };
+	}
+
+	var built = createRavenMiddleware;
+
 	var defineProperty = (function() {
 	  try {
 	    var func = _getNative(Object, 'defineProperty');
@@ -3107,12 +3198,18 @@
 	};
 
 	const utilities = (state = {
+	  overwolfUser: null,
 	  version: ''
 	}, {
 	  type,
 	  data
 	}) => {
 	  switch (type) {
+	    case RECEIVE_OVERWOLF_USER:
+	      return { ...state,
+	        overwolfUser: data
+	      };
+
 	    case RECEIVE_VERSION:
 	      return { ...state,
 	        version: data
@@ -3249,20 +3346,17 @@
 	var thunk = createThunkMiddleware();
 	thunk.withExtraArgument = createThunkMiddleware;
 
+	Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
 	  blacklist: ['activeMiners', 'hardwareInfo']
 	};
 	const persistedReducer = persistReducer(persistConfig, reducers);
-	let createStoreWithMiddleware;
-
-	{
-	  createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-	}
-
+	const createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
 	const store = createStoreWithMiddleware(persistedReducer);
 	const persistor = persistStore(store, null, () => {
+	  store.dispatch(fetchOverwolfUser());
 	  store.dispatch(fetchVersion());
 	  store.dispatch(trackHardwareInfo());
 	  store.dispatch(trackWorkerStats());
@@ -11608,7 +11702,7 @@
 		default: deepmerge_1
 	});
 
-	var _deepmerge = ( es$1 && deepmerge_1 ) || es$1;
+	var require$$3 = ( es$1 && deepmerge_1 ) || es$1;
 
 	var createTypography_1 = createCommonjsModule(function (module, exports) {
 
@@ -11621,7 +11715,7 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _deepmerge$$1 = interopRequireDefault(_deepmerge);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	// < 1kb payload overhead when lodash/merge is > 3kb.
 	function round(value) {
@@ -11650,7 +11744,7 @@
 	    return "".concat(value / htmlFontSize * coef, "rem");
 	  }
 
-	  return (0, _deepmerge$$1.default)({
+	  return (0, _deepmerge.default)({
 	    pxToRem: pxToRem,
 	    round: round,
 	    fontFamily: fontFamily,
@@ -12252,7 +12346,7 @@
 
 	var _warning = interopRequireDefault(browser);
 
-	var _deepmerge$$1 = interopRequireDefault(_deepmerge);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	var _indigo = interopRequireDefault(indigo_1);
 
@@ -12401,7 +12495,7 @@
 	    light: light
 	  };
 	  (0, _warning.default)(types[type], "Material-UI: the palette type `".concat(type, "` is not supported."));
-	  var paletteOutput = (0, _deepmerge$$1.default)((0, _objectSpread2.default)({
+	  var paletteOutput = (0, _deepmerge.default)((0, _objectSpread2.default)({
 	    // A collection of common colors.
 	    common: _common.default,
 	    // The palette type, can be light or dark.
@@ -12682,7 +12776,7 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _deepmerge$$1 = interopRequireDefault(_deepmerge);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	var _warning = interopRequireDefault(browser);
 
@@ -12728,7 +12822,7 @@
 	    // Inject custom properties
 	    shadows: shadowsInput || _shadows.default,
 	    typography: (0, _createTypography.default)(palette, typographyInput)
-	  }, (0, _deepmerge$$1.default)({
+	  }, (0, _deepmerge.default)({
 	    transitions: _transitions.default,
 	    spacing: _spacing.default,
 	    zIndex: _zIndex.default
@@ -12863,7 +12957,7 @@
 
 	var _warning = interopRequireDefault(browser);
 
-	var _deepmerge$$1 = interopRequireDefault(_deepmerge);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	// < 1kb payload overhead when lodash/merge is > 3kb.
 	// Support for the jss-expand plugin.
@@ -12885,7 +12979,7 @@
 	    var stylesWithOverrides = (0, _objectSpread2.default)({}, styles);
 	    (0, _keys.default)(overrides).forEach(function (key) {
 	      (0, _warning.default)(stylesWithOverrides[key], ['Material-UI: you are trying to override a style that does not exist.', "Fix the `".concat(key, "` key of `theme.overrides.").concat(name, "`.")].join('\n'));
-	      stylesWithOverrides[key] = (0, _deepmerge$$1.default)(stylesWithOverrides[key], overrides[key], {
+	      stylesWithOverrides[key] = (0, _deepmerge.default)(stylesWithOverrides[key], overrides[key], {
 	        arrayMerge: arrayMerge
 	      });
 	    });
@@ -34361,11 +34455,9 @@
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
-	var SvgIconCustom = typeof commonjsGlobal !== 'undefined' && commonjsGlobal.__MUI_SvgIcon__ || _SvgIcon.default;
-
 	function createSvgIcon(path, displayName) {
 	  var Icon = function Icon(props) {
-	    return _react.default.createElement(SvgIconCustom, props, path);
+	    return _react.default.createElement(_SvgIcon.default, props, path);
 	  };
 
 	  Icon.displayName = displayName;
@@ -38360,7 +38452,7 @@
 		default: createBroadcast
 	});
 
-	var _brcast = ( brcast_es && createBroadcast ) || brcast_es;
+	var require$$11 = ( brcast_es && createBroadcast ) || brcast_es;
 
 	var MuiThemeProvider_1 = createCommonjsModule(function (module, exports) {
 
@@ -38395,7 +38487,7 @@
 
 	var _warning = interopRequireDefault(browser);
 
-	var _brcast$$1 = interopRequireDefault(_brcast);
+	var _brcast = interopRequireDefault(require$$11);
 
 	var _themeListener = interopRequireWildcard(themeListener_1);
 
@@ -38421,7 +38513,7 @@
 	      configurable: true,
 	      enumerable: true,
 	      writable: true,
-	      value: (0, _brcast$$1.default)()
+	      value: (0, _brcast.default)()
 	    });
 	    Object.defineProperty((0, _assertThisInitialized2.default)(_this), "unsubscribeId", {
 	      configurable: true,
@@ -46544,2472 +46636,41 @@
 	};
 	const enhance$2 = styles_3(styles$6)(PageLayout);
 
-	var createGenerateClassName_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = createGenerateClassName;
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Returns a function which generates unique class names based on counters.
-	// When new generator function is created, rule counter is reset.
-	// We need to reset the rule counter for SSR for each request.
-	//
-	// It's inspired by
-	// https://github.com/cssinjs/jss/blob/4e6a05dd3f7b6572fdd3ab216861d9e446c20331/src/utils/createGenerateClassName.js
-	function createGenerateClassName() {
-	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	  var _options$dangerouslyU = options.dangerouslyUseGlobalCSS,
-	      dangerouslyUseGlobalCSS = _options$dangerouslyU === undefined ? false : _options$dangerouslyU,
-	      _options$productionPr = options.productionPrefix;
-
-	  var escapeRegex = /([[\].#*$><+~=|^:(),"'`\s])/g;
-	  var ruleCounter = 0;
-
-	  return function (rule, styleSheet) {
-	    ruleCounter += 1;
-	    (0, _warning2.default)(ruleCounter < 1e10, ['Material-UI: you might have a memory leak.', 'The ruleCounter is not supposed to grow that much.'].join(''));
-
-	    // Code branch the whole block at the expense of more code.
-	    if (dangerouslyUseGlobalCSS) {
-	      if (styleSheet && styleSheet.options.classNamePrefix) {
-	        var prefix = styleSheet.options.classNamePrefix;
-	        // Sanitize the string as will be used to prefix the generated class name.
-	        prefix = prefix.replace(escapeRegex, '-');
-
-	        if (prefix.match(/^Mui/)) {
-	          return prefix + '-' + rule.key;
-	        }
-
-	        {
-	          return prefix + '-' + rule.key + '-' + ruleCounter;
-	        }
-	      }
-
-	      return rule.key + '-' + ruleCounter;
-	    }
-
-	    if (styleSheet && styleSheet.options.classNamePrefix) {
-	      var _prefix = styleSheet.options.classNamePrefix;
-	      // Sanitize the string as will be used to prefix the generated class name.
-	      _prefix = _prefix.replace(escapeRegex, '-');
-
-	      return _prefix + '-' + rule.key + '-' + ruleCounter;
-	    }
-
-	    return rule.key + '-' + ruleCounter;
-	  };
-	}
-	});
-
-	unwrapExports(createGenerateClassName_1$1);
-
-	var _extends$9 = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-
-
-	var _assign2 = _interopRequireDefault(assign$2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = _assign2.default || function (target) {
-	  for (var i = 1; i < arguments.length; i++) {
-	    var source = arguments[i];
-
-	    for (var key in source) {
-	      if (Object.prototype.hasOwnProperty.call(source, key)) {
-	        target[key] = source[key];
-	      }
-	    }
-	  }
-
-	  return target;
-	};
-	});
-
-	unwrapExports(_extends$9);
-
-	var createTypography_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-	exports.default = createTypography;
-
-
-
-	var _deepmerge2 = _interopRequireDefault(_deepmerge);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// < 1kb payload overhead when lodash/merge is > 3kb.
-
-	function round(value) {
-	  return Math.round(value * 1e5) / 1e5;
-	}
-
-	function createTypography(palette, typography) {
-	  var _ref = typeof typography === 'function' ? typography(palette) : typography,
-	      _ref$fontFamily = _ref.fontFamily,
-	      fontFamily = _ref$fontFamily === undefined ? '"Roboto", "Helvetica", "Arial", sans-serif' : _ref$fontFamily,
-	      _ref$fontSize = _ref.fontSize,
-	      fontSize = _ref$fontSize === undefined ? 14 : _ref$fontSize,
-	      _ref$fontWeightLight = _ref.fontWeightLight,
-	      fontWeightLight = _ref$fontWeightLight === undefined ? 300 : _ref$fontWeightLight,
-	      _ref$fontWeightRegula = _ref.fontWeightRegular,
-	      fontWeightRegular = _ref$fontWeightRegula === undefined ? 400 : _ref$fontWeightRegula,
-	      _ref$fontWeightMedium = _ref.fontWeightMedium,
-	      fontWeightMedium = _ref$fontWeightMedium === undefined ? 500 : _ref$fontWeightMedium,
-	      _ref$htmlFontSize = _ref.htmlFontSize,
-	      htmlFontSize = _ref$htmlFontSize === undefined ? 16 : _ref$htmlFontSize,
-	      other = (0, _objectWithoutProperties3.default)(_ref, ['fontFamily', 'fontSize', 'fontWeightLight', 'fontWeightRegular', 'fontWeightMedium', 'htmlFontSize']);
-
-	  var coef = fontSize / 14;
-	  function pxToRem(value) {
-	    return value / htmlFontSize * coef + 'rem';
-	  }
-
-	  return (0, _deepmerge2.default)({
-	    pxToRem: pxToRem,
-	    round: round,
-	    fontFamily: fontFamily,
-	    fontSize: fontSize,
-	    fontWeightLight: fontWeightLight,
-	    fontWeightRegular: fontWeightRegular,
-	    fontWeightMedium: fontWeightMedium,
-	    display4: {
-	      fontSize: pxToRem(112),
-	      fontWeight: fontWeightLight,
-	      fontFamily: fontFamily,
-	      letterSpacing: '-.04em',
-	      lineHeight: round(128 / 112) + 'em',
-	      marginLeft: '-.04em',
-	      color: palette.text.secondary
-	    },
-	    display3: {
-	      fontSize: pxToRem(56),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      letterSpacing: '-.02em',
-	      lineHeight: round(73 / 56) + 'em',
-	      marginLeft: '-.02em',
-	      color: palette.text.secondary
-	    },
-	    display2: {
-	      fontSize: pxToRem(45),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(48 / 45) + 'em',
-	      marginLeft: '-.02em',
-	      color: palette.text.secondary
-	    },
-	    display1: {
-	      fontSize: pxToRem(34),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(41 / 34) + 'em',
-	      color: palette.text.secondary
-	    },
-	    headline: {
-	      fontSize: pxToRem(24),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(32.5 / 24) + 'em',
-	      color: palette.text.primary
-	    },
-	    title: {
-	      fontSize: pxToRem(21),
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily,
-	      lineHeight: round(24.5 / 21) + 'em',
-	      color: palette.text.primary
-	    },
-	    subheading: {
-	      fontSize: pxToRem(16),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(24 / 16) + 'em',
-	      color: palette.text.primary
-	    },
-	    body2: {
-	      fontSize: pxToRem(14),
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily,
-	      lineHeight: round(24 / 14) + 'em',
-	      color: palette.text.primary
-	    },
-	    body1: {
-	      fontSize: pxToRem(14),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(20.5 / 14) + 'em',
-	      color: palette.text.primary
-	    },
-	    caption: {
-	      fontSize: pxToRem(12),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: round(16.5 / 12) + 'em',
-	      color: palette.text.secondary
-	    },
-	    button: {
-	      fontSize: pxToRem(14),
-	      textTransform: 'uppercase',
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily
-	    }
-	  }, other, {
-	    clone: false // No need to clone deep
-	  });
-	}
-	});
-
-	unwrapExports(createTypography_1$1);
-
-	var createBreakpoints_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.keys = undefined;
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-	exports.default = createBreakpoints;
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Sorted ASC by size. That's important.
-	// It can't be configured as it's used statically for propTypes.
-	var keys = exports.keys = ['xs', 'sm', 'md', 'lg', 'xl'];
-
-	// Keep in mind that @media is inclusive by the CSS specification.
-	function createBreakpoints(breakpoints) {
-	  var _breakpoints$values = breakpoints.values,
-	      values = _breakpoints$values === undefined ? {
-	    xs: 0,
-	    sm: 600,
-	    md: 960,
-	    lg: 1280,
-	    xl: 1920
-	  } : _breakpoints$values,
-	      _breakpoints$unit = breakpoints.unit,
-	      unit = _breakpoints$unit === undefined ? 'px' : _breakpoints$unit,
-	      _breakpoints$step = breakpoints.step,
-	      step = _breakpoints$step === undefined ? 5 : _breakpoints$step,
-	      other = (0, _objectWithoutProperties3.default)(breakpoints, ['values', 'unit', 'step']);
-
-
-	  function up(key) {
-	    var value = typeof values[key] === 'number' ? values[key] : key;
-	    return '@media (min-width:' + value + unit + ')';
-	  }
-
-	  function down(key) {
-	    var endIndex = keys.indexOf(key) + 1;
-	    var upperbound = values[keys[endIndex]];
-
-	    if (endIndex === keys.length) {
-	      // xl down applies to all sizes
-	      return up('xs');
-	    }
-
-	    var value = typeof upperbound === 'number' && endIndex > 0 ? upperbound : key;
-	    return '@media (max-width:' + (value - step / 100) + unit + ')';
-	  }
-
-	  function between(start, end) {
-	    var endIndex = keys.indexOf(end) + 1;
-
-	    if (endIndex === keys.length) {
-	      return up(start);
-	    }
-
-	    return '@media (min-width:' + values[start] + unit + ') and ' + ('(max-width:' + (values[keys[endIndex]] - step / 100) + unit + ')');
-	  }
-
-	  function only(key) {
-	    return between(key, key);
-	  }
-
-	  function width(key) {
-	    return values[key];
-	  }
-
-	  return (0, _extends3.default)({
-	    keys: keys,
-	    values: values,
-	    up: up,
-	    down: down,
-	    between: between,
-	    only: only,
-	    width: width
-	  }, other);
-	}
-	});
-
-	unwrapExports(createBreakpoints_1$1);
-	var createBreakpoints_2$1 = createBreakpoints_1$1.keys;
-
-	var indigo_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var indigo = {
-	  50: '#e8eaf6',
-	  100: '#c5cae9',
-	  200: '#9fa8da',
-	  300: '#7986cb',
-	  400: '#5c6bc0',
-	  500: '#3f51b5',
-	  600: '#3949ab',
-	  700: '#303f9f',
-	  800: '#283593',
-	  900: '#1a237e',
-	  A100: '#8c9eff',
-	  A200: '#536dfe',
-	  A400: '#3d5afe',
-	  A700: '#304ffe'
-	};
-
-	exports.default = indigo;
-	});
-
-	unwrapExports(indigo_1$1);
-
-	var pink_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var pink = {
-	  50: '#fce4ec',
-	  100: '#f8bbd0',
-	  200: '#f48fb1',
-	  300: '#f06292',
-	  400: '#ec407a',
-	  500: '#e91e63',
-	  600: '#d81b60',
-	  700: '#c2185b',
-	  800: '#ad1457',
-	  900: '#880e4f',
-	  A100: '#ff80ab',
-	  A200: '#ff4081',
-	  A400: '#f50057',
-	  A700: '#c51162'
-	};
-
-	exports.default = pink;
-	});
-
-	unwrapExports(pink_1$1);
-
-	var grey_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var grey = {
-	  50: '#fafafa',
-	  100: '#f5f5f5',
-	  200: '#eeeeee',
-	  300: '#e0e0e0',
-	  400: '#bdbdbd',
-	  500: '#9e9e9e',
-	  600: '#757575',
-	  700: '#616161',
-	  800: '#424242',
-	  900: '#212121',
-	  A100: '#d5d5d5',
-	  A200: '#aaaaaa',
-	  A400: '#303030',
-	  A700: '#616161'
-	};
-
-	exports.default = grey;
-	});
-
-	unwrapExports(grey_1$1);
-
-	var red_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var red = {
-	  50: '#ffebee',
-	  100: '#ffcdd2',
-	  200: '#ef9a9a',
-	  300: '#e57373',
-	  400: '#ef5350',
-	  500: '#f44336',
-	  600: '#e53935',
-	  700: '#d32f2f',
-	  800: '#c62828',
-	  900: '#b71c1c',
-	  A100: '#ff8a80',
-	  A200: '#ff5252',
-	  A400: '#ff1744',
-	  A700: '#d50000'
-	};
-
-	exports.default = red;
-	});
-
-	unwrapExports(red_1$1);
-
-	var common_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var common = {
-	  black: '#000',
-	  white: '#fff'
-	};
-
-	exports.default = common;
-	});
-
-	unwrapExports(common_1$1);
-
-	var colorManipulator$2 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.convertHexToRGB = convertHexToRGB;
-	exports.decomposeColor = decomposeColor;
-	exports.recomposeColor = recomposeColor;
-	exports.getContrastRatio = getContrastRatio;
-	exports.getLuminance = getLuminance;
-	exports.emphasize = emphasize;
-	exports.fade = fade;
-	exports.darken = darken;
-	exports.lighten = lighten;
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * Returns a number whose value is limited to the given range.
-	 *
-	 * @param {number} value The value to be clamped
-	 * @param {number} min The lower boundary of the output range
-	 * @param {number} max The upper boundary of the output range
-	 * @returns {number} A number in the range [min, max]
-	 */
-	function clamp(value) {
-	  var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-	  var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-
-	  (0, _warning2.default)(value >= min && value <= max, 'Material-UI: the value provided ' + value + ' is out of range [' + min + ', ' + max + '].');
-
-	  if (value < min) {
-	    return min;
-	  }
-	  if (value > max) {
-	    return max;
-	  }
-	  return value;
-	}
-
-	/**
-	 * Converts a color from CSS hex format to CSS rgb format.
-	 *
-	 * @param {string} color - Hex color, i.e. #nnn or #nnnnnn
-	 * @returns {string} A CSS rgb color string
-	 */
-	//  weak
-	/* eslint-disable no-use-before-define */
-
-	function convertHexToRGB(color) {
-	  color = color.substr(1);
-
-	  var re = new RegExp('.{1,' + color.length / 3 + '}', 'g');
-	  var colors = color.match(re);
-
-	  if (colors && colors[0].length === 1) {
-	    colors = colors.map(function (n) {
-	      return n + n;
-	    });
-	  }
-
-	  return colors ? 'rgb(' + colors.map(function (n) {
-	    return parseInt(n, 16);
-	  }).join(', ') + ')' : '';
-	}
-
-	/**
-	 * Returns an object with the type and values of a color.
-	 *
-	 * Note: Does not support rgb % values.
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @returns {object} - A MUI color object: {type: string, values: number[]}
-	 */
-	function decomposeColor(color) {
-	  if (color.charAt(0) === '#') {
-	    return decomposeColor(convertHexToRGB(color));
-	  }
-
-	  var marker = color.indexOf('(');
-	  var type = color.substring(0, marker);
-	  var values = color.substring(marker + 1, color.length - 1).split(',');
-	  values = values.map(function (value) {
-	    return parseFloat(value);
-	  });
-
-	  {
-	    if (['rgb', 'rgba', 'hsl', 'hsla'].indexOf(type) === -1) {
-	      throw new Error(['Material-UI: unsupported `' + color + '` color.', 'We support the following formats: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla().'].join('\n'));
-	    }
-	  }
-
-	  return { type: type, values: values };
-	}
-
-	/**
-	 * Converts a color object with type and values to a string.
-	 *
-	 * @param {object} color - Decomposed color
-	 * @param {string} color.type - One of: 'rgb', 'rgba', 'hsl', 'hsla'
-	 * @param {array} color.values - [n,n,n] or [n,n,n,n]
-	 * @returns {string} A CSS color string
-	 */
-	function recomposeColor(color) {
-	  var type = color.type;
-	  var values = color.values;
-
-
-	  if (type.indexOf('rgb') !== -1) {
-	    // Only convert the first 3 values to int (i.e. not alpha)
-	    values = values.map(function (n, i) {
-	      return i < 3 ? parseInt(n, 10) : n;
-	    });
-	  }
-
-	  if (type.indexOf('hsl') !== -1) {
-	    values[1] = values[1] + '%';
-	    values[2] = values[2] + '%';
-	  }
-
-	  return color.type + '(' + values.join(', ') + ')';
-	}
-
-	/**
-	 * Calculates the contrast ratio between two colors.
-	 *
-	 * Formula: https://www.w3.org/TR/WCAG20-TECHS/G17.html#G17-tests
-	 *
-	 * @param {string} foreground - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @param {string} background - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @returns {number} A contrast ratio value in the range 0 - 21.
-	 */
-	function getContrastRatio(foreground, background) {
-	  var lumA = getLuminance(foreground);
-	  var lumB = getLuminance(background);
-	  return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
-	}
-
-	/**
-	 * The relative brightness of any point in a color space,
-	 * normalized to 0 for darkest black and 1 for lightest white.
-	 *
-	 * Formula: https://www.w3.org/TR/WCAG20-TECHS/G17.html#G17-tests
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @returns {number} The relative brightness of the color in the range 0 - 1
-	 */
-	function getLuminance(color) {
-	  var decomposedColor = decomposeColor(color);
-
-	  if (decomposedColor.type.indexOf('rgb') !== -1) {
-	    var rgb = decomposedColor.values.map(function (val) {
-	      val /= 255; // normalized
-	      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-	    });
-	    // Truncate at 3 digits
-	    return Number((0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]).toFixed(3));
-	  }
-
-	  // else if (decomposedColor.type.indexOf('hsl') !== -1)
-	  return decomposedColor.values[2] / 100;
-	}
-
-	/**
-	 * Darken or lighten a colour, depending on its luminance.
-	 * Light colors are darkened, dark colors are lightened.
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @param {number} coefficient=0.15 - multiplier in the range 0 - 1
-	 * @returns {string} A CSS color string. Hex input values are returned as rgb
-	 */
-	function emphasize(color) {
-	  var coefficient = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.15;
-
-	  return getLuminance(color) > 0.5 ? darken(color, coefficient) : lighten(color, coefficient);
-	}
-
-	/**
-	 * Set the absolute transparency of a color.
-	 * Any existing alpha values are overwritten.
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @param {number} value - value to set the alpha channel to in the range 0 -1
-	 * @returns {string} A CSS color string. Hex input values are returned as rgb
-	 */
-	function fade(color, value) {
-	  (0, _warning2.default)(color, 'Material-UI: missing color argument in fade(' + color + ', ' + value + ').');
-
-	  if (!color) return color;
-
-	  color = decomposeColor(color);
-	  value = clamp(value);
-
-	  if (color.type === 'rgb' || color.type === 'hsl') {
-	    color.type += 'a';
-	  }
-	  color.values[3] = value;
-
-	  return recomposeColor(color);
-	}
-
-	/**
-	 * Darkens a color.
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @param {number} coefficient - multiplier in the range 0 - 1
-	 * @returns {string} A CSS color string. Hex input values are returned as rgb
-	 */
-	function darken(color, coefficient) {
-	  (0, _warning2.default)(color, 'Material-UI: missing color argument in darken(' + color + ', ' + coefficient + ').');
-
-	  if (!color) return color;
-
-	  color = decomposeColor(color);
-	  coefficient = clamp(coefficient);
-
-	  if (color.type.indexOf('hsl') !== -1) {
-	    color.values[2] *= 1 - coefficient;
-	  } else if (color.type.indexOf('rgb') !== -1) {
-	    for (var i = 0; i < 3; i += 1) {
-	      color.values[i] *= 1 - coefficient;
-	    }
-	  }
-	  return recomposeColor(color);
-	}
-
-	/**
-	 * Lightens a color.
-	 *
-	 * @param {string} color - CSS color, i.e. one of: #nnn, #nnnnnn, rgb(), rgba(), hsl(), hsla()
-	 * @param {number} coefficient - multiplier in the range 0 - 1
-	 * @returns {string} A CSS color string. Hex input values are returned as rgb
-	 */
-	function lighten(color, coefficient) {
-	  (0, _warning2.default)(color, 'Material-UI: missing color argument in lighten(' + color + ', ' + coefficient + ').');
-
-	  if (!color) return color;
-
-	  color = decomposeColor(color);
-	  coefficient = clamp(coefficient);
-
-	  if (color.type.indexOf('hsl') !== -1) {
-	    color.values[2] += (100 - color.values[2]) * coefficient;
-	  } else if (color.type.indexOf('rgb') !== -1) {
-	    for (var i = 0; i < 3; i += 1) {
-	      color.values[i] += (255 - color.values[i]) * coefficient;
-	    }
-	  }
-
-	  return recomposeColor(color);
-	}
-	});
-
-	unwrapExports(colorManipulator$2);
-	var colorManipulator_1$1 = colorManipulator$2.convertHexToRGB;
-	var colorManipulator_2$1 = colorManipulator$2.decomposeColor;
-	var colorManipulator_3$1 = colorManipulator$2.recomposeColor;
-	var colorManipulator_4$1 = colorManipulator$2.getContrastRatio;
-	var colorManipulator_5$1 = colorManipulator$2.getLuminance;
-	var colorManipulator_6$1 = colorManipulator$2.emphasize;
-	var colorManipulator_7$1 = colorManipulator$2.fade;
-	var colorManipulator_8$1 = colorManipulator$2.darken;
-	var colorManipulator_9$1 = colorManipulator$2.lighten;
-
-	var createPalette_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.dark = exports.light = undefined;
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-	exports.default = createPalette;
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-
-
-	var _deepmerge2 = _interopRequireDefault(_deepmerge);
-
-
-
-	var _indigo2 = _interopRequireDefault(indigo_1$1);
-
-
-
-	var _pink2 = _interopRequireDefault(pink_1$1);
-
-
-
-	var _grey2 = _interopRequireDefault(grey_1$1);
-
-
-
-	var _red2 = _interopRequireDefault(red_1$1);
-
-
-
-	var _common2 = _interopRequireDefault(common_1$1);
-
-
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// < 1kb payload overhead when lodash/merge is > 3kb.
-	var light = exports.light = {
-	  // The colors used to style the text.
-	  text: {
-	    // The most important text.
-	    primary: 'rgba(0, 0, 0, 0.87)',
-	    // Secondary text.
-	    secondary: 'rgba(0, 0, 0, 0.54)',
-	    // Disabled text have even lower visual prominence.
-	    disabled: 'rgba(0, 0, 0, 0.38)',
-	    // Text hints.
-	    hint: 'rgba(0, 0, 0, 0.38)'
-	  },
-	  // The color used to divide different elements.
-	  divider: 'rgba(0, 0, 0, 0.12)',
-	  // The background colors used to style the surfaces.
-	  // Consistency between these values is important.
-	  background: {
-	    paper: _common2.default.white,
-	    default: _grey2.default[50]
-	  },
-	  // The colors used to style the action elements.
-	  action: {
-	    // The color of an active action like an icon button.
-	    active: 'rgba(0, 0, 0, 0.54)',
-	    // The color of an hovered action.
-	    hover: 'rgba(0, 0, 0, 0.08)',
-	    hoverOpacity: 0.08,
-	    // The color of a selected action.
-	    selected: 'rgba(0, 0, 0, 0.14)',
-	    // The color of a disabled action.
-	    disabled: 'rgba(0, 0, 0, 0.26)',
-	    // The background color of a disabled action.
-	    disabledBackground: 'rgba(0, 0, 0, 0.12)'
-	  }
-	};
-
-	var dark = exports.dark = {
-	  text: {
-	    primary: _common2.default.white,
-	    secondary: 'rgba(255, 255, 255, 0.7)',
-	    disabled: 'rgba(255, 255, 255, 0.5)',
-	    hint: 'rgba(255, 255, 255, 0.5)',
-	    icon: 'rgba(255, 255, 255, 0.5)'
-	  },
-	  divider: 'rgba(255, 255, 255, 0.12)',
-	  background: {
-	    paper: _grey2.default[800],
-	    default: '#303030'
-	  },
-	  action: {
-	    active: _common2.default.white,
-	    hover: 'rgba(255, 255, 255, 0.1)',
-	    hoverOpacity: 0.1,
-	    selected: 'rgba(255, 255, 255, 0.2)',
-	    disabled: 'rgba(255, 255, 255, 0.3)',
-	    disabledBackground: 'rgba(255, 255, 255, 0.12)'
-	  }
-	};
-
-	function addLightOrDark(intent, direction, shade, tonalOffset) {
-	  if (!intent[direction]) {
-	    if (intent.hasOwnProperty(shade)) {
-	      intent[direction] = intent[shade];
-	    } else if (direction === 'light') {
-	      intent.light = (0, colorManipulator$2.lighten)(intent.main, tonalOffset);
-	    } else if (direction === 'dark') {
-	      intent.dark = (0, colorManipulator$2.darken)(intent.main, tonalOffset * 1.5);
-	    }
-	  }
-	}
-
-	function createPalette(palette) {
-	  var _palette$primary = palette.primary,
-	      primary = _palette$primary === undefined ? {
-	    light: _indigo2.default[300],
-	    main: _indigo2.default[500],
-	    dark: _indigo2.default[700]
-	  } : _palette$primary,
-	      _palette$secondary = palette.secondary,
-	      secondary = _palette$secondary === undefined ? {
-	    light: _pink2.default.A200,
-	    main: _pink2.default.A400,
-	    dark: _pink2.default.A700
-	  } : _palette$secondary,
-	      _palette$error = palette.error,
-	      error = _palette$error === undefined ? {
-	    light: _red2.default[300],
-	    main: _red2.default[500],
-	    dark: _red2.default[700]
-	  } : _palette$error,
-	      _palette$type = palette.type,
-	      type = _palette$type === undefined ? 'light' : _palette$type,
-	      _palette$contrastThre = palette.contrastThreshold,
-	      contrastThreshold = _palette$contrastThre === undefined ? 3 : _palette$contrastThre,
-	      _palette$tonalOffset = palette.tonalOffset,
-	      tonalOffset = _palette$tonalOffset === undefined ? 0.2 : _palette$tonalOffset,
-	      other = (0, _objectWithoutProperties3.default)(palette, ['primary', 'secondary', 'error', 'type', 'contrastThreshold', 'tonalOffset']);
-
-
-	  function getContrastText(background) {
-	    // Use the same logic as
-	    // Bootstrap: https://github.com/twbs/bootstrap/blob/1d6e3710dd447de1a200f29e8fa521f8a0908f70/scss/_functions.scss#L59
-	    // and material-components-web https://github.com/material-components/material-components-web/blob/ac46b8863c4dab9fc22c4c662dc6bd1b65dd652f/packages/mdc-theme/_functions.scss#L54
-	    var contrastText = (0, colorManipulator$2.getContrastRatio)(background, dark.text.primary) >= contrastThreshold ? dark.text.primary : light.text.primary;
-
-	    {
-	      var contrast = (0, colorManipulator$2.getContrastRatio)(background, contrastText);
-	      (0, _warning2.default)(contrast >= 3, ['Material-UI: the contrast ratio of ' + contrast + ':1 for ' + contrastText + ' on ' + background, 'falls below the WACG recommended absolute minimum contrast ratio of 3:1.', 'https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast-contrast'].join('\n'));
-	    }
-
-	    return contrastText;
-	  }
-
-	  function augmentColor(color, mainShade, lightShade, darkShade) {
-	    if (!color.main && color[mainShade]) {
-	      color.main = color[mainShade];
-	    }
-	    addLightOrDark(color, 'light', lightShade, tonalOffset);
-	    addLightOrDark(color, 'dark', darkShade, tonalOffset);
-	    if (!color.contrastText) {
-	      color.contrastText = getContrastText(color.main);
-	    }
-	  }
-
-	  augmentColor(primary, 500, 300, 700);
-	  augmentColor(secondary, 'A400', 'A200', 'A700');
-	  augmentColor(error, 500, 300, 700);
-
-	  var types = { dark: dark, light: light };
-
-	  (0, _warning2.default)(types[type], 'Material-UI: the palette type `' + type + '` is not supported.');
-
-	  var paletteOutput = (0, _deepmerge2.default)((0, _extends3.default)({
-	    // A collection of common colors.
-	    common: _common2.default,
-	    // The palette type, can be light or dark.
-	    type: type,
-	    // The colors used to represent primary interface elements for a user.
-	    primary: primary,
-	    // The colors used to represent secondary interface elements for a user.
-	    secondary: secondary,
-	    // The colors used to represent interface elements that the user should be made aware of.
-	    error: error,
-	    // The grey colors.
-	    grey: _grey2.default,
-	    // Used by `getContrastText()` to maximize the contrast between the background and
-	    // the text.
-	    contrastThreshold: contrastThreshold,
-	    // Take a background color and return the color of the text to maximize the contrast.
-	    getContrastText: getContrastText,
-	    // Generate a rich color object.
-	    augmentColor: augmentColor,
-	    // Used by the functions below to shift a color's luminance by approximately
-	    // two indexes within its tonal palette.
-	    // E.g., shift from Red 500 to Red 300 or Red 700.
-	    tonalOffset: tonalOffset
-	  }, types[type]), other, {
-	    clone: false // No need to clone deep
-	  });
-
-	  return paletteOutput;
-	}
-	});
-
-	unwrapExports(createPalette_1$1);
-	var createPalette_2$1 = createPalette_1$1.dark;
-	var createPalette_3$1 = createPalette_1$1.light;
-
-	var defineProperty$7 = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-
-
-	var _defineProperty2 = _interopRequireDefault(defineProperty$5);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = function (obj, key, value) {
-	  if (key in obj) {
-	    (0, _defineProperty2.default)(obj, key, {
-	      value: value,
-	      enumerable: true,
-	      configurable: true,
-	      writable: true
-	    });
-	  } else {
-	    obj[key] = value;
-	  }
-
-	  return obj;
-	};
-	});
-
-	unwrapExports(defineProperty$7);
-
-	var createMixins_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _defineProperty3 = _interopRequireDefault(defineProperty$7);
-
-
-
-	var _extends4 = _interopRequireDefault(_extends$9);
-
-	exports.default = createMixins;
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function createMixins(breakpoints, spacing, mixins) {
-	  var _toolbar;
-
-	  return (0, _extends4.default)({
-	    gutters: function gutters() {
-	      var styles = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	      return (0, _extends4.default)({
-	        paddingLeft: spacing.unit * 2,
-	        paddingRight: spacing.unit * 2
-	      }, styles, (0, _defineProperty3.default)({}, breakpoints.up('sm'), (0, _extends4.default)({
-	        paddingLeft: spacing.unit * 3,
-	        paddingRight: spacing.unit * 3
-	      }, styles[breakpoints.up('sm')])));
-	    },
-	    toolbar: (_toolbar = {
-	      minHeight: 56
-	    }, (0, _defineProperty3.default)(_toolbar, breakpoints.up('xs') + ' and (orientation: landscape)', {
-	      minHeight: 48
-	    }), (0, _defineProperty3.default)(_toolbar, breakpoints.up('sm'), {
-	      minHeight: 64
-	    }), _toolbar)
-	  }, mixins);
-	}
-	});
-
-	unwrapExports(createMixins_1$1);
-
-	var shadows_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var shadowKeyUmbraOpacity = 0.2;
-	var shadowKeyPenumbraOpacity = 0.14;
-	var shadowAmbientShadowOpacity = 0.12;
-
-	function createShadow() {
-	  return [(arguments.length <= 0 ? undefined : arguments[0]) + 'px ' + (arguments.length <= 1 ? undefined : arguments[1]) + 'px ' + (arguments.length <= 2 ? undefined : arguments[2]) + 'px ' + (arguments.length <= 3 ? undefined : arguments[3]) + 'px rgba(0, 0, 0, ' + shadowKeyUmbraOpacity + ')', (arguments.length <= 4 ? undefined : arguments[4]) + 'px ' + (arguments.length <= 5 ? undefined : arguments[5]) + 'px ' + (arguments.length <= 6 ? undefined : arguments[6]) + 'px ' + (arguments.length <= 7 ? undefined : arguments[7]) + 'px rgba(0, 0, 0, ' + shadowKeyPenumbraOpacity + ')', (arguments.length <= 8 ? undefined : arguments[8]) + 'px ' + (arguments.length <= 9 ? undefined : arguments[9]) + 'px ' + (arguments.length <= 10 ? undefined : arguments[10]) + 'px ' + (arguments.length <= 11 ? undefined : arguments[11]) + 'px rgba(0, 0, 0, ' + shadowAmbientShadowOpacity + ')'].join(',');
-	}
-
-	var shadows = ['none', createShadow(0, 1, 3, 0, 0, 1, 1, 0, 0, 2, 1, -1), createShadow(0, 1, 5, 0, 0, 2, 2, 0, 0, 3, 1, -2), createShadow(0, 1, 8, 0, 0, 3, 4, 0, 0, 3, 3, -2), createShadow(0, 2, 4, -1, 0, 4, 5, 0, 0, 1, 10, 0), createShadow(0, 3, 5, -1, 0, 5, 8, 0, 0, 1, 14, 0), createShadow(0, 3, 5, -1, 0, 6, 10, 0, 0, 1, 18, 0), createShadow(0, 4, 5, -2, 0, 7, 10, 1, 0, 2, 16, 1), createShadow(0, 5, 5, -3, 0, 8, 10, 1, 0, 3, 14, 2), createShadow(0, 5, 6, -3, 0, 9, 12, 1, 0, 3, 16, 2), createShadow(0, 6, 6, -3, 0, 10, 14, 1, 0, 4, 18, 3), createShadow(0, 6, 7, -4, 0, 11, 15, 1, 0, 4, 20, 3), createShadow(0, 7, 8, -4, 0, 12, 17, 2, 0, 5, 22, 4), createShadow(0, 7, 8, -4, 0, 13, 19, 2, 0, 5, 24, 4), createShadow(0, 7, 9, -4, 0, 14, 21, 2, 0, 5, 26, 4), createShadow(0, 8, 9, -5, 0, 15, 22, 2, 0, 6, 28, 5), createShadow(0, 8, 10, -5, 0, 16, 24, 2, 0, 6, 30, 5), createShadow(0, 8, 11, -5, 0, 17, 26, 2, 0, 6, 32, 5), createShadow(0, 9, 11, -5, 0, 18, 28, 2, 0, 7, 34, 6), createShadow(0, 9, 12, -6, 0, 19, 29, 2, 0, 7, 36, 6), createShadow(0, 10, 13, -6, 0, 20, 31, 3, 0, 8, 38, 7), createShadow(0, 10, 13, -6, 0, 21, 33, 3, 0, 8, 40, 7), createShadow(0, 10, 14, -6, 0, 22, 35, 3, 0, 8, 42, 7), createShadow(0, 11, 14, -7, 0, 23, 36, 3, 0, 9, 44, 8), createShadow(0, 11, 15, -7, 0, 24, 38, 3, 0, 9, 46, 8)];
-
-	exports.default = shadows;
-	});
-
-	unwrapExports(shadows_1$1);
-
-	var isNan$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": isNan, __esModule: true };
-	});
-
-	unwrapExports(isNan$2);
-
-	var transitions$2 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.isNumber = exports.isString = exports.formatMs = exports.duration = exports.easing = undefined;
-
-
-
-	var _keys2 = _interopRequireDefault(keys$2);
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-
-
-	var _isNan2 = _interopRequireDefault(isNan$2);
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Follow https://material.google.com/motion/duration-easing.html#duration-easing-natural-easing-curves
-	// to learn the context in which each easing should be used.
-	var easing = exports.easing = {
-	  // This is the most common easing curve.
-	  easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-	  // Objects enter the screen at full velocity from off-screen and
-	  // slowly decelerate to a resting point.
-	  easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
-	  // Objects leave the screen at full velocity. They do not decelerate when off-screen.
-	  easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
-	  // The sharp curve is used by objects that may return to the screen at any time.
-	  sharp: 'cubic-bezier(0.4, 0, 0.6, 1)'
-	};
-
-	// Follow https://material.io/guidelines/motion/duration-easing.html#duration-easing-common-durations
-	// to learn when use what timing
-
-	/* eslint-disable no-param-reassign */
-
-	var duration = exports.duration = {
-	  shortest: 150,
-	  shorter: 200,
-	  short: 250,
-	  // most basic recommended timing
-	  standard: 300,
-	  // this is to be used in complex animations
-	  complex: 375,
-	  // recommended when something is entering screen
-	  enteringScreen: 225,
-	  // recommended when something is leaving screen
-	  leavingScreen: 195
-	};
-
-	var formatMs = exports.formatMs = function formatMs(milliseconds) {
-	  return Math.round(milliseconds) + 'ms';
-	};
-	var isString = exports.isString = function isString(value) {
-	  return typeof value === 'string';
-	};
-	var isNumber = exports.isNumber = function isNumber(value) {
-	  return !(0, _isNan2.default)(parseFloat(value));
-	};
-
-	/**
-	 * @param {string|Array} props
-	 * @param {object} param
-	 * @param {string} param.prop
-	 * @param {number} param.duration
-	 * @param {string} param.easing
-	 * @param {number} param.delay
-	 */
-	exports.default = {
-	  easing: easing,
-	  duration: duration,
-	  create: function create() {
-	    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ['all'];
-	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-	    var _options$duration = options.duration,
-	        durationOption = _options$duration === undefined ? duration.standard : _options$duration,
-	        _options$easing = options.easing,
-	        easingOption = _options$easing === undefined ? easing.easeInOut : _options$easing,
-	        _options$delay = options.delay,
-	        delay = _options$delay === undefined ? 0 : _options$delay,
-	        other = (0, _objectWithoutProperties3.default)(options, ['duration', 'easing', 'delay']);
-
-
-	    (0, _warning2.default)(isString(props) || Array.isArray(props), 'Material-UI: argument "props" must be a string or Array.');
-	    (0, _warning2.default)(isNumber(durationOption) || isString(durationOption), 'Material-UI: argument "duration" must be a number or a string but found ' + durationOption + '.');
-	    (0, _warning2.default)(isString(easingOption), 'Material-UI: argument "easing" must be a string.');
-	    (0, _warning2.default)(isNumber(delay) || isString(delay), 'Material-UI: argument "delay" must be a number or a string.');
-	    (0, _warning2.default)((0, _keys2.default)(other).length === 0, 'Material-UI: unrecognized argument(s) [' + (0, _keys2.default)(other).join(',') + ']');
-
-	    return (Array.isArray(props) ? props : [props]).map(function (animatedProp) {
-	      return animatedProp + ' ' + (typeof durationOption === 'string' ? durationOption : formatMs(durationOption)) + ' ' + easingOption + ' ' + (typeof delay === 'string' ? delay : formatMs(delay));
-	    }).join(',');
-	  },
-	  getAutoHeightDuration: function getAutoHeightDuration(height) {
-	    if (!height) {
-	      return 0;
-	    }
-
-	    var constant = height / 36;
-
-	    // https://www.wolframalpha.com/input/?i=(4+%2B+15+*+(x+%2F+36+)+**+0.25+%2B+(x+%2F+36)+%2F+5)+*+10
-	    return Math.round((4 + 15 * Math.pow(constant, 0.25) + constant / 5) * 10);
-	  }
-	};
-	});
-
-	unwrapExports(transitions$2);
-	var transitions_1$1 = transitions$2.isNumber;
-	var transitions_2$1 = transitions$2.isString;
-	var transitions_3$1 = transitions$2.formatMs;
-	var transitions_4$1 = transitions$2.duration;
-	var transitions_5$1 = transitions$2.easing;
-
-	var zIndex_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	// We need to centralize the zIndex definitions as they work
-	// like global values in the browser.
-	var zIndex = {
-	  mobileStepper: 1000,
-	  appBar: 1100,
-	  drawer: 1200,
-	  modal: 1300,
-	  snackbar: 1400,
-	  tooltip: 1500
-	};
-
-	exports.default = zIndex;
-	});
-
-	unwrapExports(zIndex_1$1);
-
-	var spacing$2 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = {
-	  // All components align to an 8dp square baseline grid for mobile, tablet, and desktop.
-	  // https://material.io/guidelines/layout/metrics-keylines.html#metrics-keylines-baseline-grids
-	  unit: 8
-	};
-	});
-
-	unwrapExports(spacing$2);
-
-	var createMuiTheme_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-
-
-	var _deepmerge2 = _interopRequireDefault(_deepmerge);
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-
-
-	var _createTypography2 = _interopRequireDefault(createTypography_1$1);
-
-
-
-	var _createBreakpoints2 = _interopRequireDefault(createBreakpoints_1$1);
-
-
-
-	var _createPalette2 = _interopRequireDefault(createPalette_1$1);
-
-
-
-	var _createMixins2 = _interopRequireDefault(createMixins_1$1);
-
-
-
-	var _shadows2 = _interopRequireDefault(shadows_1$1);
-
-
-
-	var _transitions2 = _interopRequireDefault(transitions$2);
-
-
-
-	var _zIndex2 = _interopRequireDefault(zIndex_1$1);
-
-
-
-	var _spacing2 = _interopRequireDefault(spacing$2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function createMuiTheme() {
-	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	  var _options$palette = options.palette,
-	      paletteInput = _options$palette === undefined ? {} : _options$palette,
-	      _options$breakpoints = options.breakpoints,
-	      breakpointsInput = _options$breakpoints === undefined ? {} : _options$breakpoints,
-	      _options$mixins = options.mixins,
-	      mixinsInput = _options$mixins === undefined ? {} : _options$mixins,
-	      _options$typography = options.typography,
-	      typographyInput = _options$typography === undefined ? {} : _options$typography,
-	      shadowsInput = options.shadows,
-	      other = (0, _objectWithoutProperties3.default)(options, ['palette', 'breakpoints', 'mixins', 'typography', 'shadows']);
-
-
-	  var palette = (0, _createPalette2.default)(paletteInput);
-	  var breakpoints = (0, _createBreakpoints2.default)(breakpointsInput);
-
-	  var muiTheme = (0, _extends3.default)({
-	    breakpoints: breakpoints,
-	    direction: 'ltr',
-	    mixins: (0, _createMixins2.default)(breakpoints, _spacing2.default, mixinsInput),
-	    overrides: {}, // Inject custom styles
-	    palette: palette,
-	    props: {}, // Inject custom properties
-	    shadows: shadowsInput || _shadows2.default,
-	    typography: (0, _createTypography2.default)(palette, typographyInput)
-	  }, (0, _deepmerge2.default)({
-	    transitions: _transitions2.default,
-	    spacing: _spacing2.default,
-	    zIndex: _zIndex2.default
-	  }, other));
-
-	  (0, _warning2.default)(muiTheme.shadows.length === 25, 'Material-UI: the shadows array provided to createMuiTheme should support 25 elevations.');
-
-	  return muiTheme;
-	} // < 1kb payload overhead when lodash/merge is > 3kb.
-	exports.default = createMuiTheme;
-	});
-
-	unwrapExports(createMuiTheme_1$1);
-
-	var jssPreset_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _jssGlobal2 = _interopRequireDefault(lib$1);
-
-
-
-	var _jssNested2 = _interopRequireDefault(lib$2);
-
-
-
-	var _jssCamelCase2 = _interopRequireDefault(lib$3);
-
-
-
-	var _jssDefaultUnit2 = _interopRequireDefault(lib$4);
-
-
-
-	var _jssVendorPrefixer2 = _interopRequireDefault(lib$6);
-
-
-
-	var _jssPropsSort2 = _interopRequireDefault(lib$7);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Subset of jss-preset-default with only the plugins the Material-UI
-	// components are using.
-	function jssPreset() {
-	  return {
-	    plugins: [(0, _jssGlobal2.default)(), (0, _jssNested2.default)(), (0, _jssCamelCase2.default)(), (0, _jssDefaultUnit2.default)(), (0, _jssVendorPrefixer2.default)(), (0, _jssPropsSort2.default)()]
-	  };
-	}
-
-	exports.default = jssPreset;
-	});
-
-	unwrapExports(jssPreset_1$1);
-
-	var themeListener_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.CHANNEL = undefined;
-
-
-
-	var _defineProperty3 = _interopRequireDefault(defineProperty$7);
-
-
-
-	var _propTypes2 = _interopRequireDefault(propTypes);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Same value used by react-jss
-	var CHANNEL = exports.CHANNEL = '__THEMING__';
-
-	var themeListener = {
-	  contextTypes: (0, _defineProperty3.default)({}, CHANNEL, _propTypes2.default.object),
-	  initial: function initial(context) {
-	    if (!context[CHANNEL]) {
-	      return null;
-	    }
-
-	    return context[CHANNEL].getState();
-	  },
-	  subscribe: function subscribe(context, cb) {
-	    if (!context[CHANNEL]) {
-	      return null;
-	    }
-
-	    return context[CHANNEL].subscribe(cb);
-	  },
-	  unsubscribe: function unsubscribe(context, subscriptionId) {
-	    if (context[CHANNEL]) {
-	      context[CHANNEL].unsubscribe(subscriptionId);
-	    }
-	  }
-	};
-
-	exports.default = themeListener;
-	});
-
-	unwrapExports(themeListener_1$1);
-	var themeListener_2$1 = themeListener_1$1.CHANNEL;
-
-	var exactProp_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.specialProperty = undefined;
-
-
-
-	var _defineProperty3 = _interopRequireDefault(defineProperty$7);
-
-
-
-	var _keys2 = _interopRequireDefault(keys$2);
-
-
-
-	var _extends4 = _interopRequireDefault(_extends$9);
-
-	exports.default = exactProp;
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// This module is based on https://github.com/airbnb/prop-types-exact repository.
-	// However, in order to reduce the number of dependencies and to remove some extra safe checks
-	// the module was forked.
-
-	var specialProperty = exports.specialProperty = 'exact-prop: \u200B';
-
-	function exactProp(propTypes, componentNameInError) {
-	  return (0, _extends4.default)({}, propTypes, (0, _defineProperty3.default)({}, specialProperty, function (props) {
-	    var unknownProps = (0, _keys2.default)(props).filter(function (prop) {
-	      return !propTypes.hasOwnProperty(prop);
-	    });
-	    if (unknownProps.length > 0) {
-	      return new TypeError(componentNameInError + ': unknown props found: ' + unknownProps.join(', ') + '. Please remove the unknown properties.');
-	    }
-	    return null;
-	  }));
-	}
-	});
-
-	unwrapExports(exactProp_1$1);
-	var exactProp_2$1 = exactProp_1$1.specialProperty;
-
-	var MuiThemeProvider_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _defineProperty3 = _interopRequireDefault(defineProperty$7);
-
-
-
-	var _getPrototypeOf2 = _interopRequireDefault(getPrototypeOf$2);
-
-
-
-	var _classCallCheck3 = _interopRequireDefault(classCallCheck$1);
-
-
-
-	var _createClass3 = _interopRequireDefault(createClass$1);
-
-
-
-	var _possibleConstructorReturn3 = _interopRequireDefault(possibleConstructorReturn$1);
-
-
-
-	var _inherits3 = _interopRequireDefault(inherits$1);
-
-
-
-	var _react2 = _interopRequireDefault(react);
-
-
-
-	var _propTypes2 = _interopRequireDefault(propTypes);
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-
-
-	var _brcast2 = _interopRequireDefault(_brcast);
-
-
-
-	var _themeListener2 = _interopRequireDefault(themeListener_1$1);
-
-
-
-	var _exactProp2 = _interopRequireDefault(exactProp_1$1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * This component takes a `theme` property.
-	 * It makes the `theme` available down the React tree thanks to React context.
-	 * This component should preferably be used at **the root of your component tree**.
-	 */
-	var MuiThemeProvider = function (_React$Component) {
-	  (0, _inherits3.default)(MuiThemeProvider, _React$Component);
-
-	  function MuiThemeProvider(props, context) {
-	    (0, _classCallCheck3.default)(this, MuiThemeProvider);
-
-	    // Get the outer theme from the context, can be null
-	    var _this = (0, _possibleConstructorReturn3.default)(this, (MuiThemeProvider.__proto__ || (0, _getPrototypeOf2.default)(MuiThemeProvider)).call(this, props, context));
-
-	    _this.broadcast = (0, _brcast2.default)();
-	    _this.unsubscribeId = null;
-	    _this.outerTheme = null;
-	    _this.outerTheme = _themeListener2.default.initial(context);
-	    // Propagate the theme so it can be accessed by the children
-	    _this.broadcast.setState(_this.mergeOuterLocalTheme(_this.props.theme));
-	    return _this;
-	  }
-
-	  (0, _createClass3.default)(MuiThemeProvider, [{
-	    key: 'getChildContext',
-	    value: function getChildContext() {
-	      var _ref;
-
-	      var _props = this.props,
-	          sheetsManager = _props.sheetsManager,
-	          disableStylesGeneration = _props.disableStylesGeneration;
-
-	      var muiThemeProviderOptions = this.context.muiThemeProviderOptions || {};
-
-	      if (sheetsManager !== undefined) {
-	        muiThemeProviderOptions.sheetsManager = sheetsManager;
-	      }
-
-	      if (disableStylesGeneration !== undefined) {
-	        muiThemeProviderOptions.disableStylesGeneration = disableStylesGeneration;
-	      }
-
-	      return _ref = {}, (0, _defineProperty3.default)(_ref, themeListener_1$1.CHANNEL, this.broadcast), (0, _defineProperty3.default)(_ref, 'muiThemeProviderOptions', muiThemeProviderOptions), _ref;
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      var _this2 = this;
-
-	      // Subscribe on the outer theme, if present
-	      this.unsubscribeId = _themeListener2.default.subscribe(this.context, function (outerTheme) {
-	        _this2.outerTheme = outerTheme;
-	        // Forward the parent theme update to the children
-	        _this2.broadcast.setState(_this2.mergeOuterLocalTheme(_this2.props.theme));
-	      });
-	    }
-	  }, {
-	    key: 'componentDidUpdate',
-	    value: function componentDidUpdate(prevProps) {
-	      // Propagate a local theme update
-	      if (this.props.theme !== prevProps.theme) {
-	        this.broadcast.setState(this.mergeOuterLocalTheme(this.props.theme));
-	      }
-	    }
-	  }, {
-	    key: 'componentWillUnmount',
-	    value: function componentWillUnmount() {
-	      if (this.unsubscribeId !== null) {
-	        _themeListener2.default.unsubscribe(this.context, this.unsubscribeId);
-	      }
-	    }
-	    // We are not using the React state in order to avoid unnecessary rerender.
-
-	  }, {
-	    key: 'mergeOuterLocalTheme',
-
-
-	    // Simple merge between the outer theme and the local theme
-	    value: function mergeOuterLocalTheme(localTheme) {
-	      // To support composition of theme.
-	      if (typeof localTheme === 'function') {
-	        (0, _warning2.default)(this.outerTheme, ['Material-UI: you are providing a theme function property ' + 'to the MuiThemeProvider component:', '<MuiThemeProvider theme={outerTheme => outerTheme} />', '', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n'));
-	        return localTheme(this.outerTheme);
-	      }
-
-	      if (!this.outerTheme) {
-	        return localTheme;
-	      }
-
-	      return (0, _extends3.default)({}, this.outerTheme, localTheme);
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      // TODO move the sheetsManager property to a different component.
-	      // warning(
-	      //   typeof window !== 'undefined' || this.props.sheetsManager,
-	      //   [
-	      //     'Material-UI: you need to provide a sheetsManager to the MuiThemeProvider ' +
-	      //       'when rendering on the server.',
-	      //     'If you do not, you might experience a memory leak',
-	      //   ].join('\n'),
-	      // );
-	      return this.props.children;
-	    }
-	  }]);
-	  return MuiThemeProvider;
-	}(_react2.default.Component);
-
-	MuiThemeProvider.propTypes = {
-	  /**
-	   * You can only provide a single element with react@15, a node with react@16.
-	   */
-	  children: _propTypes2.default.node.isRequired,
-	  /**
-	   * You can disable the generation of the styles with this option.
-	   * It can be useful when traversing the React tree outside of the HTML
-	   * rendering step on the server.
-	   * Let's say you are using react-apollo to extract all
-	   * the queries made by the interface server side.
-	   * You can significantly speed up the traversal with this property.
-	   */
-	  disableStylesGeneration: _propTypes2.default.bool,
-	  /**
-	   * The sheetsManager is used to deduplicate style sheet injection in the page.
-	   * It's deduplicating using the (theme, styles) couple.
-	   * On the server, you should provide a new instance for each request.
-	   */
-	  sheetsManager: _propTypes2.default.object,
-	  /**
-	   * A theme object.
-	   */
-	  theme: _propTypes2.default.oneOfType([_propTypes2.default.object, _propTypes2.default.func]).isRequired
-	};
-
-	MuiThemeProvider.propTypes = (0, _exactProp2.default)(MuiThemeProvider.propTypes, 'MuiThemeProvider');
-
-	MuiThemeProvider.childContextTypes = (0, _extends3.default)({}, _themeListener2.default.contextTypes, {
-	  muiThemeProviderOptions: _propTypes2.default.object
-	});
-
-	MuiThemeProvider.contextTypes = (0, _extends3.default)({}, _themeListener2.default.contextTypes, {
-	  muiThemeProviderOptions: _propTypes2.default.object
-	});
-
-	exports.default = MuiThemeProvider;
-	});
-
-	unwrapExports(MuiThemeProvider_1$1);
-
-	var map$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": map, __esModule: true };
-	});
-
-	unwrapExports(map$2);
-
-	var minSafeInteger$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": minSafeInteger, __esModule: true };
-	});
-
-	unwrapExports(minSafeInteger$2);
-
-	var hoistNonReactStatics$2 = createCommonjsModule(function (module, exports) {
-	/**
-	 * Copyright 2015, Yahoo! Inc.
-	 * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
-	 */
-	(function (global, factory) {
-	    module.exports = factory();
-	}(commonjsGlobal, (function () {
-	    
-	    var REACT_STATICS = {
-	        childContextTypes: true,
-	        contextTypes: true,
-	        defaultProps: true,
-	        displayName: true,
-	        getDefaultProps: true,
-	        getDerivedStateFromProps: true,
-	        mixins: true,
-	        propTypes: true,
-	        type: true
-	    };
-	    
-	    var KNOWN_STATICS = {
-	        name: true,
-	        length: true,
-	        prototype: true,
-	        caller: true,
-	        callee: true,
-	        arguments: true,
-	        arity: true
-	    };
-	    
-	    var defineProperty = Object.defineProperty;
-	    var getOwnPropertyNames = Object.getOwnPropertyNames;
-	    var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-	    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-	    var getPrototypeOf = Object.getPrototypeOf;
-	    var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
-	    
-	    return function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
-	        if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
-	            
-	            if (objectPrototype) {
-	                var inheritedComponent = getPrototypeOf(sourceComponent);
-	                if (inheritedComponent && inheritedComponent !== objectPrototype) {
-	                    hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
-	                }
-	            }
-	            
-	            var keys = getOwnPropertyNames(sourceComponent);
-	            
-	            if (getOwnPropertySymbols) {
-	                keys = keys.concat(getOwnPropertySymbols(sourceComponent));
-	            }
-	            
-	            for (var i = 0; i < keys.length; ++i) {
-	                var key = keys[i];
-	                if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
-	                    var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
-	                    try { // Avoid failures from read-only properties
-	                        defineProperty(targetComponent, key, descriptor);
-	                    } catch (e) {}
-	                }
-	            }
-	            
-	            return targetComponent;
-	        }
-	        
-	        return targetComponent;
-	    };
-	})));
-	});
-
-	var getStylesCreator_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _keys2 = _interopRequireDefault(keys$2);
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-
-
-	var _deepmerge2 = _interopRequireDefault(_deepmerge);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// < 1kb payload overhead when lodash/merge is > 3kb.
-
-	// Support for the jss-expand plugin.
-	function arrayMerge(destination, source) {
-	  return source;
-	}
-
-	function getStylesCreator(stylesOrCreator) {
-	  var themingEnabled = typeof stylesOrCreator === 'function';
-
-	  function create(theme, name) {
-	    var styles = themingEnabled ? stylesOrCreator(theme) : stylesOrCreator;
-
-	    if (!name || !theme.overrides || !theme.overrides[name]) {
-	      return styles;
-	    }
-
-	    var overrides = theme.overrides[name];
-	    var stylesWithOverrides = (0, _extends3.default)({}, styles);
-
-	    (0, _keys2.default)(overrides).forEach(function (key) {
-	      (0, _warning2.default)(stylesWithOverrides[key], ['Material-UI: you are trying to override a style that does not exist.', 'Fix the `' + key + '` key of `theme.overrides.' + name + '`.'].join('\n'));
-	      stylesWithOverrides[key] = (0, _deepmerge2.default)(stylesWithOverrides[key], overrides[key], {
-	        arrayMerge: arrayMerge
-	      });
-	    });
-
-	    return stylesWithOverrides;
-	  }
-
-	  return {
-	    create: create,
-	    options: {},
-	    themingEnabled: themingEnabled
-	  };
-	}
-
-	exports.default = getStylesCreator;
-	});
-
-	unwrapExports(getStylesCreator_1$1);
-
-	var getThemeProps_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	function getThemeProps(params) {
-	  var theme = params.theme,
-	      name = params.name;
-
-
-	  if (!name || !theme.props || !theme.props[name]) {
-	    return {};
-	  }
-
-	  return theme.props[name];
-	}
-
-	exports.default = getThemeProps;
-	});
-
-	unwrapExports(getThemeProps_1$1);
-
-	var withStyles_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.sheetsManager = undefined;
-
-
-
-	var _keys2 = _interopRequireDefault(keys$2);
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _getPrototypeOf2 = _interopRequireDefault(getPrototypeOf$2);
-
-
-
-	var _classCallCheck3 = _interopRequireDefault(classCallCheck$1);
-
-
-
-	var _createClass3 = _interopRequireDefault(createClass$1);
-
-
-
-	var _possibleConstructorReturn3 = _interopRequireDefault(possibleConstructorReturn$1);
-
-
-
-	var _inherits3 = _interopRequireDefault(inherits$1);
-
-
-
-	var _objectWithoutProperties3 = _interopRequireDefault(objectWithoutProperties$1);
-
-
-
-	var _map2 = _interopRequireDefault(map$2);
-
-
-
-	var _minSafeInteger2 = _interopRequireDefault(minSafeInteger$2);
-
-
-
-	var _react2 = _interopRequireDefault(react);
-
-
-
-	var _propTypes2 = _interopRequireDefault(propTypes);
-
-
-
-	var _warning2 = _interopRequireDefault(browser);
-
-
-
-	var _hoistNonReactStatics2 = _interopRequireDefault(hoistNonReactStatics$2);
-
-
-
-	var _getDisplayName2 = _interopRequireDefault(getDisplayName_1);
-
-
-
-	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
-
-
-
-	var _contextTypes2 = _interopRequireDefault(contextTypes);
-
-
-
-
-
-	var ns$$1 = _interopRequireWildcard(ns);
-
-
-
-	var _jssPreset2 = _interopRequireDefault(jssPreset_1$1);
-
-
-
-	var _createMuiTheme2 = _interopRequireDefault(createMuiTheme_1$1);
-
-
-
-	var _themeListener2 = _interopRequireDefault(themeListener_1$1);
-
-
-
-	var _createGenerateClassName2 = _interopRequireDefault(createGenerateClassName_1$1);
-
-
-
-	var _getStylesCreator2 = _interopRequireDefault(getStylesCreator_1$1);
-
-
-
-	var _getThemeProps2 = _interopRequireDefault(getThemeProps_1$1);
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// Default JSS instance.
-	var jss = (0, lib.create)((0, _jssPreset2.default)());
-
-	// Use a singleton or the provided one by the context.
-	var generateClassName = (0, _createGenerateClassName2.default)();
-
-	// Global index counter to preserve source order.
-	// We create the style sheet during at the creation of the component,
-	// children are handled after the parents, so the order of style elements would be parent->child.
-	// It is a problem though when a parent passes a className
-	// which needs to override any childs styles.
-	// StyleSheet of the child has a higher specificity, because of the source order.
-	// So our solution is to render sheets them in the reverse order child->sheet, so
-	// that parent has a higher specificity.
-	var indexCounter = _minSafeInteger2.default;
-
-	var sheetsManager = exports.sheetsManager = new _map2.default();
-
-	// We use the same empty object to ref count the styles that don't need a theme object.
-	var noopTheme = {};
-
-	// In order to have self-supporting components, we rely on default theme when not provided.
-	var defaultTheme = void 0;
-
-	function getDefaultTheme() {
-	  if (defaultTheme) {
-	    return defaultTheme;
-	  }
-
-	  defaultTheme = (0, _createMuiTheme2.default)();
-	  return defaultTheme;
-	}
-
-	// Link a style sheet with a component.
-	// It does not modify the component passed to it;
-	// instead, it returns a new component, with a `classes` property.
-	var withStyles = function withStyles(stylesOrCreator) {
-	  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-	  return function (Component) {
-	    var _options$withTheme = options.withTheme,
-	        withTheme = _options$withTheme === undefined ? false : _options$withTheme,
-	        _options$flip = options.flip,
-	        flip = _options$flip === undefined ? null : _options$flip,
-	        name = options.name,
-	        styleSheetOptions = (0, _objectWithoutProperties3.default)(options, ['withTheme', 'flip', 'name']);
-
-	    var stylesCreator = (0, _getStylesCreator2.default)(stylesOrCreator);
-	    var listenToTheme = stylesCreator.themingEnabled || withTheme || typeof name === 'string';
-
-	    indexCounter += 1;
-	    stylesCreator.options.index = indexCounter;
-
-	    (0, _warning2.default)(indexCounter < 0, ['Material-UI: you might have a memory leak.', 'The indexCounter is not supposed to grow that much.'].join(' '));
-
-	    var WithStyles = function (_React$Component) {
-	      (0, _inherits3.default)(WithStyles, _React$Component);
-
-	      function WithStyles(props, context) {
-	        (0, _classCallCheck3.default)(this, WithStyles);
-
-	        var _this = (0, _possibleConstructorReturn3.default)(this, (WithStyles.__proto__ || (0, _getPrototypeOf2.default)(WithStyles)).call(this, props, context));
-
-	        _this.state = {};
-	        _this.disableStylesGeneration = false;
-	        _this.jss = null;
-	        _this.sheetOptions = null;
-	        _this.sheetsManager = sheetsManager;
-	        _this.stylesCreatorSaved = null;
-	        _this.theme = null;
-	        _this.unsubscribeId = null;
-
-
-	        _this.jss = _this.context[ns$$1.jss] || jss;
-
-	        var muiThemeProviderOptions = _this.context.muiThemeProviderOptions;
-
-	        if (muiThemeProviderOptions) {
-	          if (muiThemeProviderOptions.sheetsManager) {
-	            _this.sheetsManager = muiThemeProviderOptions.sheetsManager;
-	          }
-
-	          _this.disableStylesGeneration = muiThemeProviderOptions.disableStylesGeneration;
-	        }
-
-	        // Attach the stylesCreator to the instance of the component as in the context
-	        // of react-hot-loader the hooks can be executed in a different closure context:
-	        // https://github.com/gaearon/react-hot-loader/blob/master/src/patch.dev.js#L107
-	        _this.stylesCreatorSaved = stylesCreator;
-	        _this.sheetOptions = (0, _extends3.default)({
-	          generateClassName: generateClassName
-	        }, _this.context[ns$$1.sheetOptions]);
-	        // We use || as the function call is lazy evaluated.
-	        _this.theme = listenToTheme ? _themeListener2.default.initial(context) || getDefaultTheme() : noopTheme;
-
-	        _this.attach(_this.theme);
-	        return _this;
-	      }
-
-	      (0, _createClass3.default)(WithStyles, [{
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
-	          var _this2 = this;
-
-	          if (!listenToTheme) {
-	            return;
-	          }
-
-	          this.unsubscribeId = _themeListener2.default.subscribe(this.context, function (theme) {
-	            var oldTheme = _this2.theme;
-	            _this2.theme = theme;
-	            _this2.attach(_this2.theme);
-
-	            // Rerender the component so the underlying component gets the theme update.
-	            // By theme update we mean receiving and applying the new class names.
-	            _this2.setState({}, function () {
-	              _this2.detach(oldTheme);
-	            });
-	          });
-	        }
-	      }, {
-	        key: 'componentDidUpdate',
-	        value: function componentDidUpdate() {
-	          // react-hot-loader specific logic
-	          if (this.stylesCreatorSaved === stylesCreator || "development" === 'production') {
-	            return;
-	          }
-
-	          this.detach(this.theme);
-	          this.stylesCreatorSaved = stylesCreator;
-	          this.attach(this.theme);
-	          this.forceUpdate();
-	        }
-	      }, {
-	        key: 'componentWillUnmount',
-	        value: function componentWillUnmount() {
-	          this.detach(this.theme);
-
-	          if (this.unsubscribeId !== null) {
-	            _themeListener2.default.unsubscribe(this.context, this.unsubscribeId);
-	          }
-	        }
-	      }, {
-	        key: 'attach',
-	        value: function attach(theme) {
-	          if (this.disableStylesGeneration) {
-	            return;
-	          }
-
-	          var stylesCreatorSaved = this.stylesCreatorSaved;
-	          var sheetManager = this.sheetsManager.get(stylesCreatorSaved);
-
-	          if (!sheetManager) {
-	            sheetManager = new _map2.default();
-	            this.sheetsManager.set(stylesCreatorSaved, sheetManager);
-	          }
-
-	          var sheetManagerTheme = sheetManager.get(theme);
-
-	          if (!sheetManagerTheme) {
-	            sheetManagerTheme = {
-	              refs: 0,
-	              sheet: null
-	            };
-	            sheetManager.set(theme, sheetManagerTheme);
-	          }
-
-	          if (sheetManagerTheme.refs === 0) {
-	            var styles = stylesCreatorSaved.create(theme, name);
-	            var meta = name;
-
-	            if (!meta) {
-	              meta = (0, _getDisplayName2.default)(Component);
-	            }
-
-	            var sheet = this.jss.createStyleSheet(styles, (0, _extends3.default)({
-	              meta: meta,
-	              classNamePrefix: meta,
-	              flip: typeof flip === 'boolean' ? flip : theme.direction === 'rtl',
-	              link: false
-	            }, this.sheetOptions, stylesCreatorSaved.options, {
-	              name: name
-	            }, styleSheetOptions));
-
-	            sheetManagerTheme.sheet = sheet;
-	            sheet.attach();
-
-	            var sheetsRegistry = this.context[ns$$1.sheetsRegistry];
-	            if (sheetsRegistry) {
-	              sheetsRegistry.add(sheet);
-	            }
-	          }
-
-	          sheetManagerTheme.refs += 1;
-	        }
-	      }, {
-	        key: 'detach',
-	        value: function detach(theme) {
-	          if (this.disableStylesGeneration) {
-	            return;
-	          }
-
-	          var stylesCreatorSaved = this.stylesCreatorSaved;
-	          var sheetManager = this.sheetsManager.get(stylesCreatorSaved);
-	          var sheetManagerTheme = sheetManager.get(theme);
-
-	          sheetManagerTheme.refs -= 1;
-
-	          if (sheetManagerTheme.refs === 0) {
-	            sheetManager.delete(theme);
-	            this.jss.removeStyleSheet(sheetManagerTheme.sheet);
-	            var sheetsRegistry = this.context[ns$$1.sheetsRegistry];
-	            if (sheetsRegistry) {
-	              sheetsRegistry.remove(sheetManagerTheme.sheet);
-	            }
-	          }
-	        }
-	      }, {
-	        key: 'render',
-	        value: function render() {
-	          var _this3 = this;
-
-	          var _props = this.props,
-	              classesProp = _props.classes,
-	              innerRef = _props.innerRef,
-	              other = (0, _objectWithoutProperties3.default)(_props, ['classes', 'innerRef']);
-
-
-	          var classes = void 0;
-	          var renderedClasses = {};
-
-	          if (!this.disableStylesGeneration) {
-	            var sheetManager = this.sheetsManager.get(this.stylesCreatorSaved);
-	            var sheetsManagerTheme = sheetManager.get(this.theme);
-	            renderedClasses = sheetsManagerTheme.sheet.classes;
-	          }
-
-	          if (classesProp) {
-	            classes = (0, _extends3.default)({}, renderedClasses, (0, _keys2.default)(classesProp).reduce(function (accumulator, key) {
-	              (0, _warning2.default)(renderedClasses[key] || _this3.disableStylesGeneration, ['Material-UI: the key `' + key + '` ' + ('provided to the classes property is not implemented in ' + (0, _getDisplayName2.default)(Component) + '.'), 'You can only override one of the following: ' + (0, _keys2.default)(renderedClasses).join(',')].join('\n'));
-
-	              (0, _warning2.default)(!classesProp[key] || typeof classesProp[key] === 'string', ['Material-UI: the key `' + key + '` ' + ('provided to the classes property is not valid for ' + (0, _getDisplayName2.default)(Component) + '.'), 'You need to provide a non empty string instead of: ' + classesProp[key] + '.'].join('\n'));
-
-	              if (classesProp[key]) {
-	                accumulator[key] = renderedClasses[key] + ' ' + classesProp[key];
-	              }
-
-	              return accumulator;
-	            }, {}));
-	          } else {
-	            classes = renderedClasses;
-	          }
-
-	          var more = (0, _getThemeProps2.default)({ theme: this.theme, name: name });
-
-	          // Provide the theme to the wrapped component.
-	          // So we don't have to use the `withTheme()` Higher-order Component.
-	          if (withTheme) {
-	            more.theme = this.theme;
-	          }
-
-	          return _react2.default.createElement(Component, (0, _extends3.default)({}, more, { classes: classes, ref: innerRef }, other));
-	        }
-	      }]);
-	      return WithStyles;
-	    }(_react2.default.Component);
-
-	    WithStyles.propTypes = {
-	      /**
-	       * Useful to extend the style applied to components.
-	       */
-	      classes: _propTypes2.default.object,
-	      /**
-	       * Use that property to pass a ref callback to the decorated component.
-	       */
-	      innerRef: _propTypes2.default.func
-	    };
-
-	    WithStyles.contextTypes = (0, _extends3.default)({
-	      muiThemeProviderOptions: _propTypes2.default.object
-	    }, _contextTypes2.default, listenToTheme ? _themeListener2.default.contextTypes : {});
-
-	    {
-	      WithStyles.displayName = (0, _wrapDisplayName2.default)(Component, 'WithStyles');
-	    }
-
-	    (0, _hoistNonReactStatics2.default)(WithStyles, Component);
-
-	    {
-	      // Exposed for test purposes.
-	      WithStyles.Naked = Component;
-	      WithStyles.options = options;
-	    }
-
-	    return WithStyles;
-	  };
-	};
-
-	exports.default = withStyles;
-	});
-
-	unwrapExports(withStyles_1$1);
-	var withStyles_2$1 = withStyles_1$1.sheetsManager;
-
-	var withTheme_1$1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _extends3 = _interopRequireDefault(_extends$9);
-
-
-
-	var _getPrototypeOf2 = _interopRequireDefault(getPrototypeOf$2);
-
-
-
-	var _classCallCheck3 = _interopRequireDefault(classCallCheck$1);
-
-
-
-	var _createClass3 = _interopRequireDefault(createClass$1);
-
-
-
-	var _possibleConstructorReturn3 = _interopRequireDefault(possibleConstructorReturn$1);
-
-
-
-	var _inherits3 = _interopRequireDefault(inherits$1);
-
-
-
-	var _react2 = _interopRequireDefault(react);
-
-
-
-	var _hoistNonReactStatics2 = _interopRequireDefault(hoistNonReactStatics$2);
-
-
-
-	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
-
-
-
-	var _createMuiTheme2 = _interopRequireDefault(createMuiTheme_1$1);
-
-
-
-	var _themeListener2 = _interopRequireDefault(themeListener_1$1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var defaultTheme = void 0;
-
-	function getDefaultTheme() {
-	  if (defaultTheme) {
-	    return defaultTheme;
-	  }
-
-	  defaultTheme = (0, _createMuiTheme2.default)();
-	  return defaultTheme;
-	}
-
-	// Provide the theme object as a property to the input component.
-	var withTheme = function withTheme() {
-	  return function (Component) {
-	    var WithTheme = function (_React$Component) {
-	      (0, _inherits3.default)(WithTheme, _React$Component);
-
-	      function WithTheme(props, context) {
-	        (0, _classCallCheck3.default)(this, WithTheme);
-
-	        var _this = (0, _possibleConstructorReturn3.default)(this, (WithTheme.__proto__ || (0, _getPrototypeOf2.default)(WithTheme)).call(this, props, context));
-
-	        _this.state = {};
-	        _this.unsubscribeId = null;
-
-
-	        _this.state = {
-	          // We use || as the function call is lazy evaluated.
-	          theme: _themeListener2.default.initial(context) || getDefaultTheme()
-	        };
-	        return _this;
-	      }
-
-	      (0, _createClass3.default)(WithTheme, [{
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
-	          var _this2 = this;
-
-	          this.unsubscribeId = _themeListener2.default.subscribe(this.context, function (theme) {
-	            _this2.setState({ theme: theme });
-	          });
-	        }
-	      }, {
-	        key: 'componentWillUnmount',
-	        value: function componentWillUnmount() {
-	          if (this.unsubscribeId !== null) {
-	            _themeListener2.default.unsubscribe(this.context, this.unsubscribeId);
-	          }
-	        }
-	      }, {
-	        key: 'render',
-	        value: function render() {
-	          return _react2.default.createElement(Component, (0, _extends3.default)({ theme: this.state.theme }, this.props));
-	        }
-	      }]);
-	      return WithTheme;
-	    }(_react2.default.Component);
-
-	    WithTheme.contextTypes = _themeListener2.default.contextTypes;
-
-	    {
-	      WithTheme.displayName = (0, _wrapDisplayName2.default)(Component, 'WithTheme');
-	    }
-
-	    (0, _hoistNonReactStatics2.default)(WithTheme, Component);
-
-	    {
-	      // Exposed for test purposes.
-	      WithTheme.Naked = Component;
-	    }
-
-	    return WithTheme;
-	  };
-	};
-
-	exports.default = withTheme;
-	});
-
-	unwrapExports(withTheme_1$1);
-
-	var styles$7 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	Object.defineProperty(exports, 'createGenerateClassName', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(createGenerateClassName_1$1).default;
-	  }
-	});
-
-
-
-	Object.defineProperty(exports, 'createMuiTheme', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(createMuiTheme_1$1).default;
-	  }
-	});
-
-
-
-	Object.defineProperty(exports, 'jssPreset', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(jssPreset_1$1).default;
-	  }
-	});
-
-
-
-	Object.defineProperty(exports, 'MuiThemeProvider', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(MuiThemeProvider_1$1).default;
-	  }
-	});
-
-
-
-	Object.defineProperty(exports, 'withStyles', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(withStyles_1$1).default;
-	  }
-	});
-
-
-
-	Object.defineProperty(exports, 'withTheme', {
-	  enumerable: true,
-	  get: function get() {
-	    return _interopRequireDefault(withTheme_1$1).default;
-	  }
-	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	});
-
-	unwrapExports(styles$7);
-
 	var CssBaseline_1 = createCommonjsModule(function (module, exports) {
 
+
+
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.default = void 0;
+
+	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
 
 
 
-	var _getPrototypeOf2 = _interopRequireDefault(getPrototypeOf$2);
+	var _exactProp = interopRequireDefault(exactProp_1);
 
-
-
-	var _classCallCheck3 = _interopRequireDefault(classCallCheck$1);
-
-
-
-	var _createClass3 = _interopRequireDefault(createClass$1);
-
-
-
-	var _possibleConstructorReturn3 = _interopRequireDefault(possibleConstructorReturn$1);
-
-
-
-	var _inherits3 = _interopRequireDefault(inherits$1);
-
-
-
-	var _react2 = _interopRequireDefault(react);
-
-
-
-	var _propTypes2 = _interopRequireDefault(propTypes);
-
-
-
-
-
-	var _exactProp2 = _interopRequireDefault(exactProp_1$1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var styles = function styles(theme) {
+	var styles$$1 = function styles$$1(theme) {
 	  return {
 	    '@global': {
 	      html: {
-	        WebkitFontSmoothing: 'antialiased', // Antialiasing.
-	        MozOsxFontSmoothing: 'grayscale', // Antialiasing.
+	        WebkitFontSmoothing: 'antialiased',
+	        // Antialiasing.
+	        MozOsxFontSmoothing: 'grayscale',
+	        // Antialiasing.
 	        // Change from `box-sizing: content-box` so that `width`
 	        // is not affected by `padding` or `border`.
 	        boxSizing: 'border-box'
@@ -49018,7 +46679,8 @@
 	        boxSizing: 'inherit'
 	      },
 	      body: {
-	        margin: 0, // Remove the margin in all browsers.
+	        margin: 0,
+	        // Remove the margin in all browsers.
 	        backgroundColor: theme.palette.background.default,
 	        '@media print': {
 	          // Save printer ink.
@@ -49028,71 +46690,75 @@
 	    }
 	  };
 	};
-
 	/**
 	 * Kickstart an elegant, consistent, and simple baseline to build upon.
 	 */
 
-	var CssBaseline = function (_React$Component) {
-	  (0, _inherits3.default)(CssBaseline, _React$Component);
+
+	var CssBaseline =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(CssBaseline, _React$Component);
 
 	  function CssBaseline() {
-	    (0, _classCallCheck3.default)(this, CssBaseline);
-	    return (0, _possibleConstructorReturn3.default)(this, (CssBaseline.__proto__ || (0, _getPrototypeOf2.default)(CssBaseline)).apply(this, arguments));
+	    (0, _classCallCheck2.default)(this, CssBaseline);
+	    return (0, _possibleConstructorReturn2.default)(this, (CssBaseline.__proto__ || (0, _getPrototypeOf.default)(CssBaseline)).apply(this, arguments));
 	  }
 
-	  (0, _createClass3.default)(CssBaseline, [{
-	    key: 'render',
+	  (0, _createClass2.default)(CssBaseline, [{
+	    key: "render",
 	    value: function render() {
 	      return this.props.children;
 	    }
 	  }]);
 	  return CssBaseline;
-	}(_react2.default.Component);
+	}(_react.default.Component);
 
 	CssBaseline.propTypes = {
 	  /**
-	   * You can only provide a single element with react@15, a node with react@16.
+	   * You can wrap a node.
 	   */
-	  children: _propTypes2.default.node,
+	  children: _propTypes.default.node,
+
 	  /**
 	   * @ignore
 	   */
-	  classes: _propTypes2.default.object.isRequired
+	  classes: _propTypes.default.object.isRequired
 	};
-
-	CssBaseline.propTypes = (0, _exactProp2.default)(CssBaseline.propTypes, 'CssBaseline');
-
+	CssBaseline.propTypes = (0, _exactProp.default)(CssBaseline.propTypes, 'CssBaseline');
 	CssBaseline.defaultProps = {
 	  children: null
 	};
 
-	exports.default = (0, styles$7.withStyles)(styles, { name: 'MuiCssBaseline' })(CssBaseline);
+	var _default = (0, styles.withStyles)(styles$$1, {
+	  name: 'MuiCssBaseline'
+	})(CssBaseline);
+
+	exports.default = _default;
 	});
 
 	unwrapExports(CssBaseline_1);
 
 	var CssBaseline$1 = createCommonjsModule(function (module, exports) {
 
+
+
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-
-
-	Object.defineProperty(exports, 'default', {
+	Object.defineProperty(exports, "default", {
 	  enumerable: true,
 	  get: function get() {
-	    return _interopRequireDefault(CssBaseline_1).default;
+	    return _CssBaseline.default;
 	  }
 	});
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _CssBaseline = interopRequireDefault(CssBaseline_1);
 	});
 
 	var CssBaseline$2 = unwrapExports(CssBaseline$1);
 
-	const styles$8 = {
+	const styles$7 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -49138,9 +46804,9 @@
 	  };
 	};
 
-	const enhance$3 = compose$1(styles_3(styles$8), connect(mapStateToProps$1))(BalanceCard);
+	const enhance$3 = compose$1(styles_3(styles$7), connect(mapStateToProps$1))(BalanceCard);
 
-	const styles$9 = {
+	const styles$8 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -49185,9 +46851,9 @@
 	  };
 	};
 
-	const enhance$4 = compose$1(styles_3(styles$9), connect(mapStateToProps$2))(CpusCard);
+	const enhance$4 = compose$1(styles_3(styles$8), connect(mapStateToProps$2))(CpusCard);
 
-	const styles$10 = {
+	const styles$9 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -49234,9 +46900,9 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$10), connect(mapStateToProps$3))(GpusCard);
+	const enhance$5 = compose$1(styles_3(styles$9), connect(mapStateToProps$3))(GpusCard);
 
-	const styles$11 = {
+	const styles$10 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -49276,9 +46942,9 @@
 	  };
 	};
 
-	const enhance$6 = compose$1(styles_3(styles$11), connect(mapStateToProps$4))(HashRateCard);
+	const enhance$6 = compose$1(styles_3(styles$10), connect(mapStateToProps$4))(HashRateCard);
 
-	const styles$12 = {
+	const styles$11 = {
 	  container: {
 	    margin: 4,
 	    display: 'inline-block'
@@ -49317,9 +46983,9 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$7 = styles_3(styles$12)(ActionButton);
+	const enhance$7 = styles_3(styles$11)(ActionButton);
 
-	const styles$13 = {
+	const styles$12 = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -49366,9 +47032,9 @@
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$13), connect(mapStateToProps$5, mapDispatchToProps$1))(CryptoButton);
+	const enhance$8 = compose$1(styles_3(styles$12), connect(mapStateToProps$5, mapDispatchToProps$1))(CryptoButton);
 
-	const styles$14 = {
+	const styles$13 = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -49442,9 +47108,9 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$14), connect(mapStateToProps$6, mapDispatchToProps$2))(MiningButton);
+	const enhance$9 = compose$1(styles_3(styles$13), connect(mapStateToProps$6, mapDispatchToProps$2))(MiningButton);
 
-	const styles$15 = {
+	const styles$14 = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -49478,9 +47144,9 @@
 	  };
 	};
 
-	const enhance$10 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$3))(SettingsButton);
+	const enhance$10 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$3))(SettingsButton);
 
-	const styles$16 = {
+	const styles$15 = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -49514,9 +47180,9 @@
 	  };
 	};
 
-	const enhance$11 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$4))(StatsButton);
+	const enhance$11 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$4))(StatsButton);
 
-	const styles$17 = {
+	const styles$16 = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -49550,9 +47216,9 @@
 	  };
 	};
 
-	const enhance$12 = compose$1(styles_3(styles$17), connect(null, mapDispatchToProps$5))(SupportButton);
+	const enhance$12 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$5))(SupportButton);
 
-	const styles$18 = {
+	const styles$17 = {
 	  center: {
 	    textAlign: 'center'
 	  }
@@ -49573,7 +47239,7 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$13 = styles_3(styles$18)(Actions);
+	const enhance$13 = styles_3(styles$17)(Actions);
 
 	class CryptoDialog extends react_2 {
 	  constructor(...args) {
@@ -49825,7 +47491,7 @@
 
 	}
 
-	const styles$19 = {
+	const styles$18 = {
 	  container: {
 	    margin: 16
 	  }
@@ -49864,7 +47530,7 @@
 	  };
 	};
 
-	const enhance$18 = compose$1(styles_3(styles$19), connect(mapStateToProps$11))(Notifications);
+	const enhance$18 = compose$1(styles_3(styles$18), connect(mapStateToProps$11))(Notifications);
 
 	class MiningPage extends react_2 {
 	  render() {

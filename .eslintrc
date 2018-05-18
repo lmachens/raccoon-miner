@@ -15,7 +15,8 @@
     "plugin:react/recommended"
   ],
   "globals": {
-    "overwolf": true
+    "overwolf": true,
+    "Raven": true
   },
   "parserOptions": {
     "sourceType": "module",

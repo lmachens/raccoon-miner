@@ -97,7 +97,6 @@ const fetchWorkerStats = () => {
     fetch(api(address))
       .then(response => response.json())
       .then(result => {
-        console.log(minerIdentifier, result);
         dispatch({
           type: RECEIVE_WORKER_STATS,
           data: {

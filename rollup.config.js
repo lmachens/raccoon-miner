@@ -13,7 +13,6 @@ export default [
     },
     plugins: [
       replace({
-        'process.env.__REDUX_LOGGER__': false,
         'process.env.NODE_ENV': JSON.stringify('development'), // needed by react
         'process.env.__APP_PATH__': JSON.stringify(`${process.cwd()}/dist/dev`.replace(/\\/g, '/')),
         'process.env.__LISTEN_TO_FILES__': JSON.stringify(['main.js']),

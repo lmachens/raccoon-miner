@@ -26,7 +26,7 @@
     "@babel/plugin-proposal-class-properties": "7.0.0-beta.47",
     "@babel/preset-env": "7.0.0-beta.47",
     "@babel/preset-react": "7.0.0-beta.47",
-    "@storybook/react": "3.4.4",
+    "@storybook/react": "3.4.5",
     "archiver": "2.1.1",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "8.2.3",

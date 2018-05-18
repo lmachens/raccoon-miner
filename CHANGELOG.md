@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0"></a>
+# [0.1.0](https://github.com/lmachens/raccoon-miner/compare/v0.0.2...v0.1.0) (2018-05-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.0.0 ([#9](https://github.com/lmachens/raccoon-miner/issues/9)) ([2fb1965](https://github.com/lmachens/raccoon-miner/commit/2fb1965))
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/icons to v1.0.0 ([#10](https://github.com/lmachens/raccoon-miner/issues/10)) ([87106a7](https://github.com/lmachens/raccoon-miner/commit/87106a7))
+
+
+### Features
+
+* **monitoring:** add sentry/Raven for issue tracking ([#12](https://github.com/lmachens/raccoon-miner/issues/12)) ([34d85de](https://github.com/lmachens/raccoon-miner/commit/34d85de))
+
+
+
 <a name="0.0.2"></a>
 ## 0.0.2 (2018-05-17)
 

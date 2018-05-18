@@ -1,4 +1,4 @@
-import { Button, DialogContentText, FullScreenDialog, Link } from '../generic';
+import { DialogContentText, FullScreenDialog, Link } from '../generic';
 import React, { PureComponent } from 'react';
 
 import PropTypes from 'prop-types';
@@ -12,12 +12,10 @@ class StatsDialog extends PureComponent {
     return (
       <FullScreenDialog open={open} title="Stats">
         <DialogContentText>
-          I want to fetch more data from the mining pools dashboard and explain it here.
-          <p>
-            <Link to={miner.links.stats(address)}>
-              <Button>Open Pool Stats</Button>
-            </Link>
-          </p>
+          A mining pool is the pooling of resources by miners, who share their processing power over
+          a network, to split the reward equally, according to the amount of work they contributed
+          to the probability of finding a block.{' '}
+          <Link to={miner.links.stats(address)}>Open Pool Stats</Link>
         </DialogContentText>
       </FullScreenDialog>
     );

@@ -47416,9 +47416,9 @@
 	    return react.createElement(enhanced, {
 	      open: open,
 	      title: "Stats"
-	    }, react.createElement(DialogContentText$2, null, "I want to fetch more data from the mining pools dashboard and explain it here.", react.createElement("p", null, react.createElement(LinkEnhanced, {
+	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block.", ' ', react.createElement(LinkEnhanced, {
 	      to: miner.links.stats(address)
-	    }, react.createElement(Button$2, null, "Open Pool Stats")))));
+	    }, "Open Pool Stats")));
 	  }
 
 	}

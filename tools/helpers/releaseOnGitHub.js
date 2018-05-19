@@ -32,8 +32,8 @@ const releaseOnGitHub = ({ filename, gitHubReleaseToken, version }, callback) =>
               token: [gitHubReleaseToken],
               assets: [filename]
             },
-            (err, assets) => {
-              console.log(assets);
+            error => {
+              if (error) console.error(error);
               callback();
             }
           );

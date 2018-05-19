@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/lmachens/raccoon-miner/compare/v0.1.0...v0.2.0) (2018-05-19)
+
+
+### Bug Fixes
+
+* **deps:** pin dependency raven-for-redux to v1.3.1 ([#13](https://github.com/lmachens/raccoon-miner/issues/13)) ([4fffe37](https://github.com/lmachens/raccoon-miner/commit/4fffe37))
+
+
+### Features
+
+* **settings:** add menu and prepare settings ([#16](https://github.com/lmachens/raccoon-miner/issues/16)) ([7d18f89](https://github.com/lmachens/raccoon-miner/commit/7d18f89))
+* **support:** add faq ([#17](https://github.com/lmachens/raccoon-miner/issues/17)) ([cb49aa8](https://github.com/lmachens/raccoon-miner/commit/cb49aa8))
+
+
+
 <a name="0.1.0"></a>
 # [0.1.0](https://github.com/lmachens/raccoon-miner/compare/v0.0.2...v0.1.0) (2018-05-18)
 

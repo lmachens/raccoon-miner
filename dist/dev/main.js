@@ -627,6 +627,7 @@
 	const OPEN_SETTINGS_DIALOG = 'OPEN_SETTINGS_DIALOG';
 	const OPEN_STATS_DIALOG = 'OPEN_STATS_DIALOG';
 	const OPEN_SUPPORT_DIALOG = 'OPEN_SUPPORT_DIALOG';
+	const SET_SETTINGS_DIALOG_TAB = 'SET_SETTINGS_DIALOG_TAB';
 
 	const RECEIVE_HARDWARE_INFO = 'RECEIVE_HARDWARE_INFO';
 
@@ -680,6 +681,14 @@
 	  return dispatch => {
 	    dispatch({
 	      type: OPEN_SUPPORT_DIALOG
+	    });
+	  };
+	};
+	const setSettingsDialogTab = tab => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_SETTINGS_DIALOG_TAB,
+	      data: tab
 	    });
 	  };
 	};
@@ -3102,265 +3111,38 @@
 	  return newState;
 	};
 
-	const closeAllState = {
-	  cryptoDialogOpen: false,
-	  settingsDialogOpen: false,
-	  statsDialogOpen: false,
-	  supportDialogOpen: false
-	};
-	const dialogs = (state = {
-	  cryptoDialogOpen: false,
-	  settingsDialogOpen: false,
-	  statsDialogOpen: false,
-	  supportDialogOpen: false
-	}, {
-	  type
-	}) => {
-	  switch (type) {
-	    case CLOSE_DIALOG:
-	      return { ...closeAllState
-	      };
-
-	    case OPEN_CRYPTO_DIALOG:
-	      return { ...closeAllState,
-	        cryptoDialogOpen: true
-	      };
-
-	    case OPEN_SETTINGS_DIALOG:
-	      return { ...closeAllState,
-	        settingsDialogOpen: true
-	      };
-
-	    case OPEN_STATS_DIALOG:
-	      return { ...closeAllState,
-	        statsDialogOpen: true
-	      };
-
-	    case OPEN_SUPPORT_DIALOG:
-	      return { ...closeAllState,
-	        supportDialogOpen: true
-	      };
-
-	    default:
-	      return state;
-	  }
-	};
-
-	const hardwareInfo = (state = {
-	  BatteriesInfo: [],
-	  Cpus: [],
-	  General: {},
-	  Gpus: {
-	    Gpus: []
-	  },
-	  Hdds: [],
-	  Mainboard: {},
-	  Memory: {},
-	  Nics: []
-	}, {
-	  type,
-	  data
-	}) => {
-	  switch (type) {
-	    case RECEIVE_HARDWARE_INFO:
-	      return { ...data
-	      };
-
-	    default:
-	      return state;
-	  }
-	};
-
-	const notifications = (state = {
-	  currentNotification: TEST_MODE,
-	  pastNotifications: []
-	}, {
-	  type,
-	  notification
-	}) => {
-	  switch (type) {
-	    case SET_NOTIFICATION:
-	      if (get_1(state, 'currentNotification._id') === notification._id) return state;
-	      return {
-	        currentNotification: notification,
-	        pastNotifications: [state.currentNotification, ...state.pastNotifications]
-	      };
-
-	    case UNSET_NOTIFICATION:
-	      return {
-	        currentNotification: null,
-	        pastNotifications: [state.currentNotification, ...state.pastNotifications]
-	      };
-
-	    default:
-	      return state;
-	  }
-	};
-
-	const utilities = (state = {
-	  overwolfUser: null,
-	  version: ''
-	}, {
-	  type,
-	  data
-	}) => {
-	  switch (type) {
-	    case RECEIVE_OVERWOLF_USER:
-	      return { ...state,
-	        overwolfUser: data
-	      };
-
-	    case RECEIVE_VERSION:
-	      return { ...state,
-	        version: data
-	      };
-
-	    default:
-	      return state;
-	  }
-	};
-
-	const reducers = combineReducers({
-	  dialogs,
-	  hardwareInfo,
-	  mining,
-	  activeMiners,
-	  notifications,
-	  utilities
-	});
-
-	var getStorage_1 = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	exports.default = getStorage;
-
-
-	function noop() {}
-
-	var noopStorage = {
-	  getItem: noop,
-	  setItem: noop,
-	  removeItem: noop
-	};
-
-	function hasStorage(storageType) {
-	  if ((typeof self === 'undefined' ? 'undefined' : _typeof(self)) !== 'object' || !(storageType in self)) {
-	    return false;
+	function _defineProperty$1(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
 	  }
 
-	  try {
-	    var storage = self[storageType];
-	    var testKey = 'redux-persist ' + storageType + ' test';
-	    storage.setItem(testKey, 'test');
-	    storage.getItem(testKey);
-	    storage.removeItem(testKey);
-	  } catch (e) {
-	    console.warn('redux-persist ' + storageType + ' test failed, persistence will be disabled.');
-	    return false;
-	  }
-	  return true;
+	  return obj;
 	}
 
-	function getStorage(type) {
-	  var storageType = type + 'Storage';
-	  if (hasStorage(storageType)) return self[storageType];else {
-	    {
-	      console.error('redux-persist failed to create sync storage. falling back to memory storage.');
-	    }
-	    return noopStorage;
-	  }
-	}
-	});
+	function _extends$5() {
+	  _extends$5 = Object.assign || function (target) {
+	    for (var i = 1; i < arguments.length; i++) {
+	      var source = arguments[i];
 
-	unwrapExports(getStorage_1);
-
-	var createWebStorage_1 = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-	exports.default = createWebStorage;
-
-
-
-	var _getStorage2 = _interopRequireDefault(getStorage_1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function createWebStorage(type) {
-	  var storage = (0, _getStorage2.default)(type);
-	  return {
-	    getItem: function getItem(key) {
-	      return new Promise(function (resolve, reject) {
-	        resolve(storage.getItem(key));
-	      });
-	    },
-	    setItem: function setItem(key, item) {
-	      return new Promise(function (resolve, reject) {
-	        resolve(storage.setItem(key, item));
-	      });
-	    },
-	    removeItem: function removeItem(key) {
-	      return new Promise(function (resolve, reject) {
-	        resolve(storage.removeItem(key));
-	      });
-	    }
-	  };
-	}
-	});
-
-	unwrapExports(createWebStorage_1);
-
-	var storage = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-
-
-	var _createWebStorage2 = _interopRequireDefault(createWebStorage_1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = (0, _createWebStorage2.default)('local');
-	});
-
-	var storage$1 = unwrapExports(storage);
-
-	function createThunkMiddleware(extraArgument) {
-	  return function (_ref) {
-	    var dispatch = _ref.dispatch,
-	        getState = _ref.getState;
-	    return function (next) {
-	      return function (action) {
-	        if (typeof action === 'function') {
-	          return action(dispatch, getState, extraArgument);
+	      for (var key in source) {
+	        if (Object.prototype.hasOwnProperty.call(source, key)) {
+	          target[key] = source[key];
 	        }
+	      }
+	    }
 
-	        return next(action);
-	      };
-	    };
+	    return target;
 	  };
+
+	  return _extends$5.apply(this, arguments);
 	}
-
-	var thunk = createThunkMiddleware();
-	thunk.withExtraArgument = createThunkMiddleware;
-
-	Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
-	const persistConfig = {
-	  key: 'root',
-	  storage: storage$1,
-	  blacklist: ['activeMiners', 'hardwareInfo']
-	};
-	const persistedReducer = persistReducer(persistConfig, reducers);
-	const createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
-	const store = createStoreWithMiddleware(persistedReducer);
-	const persistor = persistStore(store, null, () => {
-	  store.dispatch(fetchOverwolfUser());
-	  store.dispatch(fetchVersion());
-	  store.dispatch(trackHardwareInfo());
-	  store.dispatch(trackWorkerStats());
-	});
 
 	var interopRequireDefault = createCommonjsModule(function (module) {
 	function _interopRequireDefault(obj) {
@@ -3630,9 +3412,9 @@
 	};
 
 	var SHARED = '__core-js_shared__';
-	var store$1 = _global[SHARED] || (_global[SHARED] = {});
+	var store = _global[SHARED] || (_global[SHARED] = {});
 	var _shared = function (key) {
-	  return store$1[key] || (store$1[key] = {});
+	  return store[key] || (store[key] = {});
 	};
 
 	var id = 0;
@@ -3769,7 +3551,7 @@
 
 	var defineProperty$2 = defineProperty$1;
 
-	function _defineProperty$1(obj, key, value) {
+	function _defineProperty$2(obj, key, value) {
 	  if (key in obj) {
 	    defineProperty$2(obj, key, {
 	      value: value,
@@ -3784,7 +3566,7 @@
 	  return obj;
 	}
 
-	var defineProperty$3 = _defineProperty$1;
+	var defineProperty$3 = _defineProperty$2;
 
 	var _redefine = _hide;
 
@@ -4276,7 +4058,7 @@
 
 	var keys$1 = keys;
 
-	function _objectWithoutProperties$1(source, excluded) {
+	function _objectWithoutProperties$2(source, excluded) {
 	  if (source == null) return {};
 	  var target = {};
 
@@ -4304,7 +4086,7 @@
 	  return target;
 	}
 
-	var objectWithoutProperties = _objectWithoutProperties$1;
+	var objectWithoutProperties = _objectWithoutProperties$2;
 
 	/*
 	object-assign
@@ -6682,7 +6464,7 @@
 
 	unwrapExports(interopRequireWildcard);
 
-	function _objectSpread(target) {
+	function _objectSpread$1(target) {
 	  for (var i = 1; i < arguments.length; i++) {
 	    var source = arguments[i] != null ? arguments[i] : {};
 
@@ -6702,7 +6484,7 @@
 	  return target;
 	}
 
-	var objectSpread = _objectSpread;
+	var objectSpread = _objectSpread$1;
 
 	// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 
@@ -6732,15 +6514,15 @@
 
 	var getPrototypeOf$1 = getPrototypeOf;
 
-	function _classCallCheck(instance, Constructor) {
+	function _classCallCheck$1(instance, Constructor) {
 	  if (!(instance instanceof Constructor)) {
 	    throw new TypeError("Cannot call a class as a function");
 	  }
 	}
 
-	var classCallCheck = _classCallCheck;
+	var classCallCheck = _classCallCheck$1;
 
-	function _defineProperties(target, props) {
+	function _defineProperties$1(target, props) {
 	  for (var i = 0; i < props.length; i++) {
 	    var descriptor = props[i];
 	    descriptor.enumerable = descriptor.enumerable || false;
@@ -6751,13 +6533,13 @@
 	  }
 	}
 
-	function _createClass(Constructor, protoProps, staticProps) {
-	  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-	  if (staticProps) _defineProperties(Constructor, staticProps);
+	function _createClass$1(Constructor, protoProps, staticProps) {
+	  if (protoProps) _defineProperties$1(Constructor.prototype, protoProps);
+	  if (staticProps) _defineProperties$1(Constructor, staticProps);
 	  return Constructor;
 	}
 
-	var createClass = _createClass;
+	var createClass = _createClass$1;
 
 	// true  -> String#at
 	// false -> String#codePointAt
@@ -6942,7 +6724,7 @@
 	module.exports = _typeof;
 	});
 
-	function _assertThisInitialized(self) {
+	function _assertThisInitialized$1(self) {
 	  if (self === void 0) {
 	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
 	  }
@@ -6950,9 +6732,9 @@
 	  return self;
 	}
 
-	var assertThisInitialized = _assertThisInitialized;
+	var assertThisInitialized = _assertThisInitialized$1;
 
-	function _possibleConstructorReturn(self, call) {
+	function _possibleConstructorReturn$1(self, call) {
 	  if (call && (_typeof_1(call) === "object" || typeof call === "function")) {
 	    return call;
 	  }
@@ -6960,7 +6742,7 @@
 	  return assertThisInitialized(self);
 	}
 
-	var possibleConstructorReturn = _possibleConstructorReturn;
+	var possibleConstructorReturn = _possibleConstructorReturn$1;
 
 	// Works with __proto__ only. Old v8 can't work with null proto objects.
 	/* eslint-disable no-proto */
@@ -7009,7 +6791,7 @@
 	module.exports = _setPrototypeOf;
 	});
 
-	function _inherits(subClass, superClass) {
+	function _inherits$1(subClass, superClass) {
 	  if (typeof superClass !== "function" && superClass !== null) {
 	    throw new TypeError("Super expression must either be null or a function");
 	  }
@@ -7018,7 +6800,7 @@
 	  if (superClass) setPrototypeOf$2(subClass, superClass);
 	}
 
-	var inherits = _inherits;
+	var inherits = _inherits$1;
 
 	var _redefineAll = function (target, src, safe) {
 	  for (var key in src) {
@@ -9058,9 +8840,9 @@
 
 	unwrapExports(createGenerateClassName);
 
-	var _typeof$3 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+	var _typeof$4 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-	var isBrowser = (typeof window === "undefined" ? "undefined" : _typeof$3(window)) === "object" && (typeof document === "undefined" ? "undefined" : _typeof$3(document)) === 'object' && document.nodeType === 9;
+	var isBrowser = (typeof window === "undefined" ? "undefined" : _typeof$4(window)) === "object" && (typeof document === "undefined" ? "undefined" : _typeof$4(document)) === 'object' && document.nodeType === 9;
 
 	var module$1 = /*#__PURE__*/Object.freeze({
 		isBrowser: isBrowser,
@@ -11629,10 +11411,10 @@
 
 	// see https://github.com/facebook/react/blob/b5ac963fb791d1298e7f396236383bc955f916c1/src/isomorphic/classic/element/ReactElement.js#L21-L25
 	var canUseSymbol = typeof Symbol === 'function' && Symbol.for;
-	var REACT_ELEMENT_TYPE = canUseSymbol ? Symbol.for('react.element') : 0xeac7;
+	var REACT_ELEMENT_TYPE$1 = canUseSymbol ? Symbol.for('react.element') : 0xeac7;
 
 	function isReactElement(value) {
-		return value.$$typeof === REACT_ELEMENT_TYPE
+		return value.$$typeof === REACT_ELEMENT_TYPE$1
 	}
 
 	function emptyTarget(val) {
@@ -31269,7 +31051,7 @@
 	var focusVisible_1 = focusVisible.detectFocusVisible;
 	var focusVisible_2 = focusVisible.listenForFocusKeys;
 
-	function _arrayWithoutHoles(arr) {
+	function _arrayWithoutHoles$1(arr) {
 	  if (Array.isArray(arr)) {
 	    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
 	      arr2[i] = arr[i];
@@ -31279,7 +31061,7 @@
 	  }
 	}
 
-	var arrayWithoutHoles = _arrayWithoutHoles;
+	var arrayWithoutHoles = _arrayWithoutHoles$1;
 
 	var _createProperty = function (object, index, value) {
 	  if (index in object) _objectDp.f(object, index, _propertyDesc(0, value));
@@ -31353,23 +31135,23 @@
 
 	var isIterable$1 = isIterable;
 
-	function _iterableToArray(iter) {
+	function _iterableToArray$1(iter) {
 	  if (isIterable$1(Object(iter)) || Object.prototype.toString.call(iter) === "[object Arguments]") return from$1(iter);
 	}
 
-	var iterableToArray = _iterableToArray;
+	var iterableToArray = _iterableToArray$1;
 
-	function _nonIterableSpread() {
+	function _nonIterableSpread$1() {
 	  throw new TypeError("Invalid attempt to spread non-iterable instance");
 	}
 
-	var nonIterableSpread = _nonIterableSpread;
+	var nonIterableSpread = _nonIterableSpread$1;
 
-	function _toConsumableArray$1(arr) {
+	function _toConsumableArray$2(arr) {
 	  return arrayWithoutHoles(arr) || iterableToArray(arr) || nonIterableSpread();
 	}
 
-	var toConsumableArray = _toConsumableArray$1;
+	var toConsumableArray = _toConsumableArray$2;
 
 	var ChildMapping = createCommonjsModule(function (module, exports) {
 
@@ -34602,39 +34384,6 @@
 	});
 
 	var SettingsIcon = unwrapExports(Settings);
-
-	function _defineProperty$2(obj, key, value) {
-	  if (key in obj) {
-	    Object.defineProperty(obj, key, {
-	      value: value,
-	      enumerable: true,
-	      configurable: true,
-	      writable: true
-	    });
-	  } else {
-	    obj[key] = value;
-	  }
-
-	  return obj;
-	}
-
-	function _extends$5() {
-	  _extends$5 = Object.assign || function (target) {
-	    for (var i = 1; i < arguments.length; i++) {
-	      var source = arguments[i];
-
-	      for (var key in source) {
-	        if (Object.prototype.hasOwnProperty.call(source, key)) {
-	          target[key] = source[key];
-	        }
-	      }
-	    }
-
-	    return target;
-	  };
-
-	  return _extends$5.apply(this, arguments);
-	}
 
 	var IconButton_1 = createCommonjsModule(function (module, exports) {
 
@@ -38755,17 +38504,17 @@
 	  constructor(...args) {
 	    var _temp;
 
-	    return _temp = super(...args), _defineProperty$2(this, "state", {
+	    return _temp = super(...args), _defineProperty$1(this, "state", {
 	      open: false
-	    }), _defineProperty$2(this, "handleClickButton", () => {
+	    }), _defineProperty$1(this, "handleClickButton", () => {
 	      this.setState({
 	        open: true
 	      });
-	    }), _defineProperty$2(this, "handleClose", () => {
+	    }), _defineProperty$1(this, "handleClose", () => {
 	      this.setState({
 	        open: false
 	      });
-	    }), _defineProperty$2(this, "anchorEl", null), _temp;
+	    }), _defineProperty$1(this, "anchorEl", null), _temp;
 	  }
 
 	  render() {
@@ -39469,6 +39218,933 @@
 	});
 
 	var DialogContent$2 = unwrapExports(DialogContent$1);
+
+	var reactHelpers = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.cloneElementWithClassName = cloneElementWithClassName;
+	exports.cloneChildrenWithClassName = cloneChildrenWithClassName;
+	exports.isMuiElement = isMuiElement;
+	exports.isMuiComponent = isMuiComponent;
+
+	var _react = interopRequireDefault(react);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	/* eslint-disable import/prefer-default-export */
+	function cloneElementWithClassName(child, className) {
+	  return _react.default.cloneElement(child, {
+	    className: (0, _classnames.default)(child.props.className, className)
+	  });
+	}
+
+	function cloneChildrenWithClassName(children, className) {
+	  return _react.default.Children.map(children, function (child) {
+	    return _react.default.isValidElement(child) && cloneElementWithClassName(child, className);
+	  });
+	}
+
+	function isMuiElement(element, muiNames) {
+	  return _react.default.isValidElement(element) && muiNames.indexOf(element.type.muiName) !== -1;
+	}
+
+	function isMuiComponent(element, muiNames) {
+	  return muiNames.indexOf(element.muiName) !== -1;
+	}
+	});
+
+	unwrapExports(reactHelpers);
+	var reactHelpers_1 = reactHelpers.cloneElementWithClassName;
+	var reactHelpers_2 = reactHelpers.cloneChildrenWithClassName;
+	var reactHelpers_3 = reactHelpers.isMuiElement;
+	var reactHelpers_4 = reactHelpers.isMuiComponent;
+
+	var ListItem_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _objectSpread2 = interopRequireDefault(objectSpread);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$3);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+	var _ButtonBase = interopRequireDefault(ButtonBase$1);
+
+
+
+	var styles = function styles(theme) {
+	  return {
+	    root: {
+	      display: 'flex',
+	      justifyContent: 'flex-start',
+	      alignItems: 'center',
+	      position: 'relative',
+	      textDecoration: 'none',
+	      width: '100%',
+	      boxSizing: 'border-box',
+	      textAlign: 'left'
+	    },
+	    container: {
+	      position: 'relative'
+	    },
+	    focusVisible: {
+	      backgroundColor: theme.palette.action.hover
+	    },
+	    default: {
+	      paddingTop: 12,
+	      paddingBottom: 12
+	    },
+	    dense: {
+	      paddingTop: theme.spacing.unit,
+	      paddingBottom: theme.spacing.unit
+	    },
+	    disabled: {
+	      opacity: 0.5
+	    },
+	    divider: {
+	      borderBottom: "1px solid ".concat(theme.palette.divider),
+	      backgroundClip: 'padding-box'
+	    },
+	    gutters: theme.mixins.gutters(),
+	    button: {
+	      transition: theme.transitions.create('background-color', {
+	        duration: theme.transitions.duration.shortest
+	      }),
+	      '&:hover': {
+	        textDecoration: 'none',
+	        backgroundColor: theme.palette.action.hover,
+	        // Reset on touch devices, it doesn't add specificity
+	        '@media (hover: none)': {
+	          backgroundColor: 'transparent'
+	        }
+	      }
+	    },
+	    secondaryAction: {
+	      // Add some space to avoid collision as `ListItemSecondaryAction`
+	      // is absolutely positionned.
+	      paddingRight: theme.spacing.unit * 4
+	    }
+	  };
+	};
+
+	exports.styles = styles;
+
+	var ListItem =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(ListItem, _React$Component);
+
+	  function ListItem() {
+	    (0, _classCallCheck2.default)(this, ListItem);
+	    return (0, _possibleConstructorReturn2.default)(this, (ListItem.__proto__ || (0, _getPrototypeOf.default)(ListItem)).apply(this, arguments));
+	  }
+
+	  (0, _createClass2.default)(ListItem, [{
+	    key: "getChildContext",
+	    value: function getChildContext() {
+	      return {
+	        dense: this.props.dense || this.context.dense || false
+	      };
+	    }
+	  }, {
+	    key: "render",
+	    value: function render() {
+	      var _classNames;
+
+	      var _props = this.props,
+	          button = _props.button,
+	          childrenProp = _props.children,
+	          classes = _props.classes,
+	          classNameProp = _props.className,
+	          componentProp = _props.component,
+	          ContainerComponent = _props.ContainerComponent,
+	          _props$ContainerProps = _props.ContainerProps;
+	      _props$ContainerProps = _props$ContainerProps === void 0 ? {} : _props$ContainerProps;
+	      var ContainerClassName = _props$ContainerProps.className,
+	          ContainerProps = (0, _objectWithoutProperties2.default)(_props$ContainerProps, ["className"]),
+	          dense = _props.dense,
+	          disabled = _props.disabled,
+	          disableGutters = _props.disableGutters,
+	          divider = _props.divider,
+	          other = (0, _objectWithoutProperties2.default)(_props, ["button", "children", "classes", "className", "component", "ContainerComponent", "ContainerProps", "dense", "disabled", "disableGutters", "divider"]);
+	      var isDense = dense || this.context.dense || false;
+
+	      var children = _react.default.Children.toArray(childrenProp);
+
+	      var hasAvatar = children.some(function (value) {
+	        return (0, reactHelpers.isMuiElement)(value, ['ListItemAvatar']);
+	      });
+	      var hasSecondaryAction = children.length && (0, reactHelpers.isMuiElement)(children[children.length - 1], ['ListItemSecondaryAction']);
+	      var className = (0, _classnames.default)(classes.root, isDense || hasAvatar ? classes.dense : classes.default, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.gutters, !disableGutters), (0, _defineProperty2.default)(_classNames, classes.divider, divider), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.button, button), (0, _defineProperty2.default)(_classNames, classes.secondaryAction, hasSecondaryAction), _classNames), classNameProp);
+	      var componentProps = (0, _objectSpread2.default)({
+	        className: className,
+	        disabled: disabled
+	      }, other);
+	      var Component = componentProp || 'li';
+
+	      if (button) {
+	        componentProps.component = componentProp || 'div';
+	        componentProps.focusVisibleClassName = classes.focusVisible;
+	        Component = _ButtonBase.default;
+	      }
+
+	      if (hasSecondaryAction) {
+	        // Use div by default.
+	        Component = !componentProps.component && !componentProp ? 'div' : Component; // Avoid nesting of li > li.
+
+	        if (ContainerComponent === 'li') {
+	          if (Component === 'li') {
+	            Component = 'div';
+	          } else if (componentProps.component === 'li') {
+	            componentProps.component = 'div';
+	          }
+	        }
+
+	        return _react.default.createElement(ContainerComponent, (0, _extends2.default)({
+	          className: (0, _classnames.default)(classes.container, ContainerClassName)
+	        }, ContainerProps), _react.default.createElement(Component, componentProps, children), children.pop());
+	      }
+
+	      return _react.default.createElement(Component, componentProps, children);
+	    }
+	  }]);
+	  return ListItem;
+	}(_react.default.Component);
+
+	ListItem.propTypes = {
+	  /**
+	   * If `true`, the list item will be a button (using `ButtonBase`).
+	   */
+	  button: _propTypes.default.bool,
+
+	  /**
+	   * The content of the component.
+	   */
+	  children: _propTypes.default.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * The component used for the root node.
+	   * Either a string to use a DOM element or a component.
+	   * By default, it's a `li` when `button` is `false` and a `div` when `button` is `true`.
+	   */
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+
+	  /**
+	   * The container component used when a `ListItemSecondaryAction` is rendered.
+	   */
+	  ContainerComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+
+	  /**
+	   * Properties applied to the container element when the component
+	   * is used to display a `ListItemSecondaryAction`.
+	   */
+	  ContainerProps: _propTypes.default.object,
+
+	  /**
+	   * If `true`, compact vertical padding designed for keyboard and mouse input will be used.
+	   */
+	  dense: _propTypes.default.bool,
+
+	  /**
+	   * @ignore
+	   */
+	  disabled: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the left and right padding is removed.
+	   */
+	  disableGutters: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, a 1px light border is added to the bottom of the list item.
+	   */
+	  divider: _propTypes.default.bool
+	};
+	ListItem.defaultProps = {
+	  button: false,
+	  ContainerComponent: 'li',
+	  dense: false,
+	  disabled: false,
+	  disableGutters: false,
+	  divider: false
+	};
+	ListItem.contextTypes = {
+	  dense: _propTypes.default.bool
+	};
+	ListItem.childContextTypes = {
+	  dense: _propTypes.default.bool
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiListItem'
+	})(ListItem);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(ListItem_1);
+	var ListItem_2 = ListItem_1.styles;
+
+	var ListItem$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _ListItem.default;
+	  }
+	});
+
+	var _ListItem = interopRequireDefault(ListItem_1);
+	});
+
+	unwrapExports(ListItem$1);
+
+	var MenuItem_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$3);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _objectSpread2 = interopRequireDefault(objectSpread);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+	var _ListItem = interopRequireDefault(ListItem$1);
+
+	// @inheritedComponent ListItem
+	var styles = function styles(theme) {
+	  return {
+	    root: (0, _objectSpread2.default)({}, theme.typography.subheading, {
+	      height: theme.spacing.unit * 3,
+	      boxSizing: 'content-box',
+	      width: 'auto',
+	      overflow: 'hidden',
+	      textOverflow: 'ellipsis',
+	      whiteSpace: 'nowrap',
+	      paddingLeft: theme.spacing.unit * 2,
+	      paddingRight: theme.spacing.unit * 2,
+	      '&$selected': {
+	        backgroundColor: theme.palette.action.selected
+	      }
+	    }),
+	    selected: {}
+	  };
+	};
+
+	exports.styles = styles;
+
+	function MenuItem(props) {
+	  var classes = props.classes,
+	      className = props.className,
+	      component = props.component,
+	      selected = props.selected,
+	      role = props.role,
+	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component", "selected", "role"]);
+	  return _react.default.createElement(_ListItem.default, (0, _extends2.default)({
+	    button: true,
+	    role: role,
+	    tabIndex: -1,
+	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.selected, selected), className),
+	    component: component
+	  }, other));
+	}
+
+	MenuItem.propTypes = {
+	  /**
+	   * Menu item contents.
+	   */
+	  children: _propTypes.default.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * The component used for the root node.
+	   * Either a string to use a DOM element or a component.
+	   */
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+
+	  /**
+	   * @ignore
+	   */
+	  role: _propTypes.default.string,
+
+	  /**
+	   * Use to apply selected styling.
+	   */
+	  selected: _propTypes.default.bool
+	};
+	MenuItem.defaultProps = {
+	  component: 'li',
+	  role: 'menuitem',
+	  selected: false
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiMenuItem'
+	})(MenuItem);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(MenuItem_1);
+	var MenuItem_2 = MenuItem_1.styles;
+
+	var MenuItem$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _MenuItem.default;
+	  }
+	});
+
+	var _MenuItem = interopRequireDefault(MenuItem_1);
+	});
+
+	var MenuItem$2 = unwrapExports(MenuItem$1);
+
+	var List_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$3);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+	var styles = function styles(theme) {
+	  return {
+	    root: {
+	      listStyle: 'none',
+	      margin: 0,
+	      padding: 0,
+	      position: 'relative'
+	    },
+	    padding: {
+	      paddingTop: theme.spacing.unit,
+	      paddingBottom: theme.spacing.unit
+	    },
+	    dense: {
+	      paddingTop: theme.spacing.unit / 2,
+	      paddingBottom: theme.spacing.unit / 2
+	    },
+	    subheader: {
+	      paddingTop: 0
+	    }
+	  };
+	};
+
+	exports.styles = styles;
+
+	var List =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(List, _React$Component);
+
+	  function List() {
+	    (0, _classCallCheck2.default)(this, List);
+	    return (0, _possibleConstructorReturn2.default)(this, (List.__proto__ || (0, _getPrototypeOf.default)(List)).apply(this, arguments));
+	  }
+
+	  (0, _createClass2.default)(List, [{
+	    key: "getChildContext",
+	    value: function getChildContext() {
+	      return {
+	        dense: this.props.dense
+	      };
+	    }
+	  }, {
+	    key: "render",
+	    value: function render() {
+	      var _classNames;
+
+	      var _props = this.props,
+	          children = _props.children,
+	          classes = _props.classes,
+	          classNameProp = _props.className,
+	          Component = _props.component,
+	          dense = _props.dense,
+	          disablePadding = _props.disablePadding,
+	          subheader = _props.subheader,
+	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "component", "dense", "disablePadding", "subheader"]);
+	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.dense, dense && !disablePadding), (0, _defineProperty2.default)(_classNames, classes.padding, !disablePadding), (0, _defineProperty2.default)(_classNames, classes.subheader, subheader), _classNames), classNameProp);
+	      return _react.default.createElement(Component, (0, _extends2.default)({
+	        className: className
+	      }, other), subheader, children);
+	    }
+	  }]);
+	  return List;
+	}(_react.default.Component);
+
+	List.propTypes = {
+	  /**
+	   * The content of the component.
+	   */
+	  children: _propTypes.default.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * The component used for the root node.
+	   * Either a string to use a DOM element or a component.
+	   */
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+
+	  /**
+	   * If `true`, compact vertical padding designed for keyboard and mouse input will be used for
+	   * the list and list items. The property is available to descendant components as the
+	   * `dense` context.
+	   */
+	  dense: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, vertical padding will be removed from the list.
+	   */
+	  disablePadding: _propTypes.default.bool,
+
+	  /**
+	   * The content of the subheader, normally `ListSubheader`.
+	   */
+	  subheader: _propTypes.default.node
+	};
+	List.defaultProps = {
+	  component: 'ul',
+	  dense: false,
+	  disablePadding: false
+	};
+	List.childContextTypes = {
+	  dense: _propTypes.default.bool
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiList'
+	})(List);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(List_1);
+	var List_2 = List_1.styles;
+
+	var List$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _List.default;
+	  }
+	});
+
+	var _List = interopRequireDefault(List_1);
+	});
+
+	unwrapExports(List$1);
+
+	var MenuList_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _toConsumableArray2 = interopRequireDefault(toConsumableArray);
+
+	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _assertThisInitialized2 = interopRequireDefault(assertThisInitialized);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _reactDom = interopRequireDefault(reactDom);
+
+	var _keycode = interopRequireDefault(keycode);
+
+	var _contains = interopRequireDefault(contains);
+
+	var _activeElement = interopRequireDefault(activeElement_1);
+
+	var _ownerDocument = interopRequireDefault(ownerDocument_1);
+
+	var _List = interopRequireDefault(List$1);
+
+	// @inheritedComponent List
+	var MenuList =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(MenuList, _React$Component);
+
+	  function MenuList() {
+	    var _ref;
+
+	    var _temp, _this;
+
+	    (0, _classCallCheck2.default)(this, MenuList);
+
+	    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+	      args[_key] = arguments[_key];
+	    }
+
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = MenuList.__proto__ || (0, _getPrototypeOf.default)(MenuList)).call.apply(_ref, [this].concat(args))), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "state", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: {
+	        currentTabIndex: undefined
+	      }
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "list", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: undefined
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "selectedItem", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: undefined
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "blurTimer", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: undefined
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleBlur", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: function value(event) {
+	        _this.blurTimer = setTimeout(function () {
+	          if (_this.list) {
+	            var list = _reactDom.default.findDOMNode(_this.list);
+
+	            var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+
+	            if (!(0, _contains.default)(list, currentFocus)) {
+	              _this.resetTabIndex();
+	            }
+	          }
+	        }, 30);
+
+	        if (_this.props.onBlur) {
+	          _this.props.onBlur(event);
+	        }
+	      }
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleKeyDown", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: function value(event) {
+	        var list = _reactDom.default.findDOMNode(_this.list);
+
+	        var key = (0, _keycode.default)(event);
+	        var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+
+	        if ((key === 'up' || key === 'down') && (!currentFocus || currentFocus && !(0, _contains.default)(list, currentFocus))) {
+	          if (_this.selectedItem) {
+	            _reactDom.default.findDOMNode(_this.selectedItem).focus();
+	          } else {
+	            list.firstChild.focus();
+	          }
+	        } else if (key === 'down') {
+	          event.preventDefault();
+
+	          if (currentFocus.nextElementSibling) {
+	            currentFocus.nextElementSibling.focus();
+	          }
+	        } else if (key === 'up') {
+	          event.preventDefault();
+
+	          if (currentFocus.previousElementSibling) {
+	            currentFocus.previousElementSibling.focus();
+	          }
+	        }
+
+	        if (_this.props.onKeyDown) {
+	          _this.props.onKeyDown(event, key);
+	        }
+	      }
+	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleItemFocus", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: function value(event) {
+	        var list = _reactDom.default.findDOMNode(_this.list);
+
+	        if (list) {
+	          for (var i = 0; i < list.children.length; i += 1) {
+	            if (list.children[i] === event.currentTarget) {
+	              _this.setTabIndex(i);
+
+	              break;
+	            }
+	          }
+	        }
+	      }
+	    }), _temp));
+	  }
+
+	  (0, _createClass2.default)(MenuList, [{
+	    key: "componentDidMount",
+	    value: function componentDidMount() {
+	      this.resetTabIndex();
+	    }
+	  }, {
+	    key: "componentWillUnmount",
+	    value: function componentWillUnmount() {
+	      clearTimeout(this.blurTimer);
+	    }
+	  }, {
+	    key: "setTabIndex",
+	    value: function setTabIndex(index) {
+	      this.setState({
+	        currentTabIndex: index
+	      });
+	    }
+	  }, {
+	    key: "focus",
+	    value: function focus() {
+	      var currentTabIndex = this.state.currentTabIndex;
+
+	      var list = _reactDom.default.findDOMNode(this.list);
+
+	      if (!list || !list.children || !list.firstChild) {
+	        return;
+	      }
+
+	      if (currentTabIndex && currentTabIndex >= 0) {
+	        list.children[currentTabIndex].focus();
+	      } else {
+	        list.firstChild.focus();
+	      }
+	    }
+	  }, {
+	    key: "resetTabIndex",
+	    value: function resetTabIndex() {
+	      var list = _reactDom.default.findDOMNode(this.list);
+
+	      var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+	      var items = (0, _toConsumableArray2.default)(list.children);
+	      var currentFocusIndex = items.indexOf(currentFocus);
+
+	      if (currentFocusIndex !== -1) {
+	        return this.setTabIndex(currentFocusIndex);
+	      }
+
+	      if (this.selectedItem) {
+	        return this.setTabIndex(items.indexOf(_reactDom.default.findDOMNode(this.selectedItem)));
+	      }
+
+	      return this.setTabIndex(0);
+	    }
+	  }, {
+	    key: "render",
+	    value: function render() {
+	      var _this2 = this;
+
+	      var _props = this.props,
+	          children = _props.children,
+	          className = _props.className,
+	          onBlur = _props.onBlur,
+	          onKeyDown = _props.onKeyDown,
+	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "className", "onBlur", "onKeyDown"]);
+	      return _react.default.createElement(_List.default, (0, _extends2.default)({
+	        role: "menu",
+	        ref: function ref(node) {
+	          _this2.list = node;
+	        },
+	        className: className,
+	        onKeyDown: this.handleKeyDown,
+	        onBlur: this.handleBlur
+	      }, other), _react.default.Children.map(children, function (child, index) {
+	        if (!_react.default.isValidElement(child)) {
+	          return null;
+	        }
+
+	        return _react.default.cloneElement(child, {
+	          tabIndex: index === _this2.state.currentTabIndex ? 0 : -1,
+	          ref: child.props.selected ? function (node) {
+	            _this2.selectedItem = node;
+	          } : undefined,
+	          onFocus: _this2.handleItemFocus
+	        });
+	      }));
+	    }
+	  }]);
+	  return MenuList;
+	}(_react.default.Component);
+
+	MenuList.propTypes = {
+	  /**
+	   * MenuList contents, normally `MenuItem`s.
+	   */
+	  children: _propTypes.default.node,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * @ignore
+	   */
+	  onBlur: _propTypes.default.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onKeyDown: _propTypes.default.func
+	};
+	var _default = MenuList;
+	exports.default = _default;
+	});
+
+	unwrapExports(MenuList_1);
+
+	var MenuList$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _MenuList.default;
+	  }
+	});
+
+	var _MenuList = interopRequireDefault(MenuList_1);
+	});
+
+	var MenuList$2 = unwrapExports(MenuList$1);
 
 	var Toolbar_1 = createCommonjsModule(function (module, exports) {
 
@@ -40895,10 +41571,23 @@
 	  flex: {
 	    flex: 1
 	  },
+	  displayFlex: {
+	    display: 'flex'
+	  },
 	  content: {
+	    padding: 0,
+	    display: 'flex'
+	  },
+	  menu: {
+	    width: 120,
+	    background: '#fafafa'
+	  },
+	  children: {
+	    flex: 1,
 	    display: 'flex',
 	    flexDirection: 'column',
-	    marginTop: 8
+	    padding: 12,
+	    overflowY: 'auto'
 	  }
 	};
 
@@ -40909,6 +41598,7 @@
 	      children,
 	      closeDialog: closeDialog$$1,
 	      open,
+	      menuItems,
 	      title
 	    } = this.props;
 	    return react.createElement(Dialog$2, {
@@ -40926,7 +41616,11 @@
 	      onClick: closeDialog$$1
 	    }, "Done"))), react.createElement(DialogContent$2, {
 	      className: classes.content
-	    }, children));
+	    }, menuItems && react.createElement(MenuList$2, {
+	      className: classes.menu
+	    }, menuItems), react.createElement("div", {
+	      className: classes.children
+	    }, children)));
 	  }
 
 	}
@@ -40936,6 +41630,7 @@
 	  closeDialog: propTypes.func.isRequired,
 	  open: propTypes.bool.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired,
+	  menuItems: propTypes.array,
 	  title: propTypes.string.isRequired
 	};
 
@@ -42042,50 +42737,6 @@
 	var Input_4 = Input_1.isAdornedStart;
 	var Input_5 = Input_1.styles;
 
-	var reactHelpers = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.cloneElementWithClassName = cloneElementWithClassName;
-	exports.cloneChildrenWithClassName = cloneChildrenWithClassName;
-	exports.isMuiElement = isMuiElement;
-	exports.isMuiComponent = isMuiComponent;
-
-	var _react = interopRequireDefault(react);
-
-	var _classnames = interopRequireDefault(classnames);
-
-	/* eslint-disable import/prefer-default-export */
-	function cloneElementWithClassName(child, className) {
-	  return _react.default.cloneElement(child, {
-	    className: (0, _classnames.default)(child.props.className, className)
-	  });
-	}
-
-	function cloneChildrenWithClassName(children, className) {
-	  return _react.default.Children.map(children, function (child) {
-	    return _react.default.isValidElement(child) && cloneElementWithClassName(child, className);
-	  });
-	}
-
-	function isMuiElement(element, muiNames) {
-	  return _react.default.isValidElement(element) && muiNames.indexOf(element.type.muiName) !== -1;
-	}
-
-	function isMuiComponent(element, muiNames) {
-	  return muiNames.indexOf(element.muiName) !== -1;
-	}
-	});
-
-	unwrapExports(reactHelpers);
-	var reactHelpers_1 = reactHelpers.cloneElementWithClassName;
-	var reactHelpers_2 = reactHelpers.cloneChildrenWithClassName;
-	var reactHelpers_3 = reactHelpers.isMuiElement;
-	var reactHelpers_4 = reactHelpers.isMuiComponent;
-
 	var FormControl_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -42585,6 +43236,197 @@
 
 	unwrapExports(FormHelperText$1);
 	var FormHelperText_1$1 = FormHelperText$1.FormHelperText;
+
+	var FormControlLabel_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$3);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+	var _Typography = interopRequireDefault(Typography$1);
+
+	/* eslint-disable jsx-a11y/label-has-for */
+	var styles = function styles(theme) {
+	  return {
+	    root: {
+	      display: 'inline-flex',
+	      alignItems: 'center',
+	      cursor: 'pointer',
+	      // For correct alignment with the text.
+	      verticalAlign: 'middle',
+	      // Remove grey highlight
+	      WebkitTapHighlightColor: 'transparent',
+	      marginLeft: -14,
+	      marginRight: theme.spacing.unit * 2,
+	      // used for row presentation of radio/checkbox
+	      '&$disabled': {
+	        cursor: 'default'
+	      }
+	    },
+	    disabled: {},
+	    label: {
+	      '&$disabled': {
+	        color: theme.palette.text.disabled
+	      }
+	    }
+	  };
+	};
+	/**
+	 * Drop in replacement of the `Radio`, `Switch` and `Checkbox` component.
+	 * Use this component if you want to display an extra label.
+	 */
+
+
+	exports.styles = styles;
+
+	function FormControlLabel(props, context) {
+	  var checked = props.checked,
+	      classes = props.classes,
+	      classNameProp = props.className,
+	      control = props.control,
+	      disabledProp = props.disabled,
+	      inputRef = props.inputRef,
+	      label = props.label,
+	      name = props.name,
+	      onChange = props.onChange,
+	      value = props.value,
+	      other = (0, _objectWithoutProperties2.default)(props, ["checked", "classes", "className", "control", "disabled", "inputRef", "label", "name", "onChange", "value"]);
+	  var muiFormControl = context.muiFormControl;
+	  var disabled = disabledProp;
+
+	  if (typeof control.props.disabled !== 'undefined') {
+	    if (typeof disabled === 'undefined') {
+	      disabled = control.props.disabled;
+	    }
+	  }
+
+	  if (muiFormControl) {
+	    if (typeof disabled === 'undefined') {
+	      disabled = muiFormControl.disabled;
+	    }
+	  }
+
+	  var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.disabled, disabled), classNameProp);
+	  return _react.default.createElement("label", (0, _extends2.default)({
+	    className: className
+	  }, other), _react.default.cloneElement(control, {
+	    disabled: disabled,
+	    checked: typeof control.props.checked === 'undefined' ? checked : control.props.checked,
+	    name: control.props.name || name,
+	    onChange: control.props.onChange || onChange,
+	    value: control.props.value || value,
+	    inputRef: control.props.inputRef || inputRef
+	  }), _react.default.createElement(_Typography.default, {
+	    component: "span",
+	    className: (0, _classnames.default)(classes.label, (0, _defineProperty2.default)({}, classes.disabled, disabled))
+	  }, label));
+	}
+
+	FormControlLabel.propTypes = {
+	  /**
+	   * If `true`, the component appears selected.
+	   */
+	  checked: _propTypes.default.oneOfType([_propTypes.default.bool, _propTypes.default.string]),
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * A control element. For instance, it can be be a `Radio`, a `Switch` or a `Checkbox`.
+	   */
+	  control: _propTypes.default.element,
+
+	  /**
+	   * If `true`, the control will be disabled.
+	   */
+	  disabled: _propTypes.default.bool,
+
+	  /**
+	   * Use that property to pass a ref callback to the native input component.
+	   */
+	  inputRef: _propTypes.default.func,
+
+	  /**
+	   * The text to be used in an enclosing label element.
+	   */
+	  label: _propTypes.default.node,
+
+	  /*
+	   * @ignore
+	   */
+	  name: _propTypes.default.string,
+
+	  /**
+	   * Callback fired when the state is changed.
+	   *
+	   * @param {object} event The event source of the callback.
+	   * You can pull out the new value by accessing `event.target.checked`.
+	   * @param {boolean} checked The `checked` value of the switch
+	   */
+	  onChange: _propTypes.default.func,
+
+	  /**
+	   * The value of the component.
+	   */
+	  value: _propTypes.default.string
+	};
+	FormControlLabel.contextTypes = {
+	  muiFormControl: _propTypes.default.object
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiFormControlLabel'
+	})(FormControlLabel);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(FormControlLabel_1);
+	var FormControlLabel_2 = FormControlLabel_1.styles;
+
+	var FormControlLabel$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _FormControlLabel.default;
+	  }
+	});
+
+	var _FormControlLabel = interopRequireDefault(FormControlLabel_1);
+	});
+
+	var FormControlLabel$2 = unwrapExports(FormControlLabel$1);
 
 	var requirePropFactory_1 = createCommonjsModule(function (module, exports) {
 
@@ -43545,7 +44387,7 @@
 	  constructor(...args) {
 	    var _temp;
 
-	    return _temp = super(...args), _defineProperty$2(this, "handleClick", event => {
+	    return _temp = super(...args), _defineProperty$1(this, "handleClick", event => {
 	      const {
 	        to,
 	        onClick
@@ -43582,7 +44424,7 @@
 	};
 	const LinkEnhanced = styles_3(styles$4)(Link);
 
-	var ListItem_1 = createCommonjsModule(function (module, exports) {
+	var ListItemIcon_1 = createCommonjsModule(function (module, exports) {
 
 
 
@@ -43591,23 +44433,9 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _objectSpread2 = interopRequireDefault(objectSpread);
 
-	var _defineProperty2 = interopRequireDefault(defineProperty$3);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
-	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
-
-	var _classCallCheck2 = interopRequireDefault(classCallCheck);
-
-	var _createClass2 = interopRequireDefault(createClass);
-
-	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
-
-	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
 
@@ -43616,160 +44444,39 @@
 	var _classnames = interopRequireDefault(classnames);
 
 	var _withStyles = interopRequireDefault(withStyles_1);
-
-	var _ButtonBase = interopRequireDefault(ButtonBase$1);
-
-
 
 	var styles = function styles(theme) {
 	  return {
 	    root: {
-	      display: 'flex',
-	      justifyContent: 'flex-start',
-	      alignItems: 'center',
-	      position: 'relative',
-	      textDecoration: 'none',
-	      width: '100%',
-	      boxSizing: 'border-box',
-	      textAlign: 'left'
-	    },
-	    container: {
-	      position: 'relative'
-	    },
-	    focusVisible: {
-	      backgroundColor: theme.palette.action.hover
-	    },
-	    default: {
-	      paddingTop: 12,
-	      paddingBottom: 12
-	    },
-	    dense: {
-	      paddingTop: theme.spacing.unit,
-	      paddingBottom: theme.spacing.unit
-	    },
-	    disabled: {
-	      opacity: 0.5
-	    },
-	    divider: {
-	      borderBottom: "1px solid ".concat(theme.palette.divider),
-	      backgroundClip: 'padding-box'
-	    },
-	    gutters: theme.mixins.gutters(),
-	    button: {
-	      transition: theme.transitions.create('background-color', {
-	        duration: theme.transitions.duration.shortest
-	      }),
-	      '&:hover': {
-	        textDecoration: 'none',
-	        backgroundColor: theme.palette.action.hover,
-	        // Reset on touch devices, it doesn't add specificity
-	        '@media (hover: none)': {
-	          backgroundColor: 'transparent'
-	        }
-	      }
-	    },
-	    secondaryAction: {
-	      // Add some space to avoid collision as `ListItemSecondaryAction`
-	      // is absolutely positionned.
-	      paddingRight: theme.spacing.unit * 4
+	      marginRight: theme.spacing.unit * 2,
+	      color: theme.palette.action.active,
+	      flexShrink: 0
 	    }
 	  };
 	};
+	/**
+	 * A simple wrapper to apply `List` styles to an `Icon` or `SvgIcon`.
+	 */
+
 
 	exports.styles = styles;
 
-	var ListItem =
-	/*#__PURE__*/
-	function (_React$Component) {
-	  (0, _inherits2.default)(ListItem, _React$Component);
+	function ListItemIcon(props) {
+	  var children = props.children,
+	      classes = props.classes,
+	      classNameProp = props.className,
+	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className"]);
+	  return _react.default.cloneElement(children, (0, _objectSpread2.default)({
+	    className: (0, _classnames.default)(classes.root, classNameProp, children.props.className)
+	  }, other));
+	}
 
-	  function ListItem() {
-	    (0, _classCallCheck2.default)(this, ListItem);
-	    return (0, _possibleConstructorReturn2.default)(this, (ListItem.__proto__ || (0, _getPrototypeOf.default)(ListItem)).apply(this, arguments));
-	  }
-
-	  (0, _createClass2.default)(ListItem, [{
-	    key: "getChildContext",
-	    value: function getChildContext() {
-	      return {
-	        dense: this.props.dense || this.context.dense || false
-	      };
-	    }
-	  }, {
-	    key: "render",
-	    value: function render() {
-	      var _classNames;
-
-	      var _props = this.props,
-	          button = _props.button,
-	          childrenProp = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          componentProp = _props.component,
-	          ContainerComponent = _props.ContainerComponent,
-	          _props$ContainerProps = _props.ContainerProps;
-	      _props$ContainerProps = _props$ContainerProps === void 0 ? {} : _props$ContainerProps;
-	      var ContainerClassName = _props$ContainerProps.className,
-	          ContainerProps = (0, _objectWithoutProperties2.default)(_props$ContainerProps, ["className"]),
-	          dense = _props.dense,
-	          disabled = _props.disabled,
-	          disableGutters = _props.disableGutters,
-	          divider = _props.divider,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["button", "children", "classes", "className", "component", "ContainerComponent", "ContainerProps", "dense", "disabled", "disableGutters", "divider"]);
-	      var isDense = dense || this.context.dense || false;
-
-	      var children = _react.default.Children.toArray(childrenProp);
-
-	      var hasAvatar = children.some(function (value) {
-	        return (0, reactHelpers.isMuiElement)(value, ['ListItemAvatar']);
-	      });
-	      var hasSecondaryAction = children.length && (0, reactHelpers.isMuiElement)(children[children.length - 1], ['ListItemSecondaryAction']);
-	      var className = (0, _classnames.default)(classes.root, isDense || hasAvatar ? classes.dense : classes.default, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.gutters, !disableGutters), (0, _defineProperty2.default)(_classNames, classes.divider, divider), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.button, button), (0, _defineProperty2.default)(_classNames, classes.secondaryAction, hasSecondaryAction), _classNames), classNameProp);
-	      var componentProps = (0, _objectSpread2.default)({
-	        className: className,
-	        disabled: disabled
-	      }, other);
-	      var Component = componentProp || 'li';
-
-	      if (button) {
-	        componentProps.component = componentProp || 'div';
-	        componentProps.focusVisibleClassName = classes.focusVisible;
-	        Component = _ButtonBase.default;
-	      }
-
-	      if (hasSecondaryAction) {
-	        // Use div by default.
-	        Component = !componentProps.component && !componentProp ? 'div' : Component; // Avoid nesting of li > li.
-
-	        if (ContainerComponent === 'li') {
-	          if (Component === 'li') {
-	            Component = 'div';
-	          } else if (componentProps.component === 'li') {
-	            componentProps.component = 'div';
-	          }
-	        }
-
-	        return _react.default.createElement(ContainerComponent, (0, _extends2.default)({
-	          className: (0, _classnames.default)(classes.container, ContainerClassName)
-	        }, ContainerProps), _react.default.createElement(Component, componentProps, children), children.pop());
-	      }
-
-	      return _react.default.createElement(Component, componentProps, children);
-	    }
-	  }]);
-	  return ListItem;
-	}(_react.default.Component);
-
-	ListItem.propTypes = {
+	ListItemIcon.propTypes = {
 	  /**
-	   * If `true`, the list item will be a button (using `ButtonBase`).
+	   * The content of the component, normally `Icon`, `SvgIcon`,
+	   * or a `@material-ui/icons` SVG icon element.
 	   */
-	  button: _propTypes.default.bool,
-
-	  /**
-	   * The content of the component.
-	   */
-	  children: _propTypes.default.node,
+	  children: _propTypes.default.element.isRequired,
 
 	  /**
 	   * Override or extend the styles applied to the component.
@@ -43780,72 +44487,20 @@
 	  /**
 	   * @ignore
 	   */
-	  className: _propTypes.default.string,
-
-	  /**
-	   * The component used for the root node.
-	   * Either a string to use a DOM element or a component.
-	   * By default, it's a `li` when `button` is `false` and a `div` when `button` is `true`.
-	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
-
-	  /**
-	   * The container component used when a `ListItemSecondaryAction` is rendered.
-	   */
-	  ContainerComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
-
-	  /**
-	   * Properties applied to the container element when the component
-	   * is used to display a `ListItemSecondaryAction`.
-	   */
-	  ContainerProps: _propTypes.default.object,
-
-	  /**
-	   * If `true`, compact vertical padding designed for keyboard and mouse input will be used.
-	   */
-	  dense: _propTypes.default.bool,
-
-	  /**
-	   * @ignore
-	   */
-	  disabled: _propTypes.default.bool,
-
-	  /**
-	   * If `true`, the left and right padding is removed.
-	   */
-	  disableGutters: _propTypes.default.bool,
-
-	  /**
-	   * If `true`, a 1px light border is added to the bottom of the list item.
-	   */
-	  divider: _propTypes.default.bool
-	};
-	ListItem.defaultProps = {
-	  button: false,
-	  ContainerComponent: 'li',
-	  dense: false,
-	  disabled: false,
-	  disableGutters: false,
-	  divider: false
-	};
-	ListItem.contextTypes = {
-	  dense: _propTypes.default.bool
-	};
-	ListItem.childContextTypes = {
-	  dense: _propTypes.default.bool
+	  className: _propTypes.default.string
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
-	  name: 'MuiListItem'
-	})(ListItem);
+	  name: 'MuiListItemIcon'
+	})(ListItemIcon);
 
 	exports.default = _default;
 	});
 
-	unwrapExports(ListItem_1);
-	var ListItem_2 = ListItem_1.styles;
+	unwrapExports(ListItemIcon_1);
+	var ListItemIcon_2 = ListItemIcon_1.styles;
 
-	var ListItem$1 = createCommonjsModule(function (module, exports) {
+	var ListItemIcon$1 = createCommonjsModule(function (module, exports) {
 
 
 
@@ -43855,16 +44510,16 @@
 	Object.defineProperty(exports, "default", {
 	  enumerable: true,
 	  get: function get() {
-	    return _ListItem.default;
+	    return _ListItemIcon.default;
 	  }
 	});
 
-	var _ListItem = interopRequireDefault(ListItem_1);
+	var _ListItemIcon = interopRequireDefault(ListItemIcon_1);
 	});
 
-	unwrapExports(ListItem$1);
+	unwrapExports(ListItemIcon$1);
 
-	var MenuItem_1 = createCommonjsModule(function (module, exports) {
+	var ListItemText_1 = createCommonjsModule(function (module, exports) {
 
 
 
@@ -43879,8 +44534,6 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _react = interopRequireDefault(react);
 
 	var _propTypes = interopRequireDefault(propTypes);
@@ -43889,49 +44542,81 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
-	var _ListItem = interopRequireDefault(ListItem$1);
+	var _Typography = interopRequireDefault(Typography$1);
 
-	// @inheritedComponent ListItem
 	var styles = function styles(theme) {
 	  return {
-	    root: (0, _objectSpread2.default)({}, theme.typography.subheading, {
-	      height: theme.spacing.unit * 3,
-	      boxSizing: 'content-box',
-	      width: 'auto',
-	      overflow: 'hidden',
-	      textOverflow: 'ellipsis',
-	      whiteSpace: 'nowrap',
-	      paddingLeft: theme.spacing.unit * 2,
-	      paddingRight: theme.spacing.unit * 2,
-	      '&$selected': {
-	        backgroundColor: theme.palette.action.selected
+	    root: {
+	      flex: '1 1 auto',
+	      minWidth: 0,
+	      padding: "0 ".concat(theme.spacing.unit * 2, "px"),
+	      '&:first-child': {
+	        paddingLeft: 0
 	      }
-	    }),
-	    selected: {}
+	    },
+	    inset: {
+	      '&:first-child': {
+	        paddingLeft: theme.spacing.unit * 7
+	      }
+	    },
+	    dense: {
+	      fontSize: theme.typography.pxToRem(13)
+	    },
+	    primary: {
+	      '&$textDense': {
+	        fontSize: 'inherit'
+	      }
+	    },
+	    secondary: {
+	      '&$textDense': {
+	        fontSize: 'inherit'
+	      }
+	    },
+	    textDense: {}
 	  };
 	};
 
 	exports.styles = styles;
 
-	function MenuItem(props) {
-	  var classes = props.classes,
-	      className = props.className,
-	      component = props.component,
-	      selected = props.selected,
-	      role = props.role,
-	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component", "selected", "role"]);
-	  return _react.default.createElement(_ListItem.default, (0, _extends2.default)({
-	    button: true,
-	    role: role,
-	    tabIndex: -1,
-	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.selected, selected), className),
-	    component: component
-	  }, other));
+	function ListItemText(props, context) {
+	  var _classNames3;
+
+	  var children = props.children,
+	      classes = props.classes,
+	      classNameProp = props.className,
+	      disableTypography = props.disableTypography,
+	      inset = props.inset,
+	      primaryProp = props.primary,
+	      secondaryProp = props.secondary,
+	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableTypography", "inset", "primary", "secondary"]);
+	  var dense = context.dense;
+	  var primary = primaryProp || children;
+
+	  if (primary && !disableTypography) {
+	    primary = _react.default.createElement(_Typography.default, {
+	      variant: "subheading",
+	      className: (0, _classnames.default)(classes.primary, (0, _defineProperty2.default)({}, classes.textDense, dense))
+	    }, primary);
+	  }
+
+	  var secondary = secondaryProp;
+
+	  if (secondary && !disableTypography) {
+	    secondary = _react.default.createElement(_Typography.default, {
+	      variant: "body1",
+	      className: (0, _classnames.default)(classes.secondary, (0, _defineProperty2.default)({}, classes.textDense, dense)),
+	      color: "textSecondary"
+	    }, secondary);
+	  }
+
+	  return _react.default.createElement("div", (0, _extends2.default)({
+	    className: (0, _classnames.default)(classes.root, (_classNames3 = {}, (0, _defineProperty2.default)(_classNames3, classes.dense, dense), (0, _defineProperty2.default)(_classNames3, classes.inset, inset), _classNames3), classNameProp)
+	  }, other), primary, secondary);
 	}
 
-	MenuItem.propTypes = {
+	ListItemText.propTypes = {
 	  /**
-	   * Menu item contents.
+	   * Alias for the `primary` property.
 	   */
 	  children: _propTypes.default.node,
 
@@ -43947,38 +44632,38 @@
 	  className: _propTypes.default.string,
 
 	  /**
-	   * The component used for the root node.
-	   * Either a string to use a DOM element or a component.
+	   * If `true`, the children won't be wrapped by a typography component.
+	   * For instance, that can be useful to can render an h4 instead of a
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  disableTypography: _propTypes.default.bool,
 
 	  /**
-	   * @ignore
+	   * If `true`, the children will be indented.
+	   * This should be used if there is no left avatar or left icon.
 	   */
-	  role: _propTypes.default.string,
-
-	  /**
-	   * Use to apply selected styling.
-	   */
-	  selected: _propTypes.default.bool
+	  inset: _propTypes.default.bool,
+	  primary: _propTypes.default.node,
+	  secondary: _propTypes.default.node
 	};
-	MenuItem.defaultProps = {
-	  component: 'li',
-	  role: 'menuitem',
-	  selected: false
+	ListItemText.defaultProps = {
+	  disableTypography: false,
+	  inset: false
+	};
+	ListItemText.contextTypes = {
+	  dense: _propTypes.default.bool
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
-	  name: 'MuiMenuItem'
-	})(MenuItem);
+	  name: 'MuiListItemText'
+	})(ListItemText);
 
 	exports.default = _default;
 	});
 
-	unwrapExports(MenuItem_1);
-	var MenuItem_2 = MenuItem_1.styles;
+	unwrapExports(ListItemText_1);
+	var ListItemText_2 = ListItemText_1.styles;
 
-	var MenuItem$1 = createCommonjsModule(function (module, exports) {
+	var ListItemText$1 = createCommonjsModule(function (module, exports) {
 
 
 
@@ -43988,14 +44673,14 @@
 	Object.defineProperty(exports, "default", {
 	  enumerable: true,
 	  get: function get() {
-	    return _MenuItem.default;
+	    return _ListItemText.default;
 	  }
 	});
 
-	var _MenuItem = interopRequireDefault(MenuItem_1);
+	var _ListItemText = interopRequireDefault(ListItemText_1);
 	});
 
-	var MenuItem$2 = unwrapExports(MenuItem$1);
+	var ListItemText$2 = unwrapExports(ListItemText$1);
 
 	var CircularProgress_1 = createCommonjsModule(function (module, exports) {
 
@@ -44239,474 +44924,6 @@
 
 	unwrapExports(CircularProgress$1);
 	var CircularProgress_1$1 = CircularProgress$1.CircularProgress;
-
-	var List_1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = exports.styles = void 0;
-
-	var _extends2 = interopRequireDefault(_extends_1);
-
-	var _defineProperty2 = interopRequireDefault(defineProperty$3);
-
-	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
-	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
-
-	var _classCallCheck2 = interopRequireDefault(classCallCheck);
-
-	var _createClass2 = interopRequireDefault(createClass);
-
-	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
-
-	var _inherits2 = interopRequireDefault(inherits);
-
-	var _react = interopRequireDefault(react);
-
-	var _propTypes = interopRequireDefault(propTypes);
-
-	var _classnames = interopRequireDefault(classnames);
-
-	var _withStyles = interopRequireDefault(withStyles_1);
-
-	var styles = function styles(theme) {
-	  return {
-	    root: {
-	      listStyle: 'none',
-	      margin: 0,
-	      padding: 0,
-	      position: 'relative'
-	    },
-	    padding: {
-	      paddingTop: theme.spacing.unit,
-	      paddingBottom: theme.spacing.unit
-	    },
-	    dense: {
-	      paddingTop: theme.spacing.unit / 2,
-	      paddingBottom: theme.spacing.unit / 2
-	    },
-	    subheader: {
-	      paddingTop: 0
-	    }
-	  };
-	};
-
-	exports.styles = styles;
-
-	var List =
-	/*#__PURE__*/
-	function (_React$Component) {
-	  (0, _inherits2.default)(List, _React$Component);
-
-	  function List() {
-	    (0, _classCallCheck2.default)(this, List);
-	    return (0, _possibleConstructorReturn2.default)(this, (List.__proto__ || (0, _getPrototypeOf.default)(List)).apply(this, arguments));
-	  }
-
-	  (0, _createClass2.default)(List, [{
-	    key: "getChildContext",
-	    value: function getChildContext() {
-	      return {
-	        dense: this.props.dense
-	      };
-	    }
-	  }, {
-	    key: "render",
-	    value: function render() {
-	      var _classNames;
-
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          Component = _props.component,
-	          dense = _props.dense,
-	          disablePadding = _props.disablePadding,
-	          subheader = _props.subheader,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "component", "dense", "disablePadding", "subheader"]);
-	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.dense, dense && !disablePadding), (0, _defineProperty2.default)(_classNames, classes.padding, !disablePadding), (0, _defineProperty2.default)(_classNames, classes.subheader, subheader), _classNames), classNameProp);
-	      return _react.default.createElement(Component, (0, _extends2.default)({
-	        className: className
-	      }, other), subheader, children);
-	    }
-	  }]);
-	  return List;
-	}(_react.default.Component);
-
-	List.propTypes = {
-	  /**
-	   * The content of the component.
-	   */
-	  children: _propTypes.default.node,
-
-	  /**
-	   * Override or extend the styles applied to the component.
-	   * See [CSS API](#css-api) below for more details.
-	   */
-	  classes: _propTypes.default.object.isRequired,
-
-	  /**
-	   * @ignore
-	   */
-	  className: _propTypes.default.string,
-
-	  /**
-	   * The component used for the root node.
-	   * Either a string to use a DOM element or a component.
-	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
-
-	  /**
-	   * If `true`, compact vertical padding designed for keyboard and mouse input will be used for
-	   * the list and list items. The property is available to descendant components as the
-	   * `dense` context.
-	   */
-	  dense: _propTypes.default.bool,
-
-	  /**
-	   * If `true`, vertical padding will be removed from the list.
-	   */
-	  disablePadding: _propTypes.default.bool,
-
-	  /**
-	   * The content of the subheader, normally `ListSubheader`.
-	   */
-	  subheader: _propTypes.default.node
-	};
-	List.defaultProps = {
-	  component: 'ul',
-	  dense: false,
-	  disablePadding: false
-	};
-	List.childContextTypes = {
-	  dense: _propTypes.default.bool
-	};
-
-	var _default = (0, _withStyles.default)(styles, {
-	  name: 'MuiList'
-	})(List);
-
-	exports.default = _default;
-	});
-
-	unwrapExports(List_1);
-	var List_2 = List_1.styles;
-
-	var List$1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	Object.defineProperty(exports, "default", {
-	  enumerable: true,
-	  get: function get() {
-	    return _List.default;
-	  }
-	});
-
-	var _List = interopRequireDefault(List_1);
-	});
-
-	unwrapExports(List$1);
-
-	var MenuList_1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = void 0;
-
-	var _extends2 = interopRequireDefault(_extends_1);
-
-	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
-	var _toConsumableArray2 = interopRequireDefault(toConsumableArray);
-
-	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
-
-	var _classCallCheck2 = interopRequireDefault(classCallCheck);
-
-	var _createClass2 = interopRequireDefault(createClass);
-
-	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
-
-	var _inherits2 = interopRequireDefault(inherits);
-
-	var _assertThisInitialized2 = interopRequireDefault(assertThisInitialized);
-
-	var _react = interopRequireDefault(react);
-
-	var _propTypes = interopRequireDefault(propTypes);
-
-	var _reactDom = interopRequireDefault(reactDom);
-
-	var _keycode = interopRequireDefault(keycode);
-
-	var _contains = interopRequireDefault(contains);
-
-	var _activeElement = interopRequireDefault(activeElement_1);
-
-	var _ownerDocument = interopRequireDefault(ownerDocument_1);
-
-	var _List = interopRequireDefault(List$1);
-
-	// @inheritedComponent List
-	var MenuList =
-	/*#__PURE__*/
-	function (_React$Component) {
-	  (0, _inherits2.default)(MenuList, _React$Component);
-
-	  function MenuList() {
-	    var _ref;
-
-	    var _temp, _this;
-
-	    (0, _classCallCheck2.default)(this, MenuList);
-
-	    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-	      args[_key] = arguments[_key];
-	    }
-
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = MenuList.__proto__ || (0, _getPrototypeOf.default)(MenuList)).call.apply(_ref, [this].concat(args))), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "state", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: {
-	        currentTabIndex: undefined
-	      }
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "list", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: undefined
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "selectedItem", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: undefined
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "blurTimer", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: undefined
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleBlur", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: function value(event) {
-	        _this.blurTimer = setTimeout(function () {
-	          if (_this.list) {
-	            var list = _reactDom.default.findDOMNode(_this.list);
-
-	            var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
-
-	            if (!(0, _contains.default)(list, currentFocus)) {
-	              _this.resetTabIndex();
-	            }
-	          }
-	        }, 30);
-
-	        if (_this.props.onBlur) {
-	          _this.props.onBlur(event);
-	        }
-	      }
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleKeyDown", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: function value(event) {
-	        var list = _reactDom.default.findDOMNode(_this.list);
-
-	        var key = (0, _keycode.default)(event);
-	        var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
-
-	        if ((key === 'up' || key === 'down') && (!currentFocus || currentFocus && !(0, _contains.default)(list, currentFocus))) {
-	          if (_this.selectedItem) {
-	            _reactDom.default.findDOMNode(_this.selectedItem).focus();
-	          } else {
-	            list.firstChild.focus();
-	          }
-	        } else if (key === 'down') {
-	          event.preventDefault();
-
-	          if (currentFocus.nextElementSibling) {
-	            currentFocus.nextElementSibling.focus();
-	          }
-	        } else if (key === 'up') {
-	          event.preventDefault();
-
-	          if (currentFocus.previousElementSibling) {
-	            currentFocus.previousElementSibling.focus();
-	          }
-	        }
-
-	        if (_this.props.onKeyDown) {
-	          _this.props.onKeyDown(event, key);
-	        }
-	      }
-	    }), Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleItemFocus", {
-	      configurable: true,
-	      enumerable: true,
-	      writable: true,
-	      value: function value(event) {
-	        var list = _reactDom.default.findDOMNode(_this.list);
-
-	        if (list) {
-	          for (var i = 0; i < list.children.length; i += 1) {
-	            if (list.children[i] === event.currentTarget) {
-	              _this.setTabIndex(i);
-
-	              break;
-	            }
-	          }
-	        }
-	      }
-	    }), _temp));
-	  }
-
-	  (0, _createClass2.default)(MenuList, [{
-	    key: "componentDidMount",
-	    value: function componentDidMount() {
-	      this.resetTabIndex();
-	    }
-	  }, {
-	    key: "componentWillUnmount",
-	    value: function componentWillUnmount() {
-	      clearTimeout(this.blurTimer);
-	    }
-	  }, {
-	    key: "setTabIndex",
-	    value: function setTabIndex(index) {
-	      this.setState({
-	        currentTabIndex: index
-	      });
-	    }
-	  }, {
-	    key: "focus",
-	    value: function focus() {
-	      var currentTabIndex = this.state.currentTabIndex;
-
-	      var list = _reactDom.default.findDOMNode(this.list);
-
-	      if (!list || !list.children || !list.firstChild) {
-	        return;
-	      }
-
-	      if (currentTabIndex && currentTabIndex >= 0) {
-	        list.children[currentTabIndex].focus();
-	      } else {
-	        list.firstChild.focus();
-	      }
-	    }
-	  }, {
-	    key: "resetTabIndex",
-	    value: function resetTabIndex() {
-	      var list = _reactDom.default.findDOMNode(this.list);
-
-	      var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
-	      var items = (0, _toConsumableArray2.default)(list.children);
-	      var currentFocusIndex = items.indexOf(currentFocus);
-
-	      if (currentFocusIndex !== -1) {
-	        return this.setTabIndex(currentFocusIndex);
-	      }
-
-	      if (this.selectedItem) {
-	        return this.setTabIndex(items.indexOf(_reactDom.default.findDOMNode(this.selectedItem)));
-	      }
-
-	      return this.setTabIndex(0);
-	    }
-	  }, {
-	    key: "render",
-	    value: function render() {
-	      var _this2 = this;
-
-	      var _props = this.props,
-	          children = _props.children,
-	          className = _props.className,
-	          onBlur = _props.onBlur,
-	          onKeyDown = _props.onKeyDown,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "className", "onBlur", "onKeyDown"]);
-	      return _react.default.createElement(_List.default, (0, _extends2.default)({
-	        role: "menu",
-	        ref: function ref(node) {
-	          _this2.list = node;
-	        },
-	        className: className,
-	        onKeyDown: this.handleKeyDown,
-	        onBlur: this.handleBlur
-	      }, other), _react.default.Children.map(children, function (child, index) {
-	        if (!_react.default.isValidElement(child)) {
-	          return null;
-	        }
-
-	        return _react.default.cloneElement(child, {
-	          tabIndex: index === _this2.state.currentTabIndex ? 0 : -1,
-	          ref: child.props.selected ? function (node) {
-	            _this2.selectedItem = node;
-	          } : undefined,
-	          onFocus: _this2.handleItemFocus
-	        });
-	      }));
-	    }
-	  }]);
-	  return MenuList;
-	}(_react.default.Component);
-
-	MenuList.propTypes = {
-	  /**
-	   * MenuList contents, normally `MenuItem`s.
-	   */
-	  children: _propTypes.default.node,
-
-	  /**
-	   * @ignore
-	   */
-	  className: _propTypes.default.string,
-
-	  /**
-	   * @ignore
-	   */
-	  onBlur: _propTypes.default.func,
-
-	  /**
-	   * @ignore
-	   */
-	  onKeyDown: _propTypes.default.func
-	};
-	var _default = MenuList;
-	exports.default = _default;
-	});
-
-	unwrapExports(MenuList_1);
-
-	var MenuList$1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	Object.defineProperty(exports, "default", {
-	  enumerable: true,
-	  get: function get() {
-	    return _MenuList.default;
-	  }
-	});
-
-	var _MenuList = interopRequireDefault(MenuList_1);
-	});
-
-	unwrapExports(MenuList$1);
 
 	var Menu_1 = createCommonjsModule(function (module, exports) {
 
@@ -46100,6 +46317,543 @@
 
 	var Select$2 = unwrapExports(Select$1);
 
+	var SwitchBase_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$3);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _getPrototypeOf = interopRequireDefault(getPrototypeOf$1);
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _assertThisInitialized2 = interopRequireDefault(assertThisInitialized);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+	var _IconButton = interopRequireDefault(IconButton$1);
+
+	// @inheritedComponent IconButton
+	var styles = {
+	  root: {
+	    display: 'inline-flex',
+	    alignItems: 'center',
+	    transition: 'none',
+	    '&:hover': {
+	      // Disable the hover effect for the IconButton.
+	      backgroundColor: 'transparent'
+	    }
+	  },
+	  checked: {},
+	  disabled: {},
+	  input: {
+	    cursor: 'inherit',
+	    position: 'absolute',
+	    opacity: 0,
+	    width: '100%',
+	    height: '100%',
+	    top: 0,
+	    left: 0,
+	    margin: 0,
+	    padding: 0
+	  }
+	};
+	exports.styles = styles;
+
+	var SwitchBase =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(SwitchBase, _React$Component);
+
+	  function SwitchBase(props, context) {
+	    var _this;
+
+	    (0, _classCallCheck2.default)(this, SwitchBase);
+	    _this = (0, _possibleConstructorReturn2.default)(this, (SwitchBase.__proto__ || (0, _getPrototypeOf.default)(SwitchBase)).call(this, props, context));
+	    Object.defineProperty((0, _assertThisInitialized2.default)(_this), "state", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: {}
+	    });
+	    Object.defineProperty((0, _assertThisInitialized2.default)(_this), "input", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: null
+	    });
+	    Object.defineProperty((0, _assertThisInitialized2.default)(_this), "isControlled", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: null
+	    });
+	    Object.defineProperty((0, _assertThisInitialized2.default)(_this), "handleInputChange", {
+	      configurable: true,
+	      enumerable: true,
+	      writable: true,
+	      value: function value(event) {
+	        var checked = event.target.checked;
+
+	        if (!_this.isControlled) {
+	          _this.setState({
+	            checked: checked
+	          });
+	        }
+
+	        if (_this.props.onChange) {
+	          _this.props.onChange(event, checked);
+	        }
+	      }
+	    });
+	    _this.isControlled = props.checked != null;
+
+	    if (!_this.isControlled) {
+	      // not controlled, use internal state
+	      _this.state.checked = props.defaultChecked !== undefined ? props.defaultChecked : false;
+	    }
+
+	    return _this;
+	  }
+
+	  (0, _createClass2.default)(SwitchBase, [{
+	    key: "render",
+	    value: function render() {
+	      var _classNames;
+
+	      var _props = this.props,
+	          checkedProp = _props.checked,
+	          checkedIcon = _props.checkedIcon,
+	          classes = _props.classes,
+	          classNameProp = _props.className,
+	          disabledProp = _props.disabled,
+	          icon = _props.icon,
+	          id = _props.id,
+	          inputProps = _props.inputProps,
+	          inputRef = _props.inputRef,
+	          name = _props.name,
+	          onChange = _props.onChange,
+	          tabIndex = _props.tabIndex,
+	          type = _props.type,
+	          value = _props.value,
+	          other = (0, _objectWithoutProperties2.default)(_props, ["checked", "checkedIcon", "classes", "className", "disabled", "icon", "id", "inputProps", "inputRef", "name", "onChange", "tabIndex", "type", "value"]);
+	      var muiFormControl = this.context.muiFormControl;
+	      var disabled = disabledProp;
+
+	      if (muiFormControl) {
+	        if (typeof disabled === 'undefined') {
+	          disabled = muiFormControl.disabled;
+	        }
+	      }
+
+	      var checked = this.isControlled ? checkedProp : this.state.checked;
+	      var hasLabelFor = type === 'checkbox' || type === 'radio';
+	      return _react.default.createElement(_IconButton.default, (0, _extends2.default)({
+	        component: "span",
+	        className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.checked, checked), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), _classNames), classNameProp),
+	        disabled: disabled,
+	        tabIndex: null,
+	        role: undefined
+	      }, other), checked ? checkedIcon : icon, _react.default.createElement("input", (0, _extends2.default)({
+	        id: hasLabelFor && id,
+	        type: type,
+	        name: name,
+	        checked: checked,
+	        onChange: this.handleInputChange,
+	        className: classes.input,
+	        disabled: disabled,
+	        tabIndex: tabIndex,
+	        value: value,
+	        ref: inputRef
+	      }, inputProps)));
+	    }
+	  }]);
+	  return SwitchBase;
+	}(_react.default.Component); // NB: If changed, please update Checkbox, Switch and Radio
+	// so that the API documentation is updated.
+
+
+	SwitchBase.propTypes = {
+	  /**
+	   * If `true`, the component is checked.
+	   */
+	  checked: _propTypes.default.oneOfType([_propTypes.default.bool, _propTypes.default.string]),
+
+	  /**
+	   * The icon to display when the component is checked.
+	   */
+	  checkedIcon: _propTypes.default.node.isRequired,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * @ignore
+	   */
+	  defaultChecked: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the switch will be disabled.
+	   */
+	  disabled: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the ripple effect will be disabled.
+	   */
+	  disableRipple: _propTypes.default.bool,
+
+	  /**
+	   * The icon to display when the component is unchecked.
+	   */
+	  icon: _propTypes.default.node.isRequired,
+
+	  /**
+	   * The id of the `input` element.
+	   */
+	  id: _propTypes.default.string,
+
+	  /**
+	   * If `true`, the component appears indeterminate.
+	   */
+	  indeterminate: _propTypes.default.bool,
+
+	  /**
+	   * The icon to display when the component is indeterminate.
+	   */
+	  indeterminateIcon: _propTypes.default.node,
+
+	  /**
+	   * Properties applied to the `input` element.
+	   */
+	  inputProps: _propTypes.default.object,
+
+	  /**
+	   * Use that property to pass a ref callback to the native input component.
+	   */
+	  inputRef: _propTypes.default.func,
+
+	  /*
+	   * @ignore
+	   */
+	  name: _propTypes.default.string,
+
+	  /**
+	   * Callback fired when the state is changed.
+	   *
+	   * @param {object} event The event source of the callback.
+	   * You can pull out the new value by accessing `event.target.checked`.
+	   * @param {boolean} checked The `checked` value of the switch
+	   */
+	  onChange: _propTypes.default.func,
+
+	  /**
+	   * @ignore
+	   */
+	  tabIndex: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.string]),
+
+	  /**
+	   * The input component property `type`.
+	   */
+	  type: _propTypes.default.string,
+
+	  /**
+	   * The value of the component.
+	   */
+	  value: _propTypes.default.string
+	};
+	SwitchBase.defaultProps = {
+	  type: 'checkbox'
+	};
+	SwitchBase.contextTypes = {
+	  muiFormControl: _propTypes.default.object
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiSwitchBase'
+	})(SwitchBase);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(SwitchBase_1);
+	var SwitchBase_2 = SwitchBase_1.styles;
+
+	var Switch_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = exports.styles = void 0;
+
+	var _extends2 = interopRequireDefault(_extends_1);
+
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _classnames = interopRequireDefault(classnames);
+
+	var _withStyles = interopRequireDefault(withStyles_1);
+
+
+
+	var _SwitchBase = interopRequireDefault(SwitchBase_1);
+
+	var styles = function styles(theme) {
+	  return {
+	    root: {
+	      display: 'inline-flex',
+	      width: 62,
+	      position: 'relative',
+	      flexShrink: 0,
+	      // For correct alignment with the text.
+	      verticalAlign: 'middle'
+	    },
+	    icon: {
+	      boxShadow: theme.shadows[1],
+	      backgroundColor: 'currentColor',
+	      width: 20,
+	      height: 20,
+	      borderRadius: '50%'
+	    },
+	    iconChecked: {
+	      boxShadow: theme.shadows[2]
+	    },
+	    switchBase: {
+	      zIndex: 1,
+	      color: theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[400],
+	      transition: theme.transitions.create('transform', {
+	        duration: theme.transitions.duration.shortest
+	      })
+	    },
+	    checked: {
+	      transform: 'translateX(14px)',
+	      '& + $bar': {
+	        opacity: 0.5
+	      }
+	    },
+	    colorPrimary: {
+	      '&$checked': {
+	        color: theme.palette.primary.main,
+	        '& + $bar': {
+	          backgroundColor: theme.palette.primary.main
+	        }
+	      }
+	    },
+	    colorSecondary: {
+	      '&$checked': {
+	        color: theme.palette.secondary.main,
+	        '& + $bar': {
+	          backgroundColor: theme.palette.secondary.main
+	        }
+	      }
+	    },
+	    disabled: {
+	      '& + $bar': {
+	        opacity: theme.palette.type === 'light' ? 0.12 : 0.1
+	      },
+	      '& $icon': {
+	        boxShadow: theme.shadows[1]
+	      },
+	      '&$switchBase': {
+	        color: theme.palette.type === 'light' ? theme.palette.grey[400] : theme.palette.grey[800],
+	        '& + $bar': {
+	          backgroundColor: theme.palette.type === 'light' ? theme.palette.common.black : theme.palette.common.white
+	        }
+	      }
+	    },
+	    bar: {
+	      borderRadius: 7,
+	      display: 'block',
+	      position: 'absolute',
+	      width: 34,
+	      height: 14,
+	      top: '50%',
+	      left: '50%',
+	      marginTop: -7,
+	      marginLeft: -17,
+	      transition: theme.transitions.create(['opacity', 'background-color'], {
+	        duration: theme.transitions.duration.shortest
+	      }),
+	      backgroundColor: theme.palette.type === 'light' ? theme.palette.common.black : theme.palette.common.white,
+	      opacity: theme.palette.type === 'light' ? 0.38 : 0.3
+	    }
+	  };
+	};
+
+	exports.styles = styles;
+
+	function Switch(props) {
+	  var classes = props.classes,
+	      className = props.className,
+	      color = props.color,
+	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "color"]);
+	  return _react.default.createElement("span", {
+	    className: (0, _classnames.default)(classes.root, className)
+	  }, _react.default.createElement(_SwitchBase.default, (0, _extends2.default)({
+	    icon: _react.default.createElement("span", {
+	      className: classes.icon
+	    }),
+	    classes: {
+	      root: (0, _classnames.default)(classes.switchBase, classes["color".concat((0, helpers.capitalize)(color))]),
+	      checked: classes.checked,
+	      disabled: classes.disabled
+	    },
+	    checkedIcon: _react.default.createElement("span", {
+	      className: (0, _classnames.default)(classes.icon, classes.iconChecked)
+	    })
+	  }, other)), _react.default.createElement("span", {
+	    className: classes.bar
+	  }));
+	}
+
+	Switch.propTypes = {
+	  /**
+	   * If `true`, the component is checked.
+	   */
+	  checked: _propTypes.default.oneOfType([_propTypes.default.bool, _propTypes.default.string]),
+
+	  /**
+	   * The icon to display when the component is checked.
+	   */
+	  checkedIcon: _propTypes.default.node,
+
+	  /**
+	   * Override or extend the styles applied to the component.
+	   * See [CSS API](#css-api) below for more details.
+	   */
+	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * @ignore
+	   */
+	  className: _propTypes.default.string,
+
+	  /**
+	   * The color of the component. It supports those theme colors that make sense for this component.
+	   */
+	  color: _propTypes.default.oneOf(['primary', 'secondary', 'default']),
+
+	  /**
+	   * @ignore
+	   */
+	  defaultChecked: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the switch will be disabled.
+	   */
+	  disabled: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the ripple effect will be disabled.
+	   */
+	  disableRipple: _propTypes.default.bool,
+
+	  /**
+	   * The icon to display when the component is unchecked.
+	   */
+	  icon: _propTypes.default.node,
+
+	  /**
+	   * The id of the `input` element.
+	   */
+	  id: _propTypes.default.string,
+
+	  /**
+	   * Properties applied to the `input` element.
+	   */
+	  inputProps: _propTypes.default.object,
+
+	  /**
+	   * Use that property to pass a ref callback to the native input component.
+	   */
+	  inputRef: _propTypes.default.func,
+
+	  /**
+	   * Callback fired when the state is changed.
+	   *
+	   * @param {object} event The event source of the callback.
+	   * You can pull out the new value by accessing `event.target.checked`.
+	   * @param {boolean} checked The `checked` value of the switch
+	   */
+	  onChange: _propTypes.default.func,
+
+	  /**
+	   * The input component property `type`.
+	   */
+	  type: _propTypes.default.string,
+
+	  /**
+	   * The value of the component.
+	   */
+	  value: _propTypes.default.string
+	};
+	Switch.defaultProps = {
+	  color: 'secondary'
+	};
+
+	var _default = (0, _withStyles.default)(styles, {
+	  name: 'MuiSwitch'
+	})(Switch);
+
+	exports.default = _default;
+	});
+
+	unwrapExports(Switch_1);
+	var Switch_2 = Switch_1.styles;
+
+	var Switch$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _Switch.default;
+	  }
+	});
+
+	var _Switch = interopRequireDefault(Switch_1);
+	});
+
+	var Switch$2 = unwrapExports(Switch$1);
+
 	var Table_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -46563,6 +47317,596 @@
 	// export { default as Tooltip } from '@material-ui/core/Tooltip';
 	// Issues with positioning
 
+	const SETTINGS_DIALOG_GENERAL = 'SETTINGS_DIALOG_GENERAL';
+	const SETTINGS_DIALOG_MINING = 'SETTINGS_DIALOG_MINING';
+
+	class SettingsDialog extends react_2 {
+	  constructor(...args) {
+	    var _temp;
+
+	    return _temp = super(...args), _defineProperty$1(this, "handleTabClick", tab => () => {
+	      const {
+	        setSettingsDialogTab: setSettingsDialogTab$$1
+	      } = this.props;
+	      setSettingsDialogTab$$1(tab);
+	    }), _temp;
+	  }
+
+	  render() {
+	    const {
+	      open,
+	      tab
+	    } = this.props;
+	    const menuItems = [react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SETTINGS_DIALOG_GENERAL,
+	      onClick: this.handleTabClick(SETTINGS_DIALOG_GENERAL),
+	      selected: tab === SETTINGS_DIALOG_GENERAL
+	    }, react.createElement(ListItemText$2, {
+	      primary: "General"
+	    })), react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SETTINGS_DIALOG_MINING,
+	      onClick: this.handleTabClick(SETTINGS_DIALOG_MINING),
+	      selected: tab === SETTINGS_DIALOG_MINING
+	    }, react.createElement(ListItemText$2, {
+	      primary: "Mining"
+	    }))];
+	    let content;
+
+	    if (tab === SETTINGS_DIALOG_GENERAL) {
+	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "General configurations"), react.createElement(FormControl$2, {
+	        margin: "normal"
+	      }, react.createElement(InputLabel$2, {
+	        htmlFor: "language"
+	      }, "Language"), react.createElement(Select$2, {
+	        disabled: true,
+	        inputProps: {
+	          id: 'language'
+	        },
+	        value: 'en'
+	      }, react.createElement(MenuItem$2, {
+	        value: 'en'
+	      }, "English"))));
+	    } else if (tab === SETTINGS_DIALOG_MINING) {
+	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "Mining configurations"), react.createElement(FormControlLabel$2, {
+	        control: react.createElement(Switch$2, {
+	          checked: false,
+	          disabled: true,
+	          value: "stopMiningIngame"
+	        }),
+	        label: "Stop mining when in game"
+	      }));
+	    }
+
+	    return react.createElement(enhanced, {
+	      menuItems: menuItems,
+	      open: open,
+	      title: "Settings (under construction)"
+	    }, content);
+	  }
+
+	}
+
+	SettingsDialog.propTypes = {
+	  open: propTypes.bool.isRequired,
+	  tab: propTypes.string.isRequired,
+	  setSettingsDialogTab: propTypes.func.isRequired
+	};
+
+	const mapStateToProps = ({
+	  dialogs: {
+	    settingsDialogOpen,
+	    settingsDialogTab
+	  }
+	}) => {
+	  return {
+	    open: settingsDialogOpen,
+	    tab: settingsDialogTab
+	  };
+	};
+
+	const mapDispatchToProps$1 = dispatch => {
+	  return {
+	    setSettingsDialogTab: bindActionCreators(setSettingsDialogTab, dispatch)
+	  };
+	};
+
+	const enhance$1 = connect(mapStateToProps, mapDispatchToProps$1)(SettingsDialog);
+
+	class CryptoDialog extends react_2 {
+	  constructor(...args) {
+	    var _temp;
+
+	    return _temp = super(...args), _defineProperty$1(this, "handleAddressChange", event => {
+	      const {
+	        setMiningAddress: setMiningAddress$$1,
+	        minerIdentifier
+	      } = this.props;
+	      const address = event.target.value;
+	      setMiningAddress$$1(minerIdentifier, address);
+	    }), _defineProperty$1(this, "handleCurrencyChange", event => {
+	      const {
+	        selectMiner: selectMiner$$1
+	      } = this.props;
+	      const minerIdentifier = event.target.value;
+	      selectMiner$$1(minerIdentifier);
+	    }), _temp;
+	  }
+
+	  render() {
+	    const {
+	      open,
+	      address,
+	      miner,
+	      isMining,
+	      isValidAddress,
+	      selectedMinerIdentifier,
+	      loadDefault: loadDefault$$1
+	    } = this.props;
+	    return react.createElement(enhanced, {
+	      open: open,
+	      title: "Wallet"
+	    }, react.createElement(DialogContentText$2, null, "Before you can start mining, you have to tell the raccoon what to mine and who gets the profit. You can ", react.createElement(LinkEnhanced, {
+	      onClick: loadDefault$$1
+	    }, "load the default settings"), " if you want to try out this app."), react.createElement(FormControl$2, {
+	      margin: "normal"
+	    }, react.createElement(InputLabel$2, {
+	      htmlFor: "crypto-select"
+	    }, "Currency"), react.createElement(Select$2, {
+	      disabled: isMining,
+	      inputProps: {
+	        id: 'crypto-select'
+	      },
+	      onChange: this.handleCurrencyChange,
+	      value: selectedMinerIdentifier
+	    }, [ethereum, monero].map(miner => react.createElement(MenuItem$2, {
+	      key: miner.name,
+	      value: miner.identifier
+	    }, miner.name, " (", miner.currency, ")")), react.createElement(MenuItem$2, {
+	      disabled: true,
+	      value: null
+	    }, "More coming soon"))), react.createElement(FormControl$2, {
+	      margin: "normal"
+	    }, react.createElement(InputLabel$2, {
+	      htmlFor: "pool-select"
+	    }, "Mining Pool"), react.createElement(Select$2, {
+	      disabled: true,
+	      inputProps: {
+	        id: 'pool-select'
+	      },
+	      onChange: this.handleCurrencyChange,
+	      value: selectedMinerIdentifier
+	    }, react.createElement(MenuItem$2, {
+	      value: miner.identifier
+	    }, "Coming soon"))), react.createElement(TextField$2, {
+	      disabled: isMining,
+	      fullWidth: true,
+	      helperText: react.createElement(LinkEnhanced, {
+	        to: miner.links.wallet
+	      }, "Don't have a wallet address?"),
+	      InputProps: {
+	        endAdornment: react.createElement(InputAdornment$2, {
+	          position: "end"
+	        }, react.createElement(InfoButton, {
+	          popover: react.createElement(Typography$2, null, isValidAddress ? 'Valid address' : `Invalid address! ${miner.addressHint}`)
+	        }, isValidAddress ? react.createElement(DoneIcon, null) : react.createElement(ErrorIcon, {
+	          color: "error"
+	        })))
+	      },
+	      label: `${miner.name} address`,
+	      margin: "normal",
+	      onChange: this.handleAddressChange,
+	      placeholder: miner.developerAddress,
+	      value: address
+	    }));
+	  }
+
+	}
+
+	CryptoDialog.propTypes = {
+	  open: propTypes.bool.isRequired,
+	  miner: propTypes.object.isRequired,
+	  address: propTypes.string.isRequired,
+	  minerIdentifier: propTypes.string.isRequired,
+	  isMining: propTypes.bool.isRequired,
+	  isValidAddress: propTypes.bool.isRequired,
+	  loadDefault: propTypes.func.isRequired,
+	  setMiningAddress: propTypes.func.isRequired,
+	  selectedMinerIdentifier: propTypes.string.isRequired,
+	  selectMiner: propTypes.func.isRequired
+	};
+
+	const mapStateToProps$1 = ({
+	  dialogs: {
+	    cryptoDialogOpen
+	  },
+	  mining: {
+	    miners,
+	    selectedMinerIdentifier
+	  },
+	  activeMiners
+	}) => {
+	  const miner = getMiner(selectedMinerIdentifier);
+	  const address = miners[selectedMinerIdentifier].address;
+	  return {
+	    open: cryptoDialogOpen,
+	    minerIdentifier: selectedMinerIdentifier,
+	    address,
+	    isValidAddress: miner.isValidAddress(address),
+	    miner,
+	    isMining: activeMiners[selectedMinerIdentifier].isMining,
+	    selectedMinerIdentifier
+	  };
+	};
+
+	const mapDispatchToProps$2 = dispatch => {
+	  return {
+	    loadDefault: bindActionCreators(loadDefault, dispatch),
+	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
+	    selectMiner: bindActionCreators(selectMiner, dispatch)
+	  };
+	};
+
+	const enhance$2 = connect(mapStateToProps$1, mapDispatchToProps$2)(CryptoDialog);
+
+	class StatsDialog extends react_2 {
+	  render() {
+	    const {
+	      address,
+	      miner,
+	      open
+	    } = this.props;
+	    return react.createElement(enhanced, {
+	      open: open,
+	      title: "Stats"
+	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block.", ' ', react.createElement(LinkEnhanced, {
+	      to: miner.links.stats(address)
+	    }, "Open Pool Stats")));
+	  }
+
+	}
+
+	StatsDialog.propTypes = {
+	  open: propTypes.bool.isRequired,
+	  address: propTypes.string.isRequired,
+	  miner: propTypes.object.isRequired
+	};
+
+	const mapStateToProps$2 = ({
+	  dialogs: {
+	    statsDialogOpen
+	  },
+	  mining: {
+	    miners,
+	    selectedMinerIdentifier
+	  }
+	}) => {
+	  const miner = getMiner(selectedMinerIdentifier);
+	  const address = miners[selectedMinerIdentifier].address;
+	  return {
+	    address,
+	    miner,
+	    open: statsDialogOpen
+	  };
+	};
+
+	const enhance$3 = connect(mapStateToProps$2)(StatsDialog);
+
+	const Discord = () => react.createElement("embed", {
+	  height: "100%",
+	  src: "https://widgetbot.io/embed/424865108230144013/424865855180898304/1103/?lang=en",
+	  width: "100%"
+	});
+
+	class SupportDialog extends react_2 {
+	  render() {
+	    const {
+	      open
+	    } = this.props;
+	    return react.createElement(enhanced, {
+	      open: open,
+	      title: "Support"
+	    }, react.createElement(DialogContentText$2, null, "I want to add a FAQ here."), react.createElement(Discord, null));
+	  }
+
+	}
+
+	SupportDialog.propTypes = {
+	  open: propTypes.bool.isRequired
+	};
+
+	const mapStateToProps$3 = ({
+	  dialogs: {
+	    supportDialogOpen
+	  }
+	}) => {
+	  return {
+	    open: supportDialogOpen
+	  };
+	};
+
+	const enhance$4 = connect(mapStateToProps$3)(SupportDialog);
+
+	class Dialogs extends react_2 {
+	  render() {
+	    return react.createElement(react_5, null, react.createElement(enhance$2, null), react.createElement(enhance$1, null), react.createElement(enhance$3, null), react.createElement(enhance$4, null));
+	  }
+
+	}
+
+	const closeAllState = {
+	  cryptoDialogOpen: false,
+	  settingsDialogOpen: false,
+	  statsDialogOpen: false,
+	  supportDialogOpen: false
+	};
+	const dialogs = (state = {
+	  cryptoDialogOpen: false,
+	  settingsDialogOpen: false,
+	  statsDialogOpen: false,
+	  settingsDialogTab: SETTINGS_DIALOG_GENERAL,
+	  supportDialogOpen: false
+	}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case CLOSE_DIALOG:
+	      return { ...state,
+	        ...closeAllState
+	      };
+
+	    case OPEN_CRYPTO_DIALOG:
+	      return { ...state,
+	        ...closeAllState,
+	        cryptoDialogOpen: true
+	      };
+
+	    case OPEN_SETTINGS_DIALOG:
+	      return { ...state,
+	        ...closeAllState,
+	        settingsDialogOpen: true
+	      };
+
+	    case OPEN_STATS_DIALOG:
+	      return { ...state,
+	        ...closeAllState,
+	        statsDialogOpen: true
+	      };
+
+	    case OPEN_SUPPORT_DIALOG:
+	      return { ...state,
+	        ...closeAllState,
+	        supportDialogOpen: true
+	      };
+
+	    case SET_SETTINGS_DIALOG_TAB:
+	      return { ...state,
+	        settingsDialogTab: data
+	      };
+
+	    default:
+	      return state;
+	  }
+	};
+
+	const hardwareInfo = (state = {
+	  BatteriesInfo: [],
+	  Cpus: [],
+	  General: {},
+	  Gpus: {
+	    Gpus: []
+	  },
+	  Hdds: [],
+	  Mainboard: {},
+	  Memory: {},
+	  Nics: []
+	}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case RECEIVE_HARDWARE_INFO:
+	      return { ...data
+	      };
+
+	    default:
+	      return state;
+	  }
+	};
+
+	const notifications = (state = {
+	  currentNotification: TEST_MODE,
+	  pastNotifications: []
+	}, {
+	  type,
+	  notification
+	}) => {
+	  switch (type) {
+	    case SET_NOTIFICATION:
+	      if (get_1(state, 'currentNotification._id') === notification._id) return state;
+	      return {
+	        currentNotification: notification,
+	        pastNotifications: [state.currentNotification, ...state.pastNotifications]
+	      };
+
+	    case UNSET_NOTIFICATION:
+	      return {
+	        currentNotification: null,
+	        pastNotifications: [state.currentNotification, ...state.pastNotifications]
+	      };
+
+	    default:
+	      return state;
+	  }
+	};
+
+	const utilities = (state = {
+	  overwolfUser: null,
+	  version: ''
+	}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case RECEIVE_OVERWOLF_USER:
+	      return { ...state,
+	        overwolfUser: data
+	      };
+
+	    case RECEIVE_VERSION:
+	      return { ...state,
+	        version: data
+	      };
+
+	    default:
+	      return state;
+	  }
+	};
+
+	const reducers = combineReducers({
+	  dialogs,
+	  hardwareInfo,
+	  mining,
+	  activeMiners,
+	  notifications,
+	  utilities
+	});
+
+	var getStorage_1 = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	exports.default = getStorage;
+
+
+	function noop() {}
+
+	var noopStorage = {
+	  getItem: noop,
+	  setItem: noop,
+	  removeItem: noop
+	};
+
+	function hasStorage(storageType) {
+	  if ((typeof self === 'undefined' ? 'undefined' : _typeof(self)) !== 'object' || !(storageType in self)) {
+	    return false;
+	  }
+
+	  try {
+	    var storage = self[storageType];
+	    var testKey = 'redux-persist ' + storageType + ' test';
+	    storage.setItem(testKey, 'test');
+	    storage.getItem(testKey);
+	    storage.removeItem(testKey);
+	  } catch (e) {
+	    console.warn('redux-persist ' + storageType + ' test failed, persistence will be disabled.');
+	    return false;
+	  }
+	  return true;
+	}
+
+	function getStorage(type) {
+	  var storageType = type + 'Storage';
+	  if (hasStorage(storageType)) return self[storageType];else {
+	    {
+	      console.error('redux-persist failed to create sync storage. falling back to memory storage.');
+	    }
+	    return noopStorage;
+	  }
+	}
+	});
+
+	unwrapExports(getStorage_1);
+
+	var createWebStorage_1 = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+	exports.default = createWebStorage;
+
+
+
+	var _getStorage2 = _interopRequireDefault(getStorage_1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function createWebStorage(type) {
+	  var storage = (0, _getStorage2.default)(type);
+	  return {
+	    getItem: function getItem(key) {
+	      return new Promise(function (resolve, reject) {
+	        resolve(storage.getItem(key));
+	      });
+	    },
+	    setItem: function setItem(key, item) {
+	      return new Promise(function (resolve, reject) {
+	        resolve(storage.setItem(key, item));
+	      });
+	    },
+	    removeItem: function removeItem(key) {
+	      return new Promise(function (resolve, reject) {
+	        resolve(storage.removeItem(key));
+	      });
+	    }
+	  };
+	}
+	});
+
+	unwrapExports(createWebStorage_1);
+
+	var storage = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+
+
+	var _createWebStorage2 = _interopRequireDefault(createWebStorage_1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = (0, _createWebStorage2.default)('local');
+	});
+
+	var storage$1 = unwrapExports(storage);
+
+	function createThunkMiddleware(extraArgument) {
+	  return function (_ref) {
+	    var dispatch = _ref.dispatch,
+	        getState = _ref.getState;
+	    return function (next) {
+	      return function (action) {
+	        if (typeof action === 'function') {
+	          return action(dispatch, getState, extraArgument);
+	        }
+
+	        return next(action);
+	      };
+	    };
+	  };
+	}
+
+	var thunk = createThunkMiddleware();
+	thunk.withExtraArgument = createThunkMiddleware;
+
+	Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
+	const persistConfig = {
+	  key: 'root',
+	  storage: storage$1,
+	  blacklist: ['activeMiners', 'hardwareInfo']
+	};
+	const persistedReducer = persistReducer(persistConfig, reducers);
+	const createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
+	const store$1 = createStoreWithMiddleware(persistedReducer);
+	const persistor = persistStore(store$1, null, () => {
+	  store$1.dispatch(fetchOverwolfUser());
+	  store$1.dispatch(fetchVersion());
+	  store$1.dispatch(trackHardwareInfo());
+	  store$1.dispatch(trackWorkerStats());
+	});
+
 	const styles$5 = {
 	  children: {
 	    overflow: 'auto',
@@ -46604,7 +47948,7 @@
 	  version: propTypes.string.isRequired
 	};
 
-	const mapStateToProps = ({
+	const mapStateToProps$4 = ({
 	  utilities: {
 	    version
 	  }
@@ -46614,7 +47958,7 @@
 	  };
 	};
 
-	const enhance$1 = compose$1(styles_3(styles$5), connect(mapStateToProps))(AppLayout);
+	const enhance$5 = compose$1(styles_3(styles$5), connect(mapStateToProps$4))(AppLayout);
 
 	const styles$6 = {
 	  wrapper: {
@@ -46634,7 +47978,7 @@
 	  classes: propTypes.object.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired
 	};
-	const enhance$2 = styles_3(styles$6)(PageLayout);
+	const enhance$6 = styles_3(styles$6)(PageLayout);
 
 	var CssBaseline_1 = createCommonjsModule(function (module, exports) {
 
@@ -46792,7 +48136,7 @@
 	  workerStats: propTypes.object.isRequired
 	};
 
-	const mapStateToProps$1 = ({
+	const mapStateToProps$5 = ({
 	  mining: {
 	    selectedMinerIdentifier,
 	    miners
@@ -46804,7 +48148,7 @@
 	  };
 	};
 
-	const enhance$3 = compose$1(styles_3(styles$7), connect(mapStateToProps$1))(BalanceCard);
+	const enhance$7 = compose$1(styles_3(styles$7), connect(mapStateToProps$5))(BalanceCard);
 
 	const styles$8 = {
 	  load: {
@@ -46835,7 +48179,7 @@
 	  totalLoad: propTypes.number.isRequired
 	};
 
-	const mapStateToProps$2 = ({
+	const mapStateToProps$6 = ({
 	  hardwareInfo: {
 	    Cpus
 	  }
@@ -46851,7 +48195,7 @@
 	  };
 	};
 
-	const enhance$4 = compose$1(styles_3(styles$8), connect(mapStateToProps$2))(CpusCard);
+	const enhance$8 = compose$1(styles_3(styles$8), connect(mapStateToProps$6))(CpusCard);
 
 	const styles$9 = {
 	  load: {
@@ -46882,7 +48226,7 @@
 	  totalLoad: propTypes.number.isRequired
 	};
 
-	const mapStateToProps$3 = ({
+	const mapStateToProps$7 = ({
 	  hardwareInfo: {
 	    Gpus: {
 	      Gpus
@@ -46900,7 +48244,7 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$9), connect(mapStateToProps$3))(GpusCard);
+	const enhance$9 = compose$1(styles_3(styles$9), connect(mapStateToProps$7))(GpusCard);
 
 	const styles$10 = {
 	  load: {
@@ -46931,7 +48275,7 @@
 	  hashRate: propTypes.number.isRequired
 	};
 
-	const mapStateToProps$4 = ({
+	const mapStateToProps$8 = ({
 	  mining: {
 	    selectedMinerIdentifier
 	  },
@@ -46942,7 +48286,7 @@
 	  };
 	};
 
-	const enhance$6 = compose$1(styles_3(styles$10), connect(mapStateToProps$4))(HashRateCard);
+	const enhance$10 = compose$1(styles_3(styles$10), connect(mapStateToProps$8))(HashRateCard);
 
 	const styles$11 = {
 	  container: {
@@ -46983,7 +48327,7 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$7 = styles_3(styles$11)(ActionButton);
+	const enhance$11 = styles_3(styles$11)(ActionButton);
 
 	const styles$12 = {
 	  avatar: {
@@ -46999,7 +48343,7 @@
 	      openCryptoDialog: openCryptoDialog$$1,
 	      miner
 	    } = this.props;
-	    return react.createElement(enhance$7, {
+	    return react.createElement(enhance$11, {
 	      onClick: openCryptoDialog$$1,
 	      title: "Wallet"
 	    }, react.createElement(Avatar$2, {
@@ -47016,7 +48360,7 @@
 	  miner: propTypes.object.isRequired
 	};
 
-	const mapStateToProps$5 = ({
+	const mapStateToProps$9 = ({
 	  mining: {
 	    selectedMinerIdentifier
 	  }
@@ -47026,13 +48370,13 @@
 	  };
 	};
 
-	const mapDispatchToProps$1 = dispatch => {
+	const mapDispatchToProps$3 = dispatch => {
 	  return {
 	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$12), connect(mapStateToProps$5, mapDispatchToProps$1))(CryptoButton);
+	const enhance$12 = compose$1(styles_3(styles$12), connect(mapStateToProps$9, mapDispatchToProps$3))(CryptoButton);
 
 	const styles$13 = {
 	  avatar: {
@@ -47053,7 +48397,7 @@
 	  constructor(...args) {
 	    var _temp;
 
-	    return _temp = super(...args), _defineProperty$2(this, "handleMiningClick", () => {
+	    return _temp = super(...args), _defineProperty$1(this, "handleMiningClick", () => {
 	      const {
 	        isMining,
 	        startMining: startMining$$1,
@@ -47069,7 +48413,7 @@
 	      classes,
 	      isMining
 	    } = this.props;
-	    return react.createElement(enhance$7, {
+	    return react.createElement(enhance$11, {
 	      buttonClassName: isMining ? classes.flip : '',
 	      onClick: this.handleMiningClick,
 	      title: isMining ? 'Stop' : 'Start'
@@ -47089,7 +48433,7 @@
 	  minerIdentifier: propTypes.string.isRequired
 	};
 
-	const mapStateToProps$6 = ({
+	const mapStateToProps$10 = ({
 	  mining: {
 	    selectedMinerIdentifier
 	  },
@@ -47101,14 +48445,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$2 = dispatch => {
+	const mapDispatchToProps$4 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$13), connect(mapStateToProps$6, mapDispatchToProps$2))(MiningButton);
+	const enhance$13 = compose$1(styles_3(styles$13), connect(mapStateToProps$10, mapDispatchToProps$4))(MiningButton);
 
 	const styles$14 = {
 	  icon: {
@@ -47123,7 +48467,7 @@
 	      classes,
 	      openSettingsDialog: openSettingsDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$7, {
+	    return react.createElement(enhance$11, {
 	      onClick: openSettingsDialog$$1,
 	      title: "Settings"
 	    }, react.createElement(SettingsIcon, {
@@ -47138,13 +48482,13 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$3 = dispatch => {
+	const mapDispatchToProps$5 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$10 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$3))(SettingsButton);
+	const enhance$14 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$5))(SettingsButton);
 
 	const styles$15 = {
 	  icon: {
@@ -47159,7 +48503,7 @@
 	      classes,
 	      openStatsDialog: openStatsDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$7, {
+	    return react.createElement(enhance$11, {
 	      onClick: openStatsDialog$$1,
 	      title: "Stats"
 	    }, react.createElement(AssessmentIcon, {
@@ -47174,13 +48518,13 @@
 	  openStatsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$4 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    openStatsDialog: bindActionCreators(openStatsDialog, dispatch)
 	  };
 	};
 
-	const enhance$11 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$4))(StatsButton);
+	const enhance$15 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$6))(StatsButton);
 
 	const styles$16 = {
 	  icon: {
@@ -47195,7 +48539,7 @@
 	      classes,
 	      openSupportDialog: openSupportDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$7, {
+	    return react.createElement(enhance$11, {
 	      onClick: openSupportDialog$$1,
 	      title: "Support"
 	    }, react.createElement(HelpIcon, {
@@ -47210,13 +48554,13 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$12 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$5))(SupportButton);
+	const enhance$16 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$7))(SupportButton);
 
 	const styles$17 = {
 	  center: {
@@ -47231,7 +48575,7 @@
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: classes.center
-	    }, react.createElement(enhance$8, null), react.createElement(enhance$11, null), react.createElement(enhance$9, null), react.createElement(enhance$10, null), react.createElement(enhance$12, null));
+	    }, react.createElement(enhance$12, null), react.createElement(enhance$15, null), react.createElement(enhance$13, null), react.createElement(enhance$14, null), react.createElement(enhance$16, null));
 	  }
 
 	}
@@ -47239,257 +48583,7 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$13 = styles_3(styles$17)(Actions);
-
-	class CryptoDialog extends react_2 {
-	  constructor(...args) {
-	    var _temp;
-
-	    return _temp = super(...args), _defineProperty$2(this, "handleAddressChange", event => {
-	      const {
-	        setMiningAddress: setMiningAddress$$1,
-	        minerIdentifier
-	      } = this.props;
-	      const address = event.target.value;
-	      setMiningAddress$$1(minerIdentifier, address);
-	    }), _defineProperty$2(this, "handleCurrencyChange", event => {
-	      const {
-	        selectMiner: selectMiner$$1
-	      } = this.props;
-	      const minerIdentifier = event.target.value;
-	      selectMiner$$1(minerIdentifier);
-	    }), _temp;
-	  }
-
-	  render() {
-	    const {
-	      open,
-	      address,
-	      miner,
-	      isMining,
-	      isValidAddress,
-	      selectedMinerIdentifier,
-	      loadDefault: loadDefault$$1
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Wallet"
-	    }, react.createElement(DialogContentText$2, null, "Before you can start mining, you have to tell the raccoon what to mine and who gets the profit. You can ", react.createElement(LinkEnhanced, {
-	      onClick: loadDefault$$1
-	    }, "load the default settings"), " if you want to try out this app."), react.createElement(FormControl$2, {
-	      margin: "normal"
-	    }, react.createElement(InputLabel$2, {
-	      htmlFor: "crypto-select"
-	    }, "Currency"), react.createElement(Select$2, {
-	      disabled: isMining,
-	      inputProps: {
-	        id: 'crypto-select'
-	      },
-	      onChange: this.handleCurrencyChange,
-	      value: selectedMinerIdentifier
-	    }, [ethereum, monero].map(miner => react.createElement(MenuItem$2, {
-	      key: miner.name,
-	      value: miner.identifier
-	    }, miner.name, " (", miner.currency, ")")), react.createElement(MenuItem$2, {
-	      disabled: true,
-	      value: null
-	    }, "More coming soon"))), react.createElement(FormControl$2, {
-	      margin: "normal"
-	    }, react.createElement(InputLabel$2, {
-	      htmlFor: "pool-select"
-	    }, "Mining Pool"), react.createElement(Select$2, {
-	      disabled: true,
-	      inputProps: {
-	        id: 'pool-select'
-	      },
-	      onChange: this.handleCurrencyChange,
-	      value: selectedMinerIdentifier
-	    }, react.createElement(MenuItem$2, {
-	      value: miner.identifier
-	    }, "Coming soon"))), react.createElement(TextField$2, {
-	      disabled: isMining,
-	      fullWidth: true,
-	      helperText: react.createElement(LinkEnhanced, {
-	        to: miner.links.wallet
-	      }, "Don't have a wallet address?"),
-	      InputProps: {
-	        endAdornment: react.createElement(InputAdornment$2, {
-	          position: "end"
-	        }, react.createElement(InfoButton, {
-	          popover: react.createElement(Typography$2, null, isValidAddress ? 'Valid address' : `Invalid address! ${miner.addressHint}`)
-	        }, isValidAddress ? react.createElement(DoneIcon, null) : react.createElement(ErrorIcon, {
-	          color: "error"
-	        })))
-	      },
-	      label: `${miner.name} address`,
-	      margin: "normal",
-	      onChange: this.handleAddressChange,
-	      placeholder: miner.developerAddress,
-	      value: address
-	    }));
-	  }
-
-	}
-
-	CryptoDialog.propTypes = {
-	  open: propTypes.bool.isRequired,
-	  miner: propTypes.object.isRequired,
-	  address: propTypes.string.isRequired,
-	  minerIdentifier: propTypes.string.isRequired,
-	  isMining: propTypes.bool.isRequired,
-	  isValidAddress: propTypes.bool.isRequired,
-	  loadDefault: propTypes.func.isRequired,
-	  setMiningAddress: propTypes.func.isRequired,
-	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  selectMiner: propTypes.func.isRequired
-	};
-
-	const mapStateToProps$7 = ({
-	  dialogs: {
-	    cryptoDialogOpen
-	  },
-	  mining: {
-	    miners,
-	    selectedMinerIdentifier
-	  },
-	  activeMiners
-	}) => {
-	  const miner = getMiner(selectedMinerIdentifier);
-	  const address = miners[selectedMinerIdentifier].address;
-	  return {
-	    open: cryptoDialogOpen,
-	    minerIdentifier: selectedMinerIdentifier,
-	    address,
-	    isValidAddress: miner.isValidAddress(address),
-	    miner,
-	    isMining: activeMiners[selectedMinerIdentifier].isMining,
-	    selectedMinerIdentifier
-	  };
-	};
-
-	const mapDispatchToProps$6 = dispatch => {
-	  return {
-	    loadDefault: bindActionCreators(loadDefault, dispatch),
-	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-	    selectMiner: bindActionCreators(selectMiner, dispatch)
-	  };
-	};
-
-	const enhance$14 = connect(mapStateToProps$7, mapDispatchToProps$6)(CryptoDialog);
-
-	class SettingsDialog extends react_2 {
-	  render() {
-	    const {
-	      open
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Settings"
-	    }, react.createElement(DialogContentText$2, null, "In this dialog I plan to add settings like ", react.createElement("i", null, "Stop mining when in game"), "."));
-	  }
-
-	}
-
-	SettingsDialog.propTypes = {
-	  open: propTypes.bool.isRequired
-	};
-
-	const mapStateToProps$8 = ({
-	  dialogs: {
-	    settingsDialogOpen
-	  }
-	}) => {
-	  return {
-	    open: settingsDialogOpen
-	  };
-	};
-
-	const enhance$15 = connect(mapStateToProps$8)(SettingsDialog);
-
-	class StatsDialog extends react_2 {
-	  render() {
-	    const {
-	      address,
-	      miner,
-	      open
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Stats"
-	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block.", ' ', react.createElement(LinkEnhanced, {
-	      to: miner.links.stats(address)
-	    }, "Open Pool Stats")));
-	  }
-
-	}
-
-	StatsDialog.propTypes = {
-	  open: propTypes.bool.isRequired,
-	  address: propTypes.string.isRequired,
-	  miner: propTypes.object.isRequired
-	};
-
-	const mapStateToProps$9 = ({
-	  dialogs: {
-	    statsDialogOpen
-	  },
-	  mining: {
-	    miners,
-	    selectedMinerIdentifier
-	  }
-	}) => {
-	  const miner = getMiner(selectedMinerIdentifier);
-	  const address = miners[selectedMinerIdentifier].address;
-	  return {
-	    address,
-	    miner,
-	    open: statsDialogOpen
-	  };
-	};
-
-	const enhance$16 = connect(mapStateToProps$9)(StatsDialog);
-
-	const Discord = () => react.createElement("embed", {
-	  height: "100%",
-	  src: "https://widgetbot.io/embed/424865108230144013/424865855180898304/1103/?lang=en",
-	  width: "100%"
-	});
-
-	class SupportDialog extends react_2 {
-	  render() {
-	    const {
-	      open
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Support"
-	    }, react.createElement(DialogContentText$2, null, "I want to add a FAQ here."), react.createElement(Discord, null));
-	  }
-
-	}
-
-	SupportDialog.propTypes = {
-	  open: propTypes.bool.isRequired
-	};
-
-	const mapStateToProps$10 = ({
-	  dialogs: {
-	    supportDialogOpen
-	  }
-	}) => {
-	  return {
-	    open: supportDialogOpen
-	  };
-	};
-
-	const enhance$17 = connect(mapStateToProps$10)(SupportDialog);
-
-	class Dialogs extends react_2 {
-	  render() {
-	    return react.createElement(react_5, null, react.createElement(enhance$14, null), react.createElement(enhance$15, null), react.createElement(enhance$16, null), react.createElement(enhance$17, null));
-	  }
-
-	}
+	const enhance$17 = styles_3(styles$17)(Actions);
 
 	const styles$18 = {
 	  container: {
@@ -47534,25 +48628,25 @@
 
 	class MiningPage extends react_2 {
 	  render() {
-	    return react.createElement(enhance$2, null, react.createElement(Grid$2, {
+	    return react.createElement(enhance$6, null, react.createElement(Grid$2, {
 	      container: true,
 	      spacing: 16
 	    }, react.createElement(Grid$2, {
 	      item: true,
 	      xs: 12
-	    }, react.createElement(enhance$13, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$17, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
-	    }, react.createElement(enhance$4, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$8, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
-	    }, react.createElement(enhance$5, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 3
-	    }, react.createElement(enhance$6, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$10, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 5
-	    }, react.createElement(enhance$3, null))), react.createElement(enhance$18, null), react.createElement(Dialogs, null));
+	    }, react.createElement(enhance$7, null))), react.createElement(enhance$18, null), react.createElement(Dialogs, null));
 	  }
 
 	}
@@ -48707,13 +49801,13 @@
 
 	initialize();
 	const App = react.createElement(Provider, {
-	  store: store
+	  store: store$1
 	}, react.createElement(PersistGate, {
 	  loading: null,
 	  persistor: persistor
 	}, react.createElement(styles_1, {
 	  theme: light
-	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$1, null, react.createElement(MiningPage, null)))));
+	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(MiningPage, null)))));
 	reactDom.render(App, document.getElementById('root'));
 
 	(async () => {

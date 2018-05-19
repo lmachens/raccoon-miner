@@ -3,8 +3,11 @@ import {
   OPEN_CRYPTO_DIALOG,
   OPEN_SETTINGS_DIALOG,
   OPEN_STATS_DIALOG,
-  OPEN_SUPPORT_DIALOG
+  OPEN_SUPPORT_DIALOG,
+  SET_SETTINGS_DIALOG_TAB
 } from '../types';
+
+import { SETTINGS_DIALOG_GENERAL } from '../../ui/components/dialogs';
 
 const closeAllState = {
   cryptoDialogOpen: false,
@@ -18,21 +21,24 @@ export const dialogs = (
     cryptoDialogOpen: false,
     settingsDialogOpen: false,
     statsDialogOpen: false,
+    settingsDialogTab: SETTINGS_DIALOG_GENERAL,
     supportDialogOpen: false
   },
-  { type }
+  { type, data }
 ) => {
   switch (type) {
     case CLOSE_DIALOG:
-      return { ...closeAllState };
+      return { ...state, ...closeAllState };
     case OPEN_CRYPTO_DIALOG:
-      return { ...closeAllState, cryptoDialogOpen: true };
+      return { ...state, ...closeAllState, cryptoDialogOpen: true };
     case OPEN_SETTINGS_DIALOG:
-      return { ...closeAllState, settingsDialogOpen: true };
+      return { ...state, ...closeAllState, settingsDialogOpen: true };
     case OPEN_STATS_DIALOG:
-      return { ...closeAllState, statsDialogOpen: true };
+      return { ...state, ...closeAllState, statsDialogOpen: true };
     case OPEN_SUPPORT_DIALOG:
-      return { ...closeAllState, supportDialogOpen: true };
+      return { ...state, ...closeAllState, supportDialogOpen: true };
+    case SET_SETTINGS_DIALOG_TAB:
+      return { ...state, settingsDialogTab: data };
     default:
       return state;
   }

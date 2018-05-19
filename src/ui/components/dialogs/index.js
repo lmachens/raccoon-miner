@@ -1,3 +1,5 @@
+export * from './_Settings';
+
 import React, { Fragment, PureComponent } from 'react';
 
 import { CryptoDialog } from './_Crypto';

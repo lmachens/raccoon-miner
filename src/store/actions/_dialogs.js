@@ -3,7 +3,8 @@ import {
   OPEN_CRYPTO_DIALOG,
   OPEN_SETTINGS_DIALOG,
   OPEN_STATS_DIALOG,
-  OPEN_SUPPORT_DIALOG
+  OPEN_SUPPORT_DIALOG,
+  SET_SETTINGS_DIALOG_TAB
 } from '../types';
 
 export const closeDialog = () => {
@@ -42,6 +43,15 @@ export const openSupportDialog = () => {
   return dispatch => {
     dispatch({
       type: OPEN_SUPPORT_DIALOG
+    });
+  };
+};
+
+export const setSettingsDialogTab = tab => {
+  return dispatch => {
+    dispatch({
+      type: SET_SETTINGS_DIALOG_TAB,
+      data: tab
     });
   };
 };

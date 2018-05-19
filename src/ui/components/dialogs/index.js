@@ -1,4 +1,5 @@
 export * from './_Settings';
+export * from './_Support';
 
 import React, { Fragment, PureComponent } from 'react';
 

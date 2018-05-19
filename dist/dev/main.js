@@ -628,6 +628,7 @@
 	const OPEN_STATS_DIALOG = 'OPEN_STATS_DIALOG';
 	const OPEN_SUPPORT_DIALOG = 'OPEN_SUPPORT_DIALOG';
 	const SET_SETTINGS_DIALOG_TAB = 'SET_SETTINGS_DIALOG_TAB';
+	const SET_SUPPORT_DIALOG_TAB = 'SET_SUPPORT_DIALOG_TAB';
 
 	const RECEIVE_HARDWARE_INFO = 'RECEIVE_HARDWARE_INFO';
 
@@ -688,6 +689,14 @@
 	  return dispatch => {
 	    dispatch({
 	      type: SET_SETTINGS_DIALOG_TAB,
+	      data: tab
+	    });
+	  };
+	};
+	const setSupportDialogTab = tab => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_SUPPORT_DIALOG_TAB,
 	      data: tab
 	    });
 	  };
@@ -47414,6 +47423,107 @@
 
 	const enhance$1 = connect(mapStateToProps, mapDispatchToProps$1)(SettingsDialog);
 
+	const Discord = () => react.createElement("embed", {
+	  height: "100%",
+	  src: "https://widgetbot.io/embed/424865108230144013/424865855180898304/1103/?lang=en",
+	  width: "100%"
+	});
+
+	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
+	const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
+
+	const FAQEntry = ({
+	  question,
+	  answer
+	}) => react.createElement(react_5, null, react.createElement(Typography$2, {
+	  variant: "body2"
+	}, question), react.createElement(Typography$2, {
+	  variant: "body1"
+	}, answer));
+
+	FAQEntry.propTypes = {
+	  question: propTypes.string.isRequired,
+	  answer: propTypes.string.isRequired
+	};
+
+	class SupportDialog extends react_2 {
+	  constructor(...args) {
+	    var _temp;
+
+	    return _temp = super(...args), _defineProperty$1(this, "handleTabClick", tab => () => {
+	      const {
+	        setSupportDialogTab: setSupportDialogTab$$1
+	      } = this.props;
+	      setSupportDialogTab$$1(tab);
+	    }), _temp;
+	  }
+
+	  render() {
+	    const {
+	      open,
+	      tab
+	    } = this.props;
+	    const menuItems = [react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SUPPORT_DIALOG_DISCORD,
+	      onClick: this.handleTabClick(SUPPORT_DIALOG_DISCORD),
+	      selected: tab === SUPPORT_DIALOG_DISCORD
+	    }, react.createElement(ListItemText$2, {
+	      primary: "Chat"
+	    })), react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SUPPORT_DIALOG_FAQ,
+	      onClick: this.handleTabClick(SUPPORT_DIALOG_FAQ),
+	      selected: tab === SUPPORT_DIALOG_FAQ
+	    }, react.createElement(ListItemText$2, {
+	      primary: "FAQ"
+	    }))];
+	    let content;
+
+	    if (tab === SUPPORT_DIALOG_DISCORD) {
+	      content = react.createElement(Discord, null);
+	    } else if (tab === SUPPORT_DIALOG_FAQ) {
+	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "FAQ (under construction)"), react.createElement(FAQEntry, {
+	        answer: "A mining pool is the pooling of resources by miners, who share their processing power over\r a network, to split the reward equally, according to the amount of work they contributed\r to the probability of finding a block.",
+	        question: "What is a mining pool?"
+	      }));
+	    }
+
+	    return react.createElement(enhanced, {
+	      menuItems: menuItems,
+	      open: open,
+	      title: "Support"
+	    }, content);
+	  }
+
+	}
+
+	SupportDialog.propTypes = {
+	  open: propTypes.bool.isRequired,
+	  tab: propTypes.string.isRequired,
+	  setSupportDialogTab: propTypes.func.isRequired
+	};
+
+	const mapStateToProps$1 = ({
+	  dialogs: {
+	    supportDialogOpen,
+	    supportDialogTab
+	  }
+	}) => {
+	  return {
+	    open: supportDialogOpen,
+	    tab: supportDialogTab
+	  };
+	};
+
+	const mapDispatchToProps$2 = dispatch => {
+	  return {
+	    setSupportDialogTab: bindActionCreators(setSupportDialogTab, dispatch)
+	  };
+	};
+
+	const enhance$2 = connect(mapStateToProps$1, mapDispatchToProps$2)(SupportDialog);
+
 	class CryptoDialog extends react_2 {
 	  constructor(...args) {
 	    var _temp;
@@ -47517,7 +47627,7 @@
 	  selectMiner: propTypes.func.isRequired
 	};
 
-	const mapStateToProps$1 = ({
+	const mapStateToProps$2 = ({
 	  dialogs: {
 	    cryptoDialogOpen
 	  },
@@ -47540,7 +47650,7 @@
 	  };
 	};
 
-	const mapDispatchToProps$2 = dispatch => {
+	const mapDispatchToProps$3 = dispatch => {
 	  return {
 	    loadDefault: bindActionCreators(loadDefault, dispatch),
 	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
@@ -47548,7 +47658,7 @@
 	  };
 	};
 
-	const enhance$2 = connect(mapStateToProps$1, mapDispatchToProps$2)(CryptoDialog);
+	const enhance$3 = connect(mapStateToProps$2, mapDispatchToProps$3)(CryptoDialog);
 
 	class StatsDialog extends react_2 {
 	  render() {
@@ -47573,7 +47683,7 @@
 	  miner: propTypes.object.isRequired
 	};
 
-	const mapStateToProps$2 = ({
+	const mapStateToProps$3 = ({
 	  dialogs: {
 	    statsDialogOpen
 	  },
@@ -47591,46 +47701,11 @@
 	  };
 	};
 
-	const enhance$3 = connect(mapStateToProps$2)(StatsDialog);
-
-	const Discord = () => react.createElement("embed", {
-	  height: "100%",
-	  src: "https://widgetbot.io/embed/424865108230144013/424865855180898304/1103/?lang=en",
-	  width: "100%"
-	});
-
-	class SupportDialog extends react_2 {
-	  render() {
-	    const {
-	      open
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Support"
-	    }, react.createElement(DialogContentText$2, null, "I want to add a FAQ here."), react.createElement(Discord, null));
-	  }
-
-	}
-
-	SupportDialog.propTypes = {
-	  open: propTypes.bool.isRequired
-	};
-
-	const mapStateToProps$3 = ({
-	  dialogs: {
-	    supportDialogOpen
-	  }
-	}) => {
-	  return {
-	    open: supportDialogOpen
-	  };
-	};
-
-	const enhance$4 = connect(mapStateToProps$3)(SupportDialog);
+	const enhance$4 = connect(mapStateToProps$3)(StatsDialog);
 
 	class Dialogs extends react_2 {
 	  render() {
-	    return react.createElement(react_5, null, react.createElement(enhance$2, null), react.createElement(enhance$1, null), react.createElement(enhance$3, null), react.createElement(enhance$4, null));
+	    return react.createElement(react_5, null, react.createElement(enhance$3, null), react.createElement(enhance$1, null), react.createElement(enhance$4, null), react.createElement(enhance$2, null));
 	  }
 
 	}
@@ -47645,8 +47720,9 @@
 	  cryptoDialogOpen: false,
 	  settingsDialogOpen: false,
 	  statsDialogOpen: false,
+	  supportDialogOpen: false,
 	  settingsDialogTab: SETTINGS_DIALOG_GENERAL,
-	  supportDialogOpen: false
+	  supportDialogTab: SUPPORT_DIALOG_DISCORD
 	}, {
 	  type,
 	  data
@@ -47684,6 +47760,11 @@
 	    case SET_SETTINGS_DIALOG_TAB:
 	      return { ...state,
 	        settingsDialogTab: data
+	      };
+
+	    case SET_SUPPORT_DIALOG_TAB:
+	      return { ...state,
+	        supportDialogTab: data
 	      };
 
 	    default:
@@ -48370,13 +48451,13 @@
 	  };
 	};
 
-	const mapDispatchToProps$3 = dispatch => {
+	const mapDispatchToProps$4 = dispatch => {
 	  return {
 	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
 	  };
 	};
 
-	const enhance$12 = compose$1(styles_3(styles$12), connect(mapStateToProps$9, mapDispatchToProps$3))(CryptoButton);
+	const enhance$12 = compose$1(styles_3(styles$12), connect(mapStateToProps$9, mapDispatchToProps$4))(CryptoButton);
 
 	const styles$13 = {
 	  avatar: {
@@ -48445,14 +48526,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$4 = dispatch => {
+	const mapDispatchToProps$5 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$13 = compose$1(styles_3(styles$13), connect(mapStateToProps$10, mapDispatchToProps$4))(MiningButton);
+	const enhance$13 = compose$1(styles_3(styles$13), connect(mapStateToProps$10, mapDispatchToProps$5))(MiningButton);
 
 	const styles$14 = {
 	  icon: {
@@ -48482,13 +48563,13 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$14 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$5))(SettingsButton);
+	const enhance$14 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$6))(SettingsButton);
 
 	const styles$15 = {
 	  icon: {
@@ -48518,13 +48599,13 @@
 	  openStatsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$6 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    openStatsDialog: bindActionCreators(openStatsDialog, dispatch)
 	  };
 	};
 
-	const enhance$15 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$6))(StatsButton);
+	const enhance$15 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$7))(StatsButton);
 
 	const styles$16 = {
 	  icon: {
@@ -48554,13 +48635,13 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$7 = dispatch => {
+	const mapDispatchToProps$8 = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$16 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$7))(SupportButton);
+	const enhance$16 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$8))(SupportButton);
 
 	const styles$17 = {
 	  center: {

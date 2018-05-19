@@ -4,10 +4,10 @@ import {
   OPEN_SETTINGS_DIALOG,
   OPEN_STATS_DIALOG,
   OPEN_SUPPORT_DIALOG,
-  SET_SETTINGS_DIALOG_TAB
+  SET_SETTINGS_DIALOG_TAB,
+  SET_SUPPORT_DIALOG_TAB
 } from '../types';
-
-import { SETTINGS_DIALOG_GENERAL } from '../../ui/components/dialogs';
+import { SETTINGS_DIALOG_GENERAL, SUPPORT_DIALOG_DISCORD } from '../../ui/components/dialogs';
 
 const closeAllState = {
   cryptoDialogOpen: false,
@@ -21,8 +21,9 @@ export const dialogs = (
     cryptoDialogOpen: false,
     settingsDialogOpen: false,
     statsDialogOpen: false,
+    supportDialogOpen: false,
     settingsDialogTab: SETTINGS_DIALOG_GENERAL,
-    supportDialogOpen: false
+    supportDialogTab: SUPPORT_DIALOG_DISCORD
   },
   { type, data }
 ) => {
@@ -39,6 +40,8 @@ export const dialogs = (
       return { ...state, ...closeAllState, supportDialogOpen: true };
     case SET_SETTINGS_DIALOG_TAB:
       return { ...state, settingsDialogTab: data };
+    case SET_SUPPORT_DIALOG_TAB:
+      return { ...state, supportDialogTab: data };
     default:
       return state;
   }

@@ -47,6 +47,7 @@ class SettingsDialog extends PureComponent {
         <ListItemText primary="Mining" />
       </MenuItem>
     ];
+
     let content;
     if (tab === SETTINGS_DIALOG_GENERAL) {
       content = (

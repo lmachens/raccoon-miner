@@ -4,7 +4,8 @@ import {
   OPEN_SETTINGS_DIALOG,
   OPEN_STATS_DIALOG,
   OPEN_SUPPORT_DIALOG,
-  SET_SETTINGS_DIALOG_TAB
+  SET_SETTINGS_DIALOG_TAB,
+  SET_SUPPORT_DIALOG_TAB
 } from '../types';
 
 export const closeDialog = () => {
@@ -51,6 +52,15 @@ export const setSettingsDialogTab = tab => {
   return dispatch => {
     dispatch({
       type: SET_SETTINGS_DIALOG_TAB,
+      data: tab
+    });
+  };
+};
+
+export const setSupportDialogTab = tab => {
+  return dispatch => {
+    dispatch({
+      type: SET_SUPPORT_DIALOG_TAB,
       data: tab
     });
   };

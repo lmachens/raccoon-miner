@@ -43,7 +43,7 @@
     "github-remove-all-releases": "1.0.1",
     "husky": "0.14.3",
     "jest": "22.4.4",
-    "lint-staged": "7.1.1",
+    "lint-staged": "7.1.2",
     "prettier": "1.12.1",
     "regenerator-runtime": "0.11.1",
     "request": "2.86.0",

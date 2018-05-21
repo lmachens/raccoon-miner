@@ -46,7 +46,7 @@
     "lint-staged": "7.1.2",
     "prettier": "1.12.1",
     "regenerator-runtime": "0.11.1",
-    "request": "2.86.0",
+    "request": "2.87.0",
     "rollup": "0.58.2",
     "rollup-plugin-babel": "4.0.0-beta.4",
     "rollup-plugin-commonjs": "9.1.3",

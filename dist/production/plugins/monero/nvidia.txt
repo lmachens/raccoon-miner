@@ -1,0 +1,11 @@
+"gpu_threads_conf" :
+[
+// gpu: GeForce GTX 980 architecture: 52
+// memory: 3926/4096 MiB
+// smx: 16
+{ "index" : 0,
+"threads" : 16, "blocks" : 64,
+"bfactor" : 6, "bsleep" : 25,
+"affine_to_cpu" : false, "sync_mode" : 3,
+},
+],

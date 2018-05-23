@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/lmachens/raccoon-miner/compare/v0.2.0...v0.3.0) (2018-05-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency recompose to v0.27.1 ([#19](https://github.com/lmachens/raccoon-miner/issues/19)) ([e0879df](https://github.com/lmachens/raccoon-miner/commit/e0879df))
+
+
+### Features
+
+* **faq:** add entries for xmr, eth and 100% load ([3a8e8e3](https://github.com/lmachens/raccoon-miner/commit/3a8e8e3))
+* **mining:** stop animating mining logo when hash rate is known ([5a05696](https://github.com/lmachens/raccoon-miner/commit/5a05696))
+* **monero:** add configuration for nvidia cards ([47d2356](https://github.com/lmachens/raccoon-miner/commit/47d2356))
+* **wallet:** add message when changing wallet during mining ([df6000e](https://github.com/lmachens/raccoon-miner/commit/df6000e))
+
+
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/lmachens/raccoon-miner/compare/v0.1.0...v0.2.0) (2018-05-19)
 

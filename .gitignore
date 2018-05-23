@@ -3,3 +3,6 @@
 node_modules/
 .env.json
 tools/*.zip
+**/monero/amd.txt
+**/monero/cpu.txt
+**/monero/nvidia.txt

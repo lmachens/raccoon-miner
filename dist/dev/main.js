@@ -47422,9 +47422,6 @@
 	  width: "100%"
 	});
 
-	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
-	const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
-
 	const FAQEntry = ({
 	  question,
 	  answer
@@ -47438,6 +47435,23 @@
 	  question: propTypes.string.isRequired,
 	  answer: propTypes.string.isRequired
 	};
+
+	const FAQ = () => react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "FAQ (under construction)"), react.createElement(FAQEntry, {
+	  answer: "A mining pool is the pooling of resources by miners, who share their processing power over\r a network, to split the reward equally, according to the amount of work they contributed\r to the probability of finding a block.",
+	  question: "What is a mining pool?"
+	}), react.createElement(FAQEntry, {
+	  answer: "ETH is the short form of Ether which is the currency of Ethereum.",
+	  question: "What is ETH?"
+	}), react.createElement(FAQEntry, {
+	  answer: "XMR is the currency of Monero.",
+	  question: "What is XMR?"
+	}), react.createElement(FAQEntry, {
+	  answer: "This is normal when mining is active. Mining is a load intensive process which uses all ressources available.",
+	  question: "Why is my CPU or GPU at 100%?"
+	}));
+
+	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
+	const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
 
 	class SupportDialog extends react_2 {
 	  constructor(...args) {
@@ -47476,10 +47490,7 @@
 	    if (tab === SUPPORT_DIALOG_DISCORD) {
 	      content = react.createElement(Discord, null);
 	    } else if (tab === SUPPORT_DIALOG_FAQ) {
-	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "FAQ (under construction)"), react.createElement(FAQEntry, {
-	        answer: "A mining pool is the pooling of resources by miners, who share their processing power over\r a network, to split the reward equally, according to the amount of work they contributed\r to the probability of finding a block.",
-	        question: "What is a mining pool?"
-	      }));
+	      content = react.createElement(FAQ, null);
 	    }
 
 	    return react.createElement(enhanced, {

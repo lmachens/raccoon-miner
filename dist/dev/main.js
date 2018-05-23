@@ -48498,10 +48498,12 @@
 	  render() {
 	    const {
 	      classes,
+	      hashRate,
 	      isMining
 	    } = this.props;
+	    const animateLogo = isMining && !hashRate;
 	    return react.createElement(enhance$11, {
-	      buttonClassName: isMining ? classes.flip : '',
+	      buttonClassName: animateLogo ? classes.flip : '',
 	      onClick: this.handleMiningClick,
 	      title: isMining ? 'Stop' : 'Start'
 	    }, react.createElement(Avatar$2, {
@@ -48514,6 +48516,7 @@
 
 	MiningButton.propTypes = {
 	  classes: propTypes.object.isRequired,
+	  hashRate: propTypes.number.isRequired,
 	  isMining: propTypes.bool.isRequired,
 	  startMining: propTypes.func.isRequired,
 	  stopMining: propTypes.func.isRequired,
@@ -48527,6 +48530,7 @@
 	  activeMiners
 	}) => {
 	  return {
+	    hashRate: activeMiners[selectedMinerIdentifier].currentSpeed,
 	    isMining: activeMiners[selectedMinerIdentifier].isMining,
 	    minerIdentifier: selectedMinerIdentifier
 	  };

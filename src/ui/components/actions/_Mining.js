@@ -32,11 +32,11 @@ class MiningButton extends PureComponent {
   };
 
   render() {
-    const { classes, isMining } = this.props;
-
+    const { classes, hashRate, isMining } = this.props;
+    const animateLogo = isMining && !hashRate;
     return (
       <ActionButton
-        buttonClassName={isMining ? classes.flip : ''}
+        buttonClassName={animateLogo ? classes.flip : ''}
         onClick={this.handleMiningClick}
         title={isMining ? 'Stop' : 'Start'}
       >
@@ -48,6 +48,7 @@ class MiningButton extends PureComponent {
 
 MiningButton.propTypes = {
   classes: PropTypes.object.isRequired,
+  hashRate: PropTypes.number.isRequired,
   isMining: PropTypes.bool.isRequired,
   startMining: PropTypes.func.isRequired,
   stopMining: PropTypes.func.isRequired,
@@ -56,6 +57,7 @@ MiningButton.propTypes = {
 
 const mapStateToProps = ({ mining: { selectedMinerIdentifier }, activeMiners }) => {
   return {
+    hashRate: activeMiners[selectedMinerIdentifier].currentSpeed,
     isMining: activeMiners[selectedMinerIdentifier].isMining,
     minerIdentifier: selectedMinerIdentifier
   };

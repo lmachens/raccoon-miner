@@ -40265,28 +40265,21 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = compose;
-	function compose() {
+	var compose = function compose() {
 	  for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
 	    funcs[_key] = arguments[_key];
-	  }
-
-	  if (funcs.length === 0) {
-	    return function (arg) {
-	      return arg;
-	    };
-	  }
-
-	  if (funcs.length === 1) {
-	    return funcs[0];
 	  }
 
 	  return funcs.reduce(function (a, b) {
 	    return function () {
 	      return a(b.apply(undefined, arguments));
 	    };
+	  }, function (arg) {
+	    return arg;
 	  });
-	}
+	};
+
+	exports.default = compose;
 	});
 
 	var compose$1 = unwrapExports(compose_1);
@@ -47559,7 +47552,9 @@
 	      title: "Wallet"
 	    }, react.createElement(DialogContentText$2, null, "Before you can start mining, you have to tell the raccoon what to mine and who gets the profit. You can ", react.createElement(LinkEnhanced, {
 	      onClick: loadDefault$$1
-	    }, "load the default settings"), " if you want to try out this app."), react.createElement(FormControl$2, {
+	    }, "load the default settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
+	      color: "error"
+	    }, "You have to stop mining before you can change these settings!"), react.createElement(FormControl$2, {
 	      margin: "normal"
 	    }, react.createElement(InputLabel$2, {
 	      htmlFor: "crypto-select"

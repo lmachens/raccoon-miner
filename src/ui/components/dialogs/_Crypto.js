@@ -52,6 +52,11 @@ class CryptoDialog extends PureComponent {
           profit. You can <Link onClick={loadDefault}>load the default settings</Link> if you want
           to try out this app.
         </DialogContentText>
+        {isMining && (
+          <Typography color="error">
+            You have to stop mining before you can change these settings!
+          </Typography>
+        )}
         <FormControl margin="normal">
           <InputLabel htmlFor="crypto-select">Currency</InputLabel>
           <Select

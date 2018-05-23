@@ -6,12 +6,14 @@ import {
   SELECT_MINER,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
+  SET_MINING_POOL,
   SET_MINING_SPEED,
   SET_PROCESS_ID,
   START_MINING,
   STOP_MINING
 } from '../types';
 import { ETHEREUM_MINER, MONERO_MINER, ethereum, monero } from '../../api/mining';
+import { ETHERMINE, SUPPORT_XMR } from '../../api/pools';
 
 import set from 'lodash/set';
 
@@ -32,8 +34,16 @@ export const mining = (
   state = {
     selectedMinerIdentifier: MONERO_MINER,
     miners: {
-      [ETHEREUM_MINER]: { ...defaultMinerProps, address: ethereum.developerAddress },
-      [MONERO_MINER]: { ...defaultMinerProps, address: monero.developerAddress }
+      [ETHEREUM_MINER]: {
+        ...defaultMinerProps,
+        miningPoolIdentifier: ETHERMINE,
+        address: ethereum.developerAddress
+      },
+      [MONERO_MINER]: {
+        ...defaultMinerProps,
+        miningPoolIdentifier: SUPPORT_XMR,
+        address: monero.developerAddress
+      }
     }
   },
   { type, data }
@@ -45,6 +55,13 @@ export const mining = (
       break;
     case SELECT_MINER:
       set(newState, `selectedMinerIdentifier`, data);
+      break;
+    case SET_MINING_POOL:
+      set(
+        newState,
+        `miners.${data.minerIdentifier}.miningPoolIdentifier`,
+        data.miningPoolIdentifier
+      );
       break;
     case REQUEST_MINING_METRICS:
       set(newState, `miners.${data.minerIdentifier}.metrics.fetching`, true);

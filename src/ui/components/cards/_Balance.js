@@ -4,7 +4,7 @@ import { StatusCard, Typography } from '../generic';
 import PropTypes from 'prop-types';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
-import { getMiner } from '../../../api/mining';
+import { minersByIdentifier } from '../../../api/mining';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
@@ -42,7 +42,7 @@ BalanceCard.propTypes = {
 
 const mapStateToProps = ({ mining: { selectedMinerIdentifier, miners } }) => {
   return {
-    miner: getMiner(selectedMinerIdentifier),
+    miner: minersByIdentifier[selectedMinerIdentifier],
     workerStats: miners[selectedMinerIdentifier].workerStats
   };
 };

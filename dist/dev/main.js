@@ -643,6 +643,7 @@
 	const RECEIVE_WORKER_STATS = 'RECEIVE_WORKER_STATS';
 	const RECEIVE_MINING_METRICS = 'RECEIVE_MINING_METRICS';
 	const REQUEST_MINING_METRICS = 'REQUEST_MINING_METRICS';
+	const SET_MINING_POOL = 'SET_MINING_POOL';
 
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
@@ -765,6 +766,72 @@
 	  }
 
 	  return result;
+	};
+
+	const ETHEREUM_MINER = 'ETHEREUM_MINER';
+	const ethereum = {
+	  name: 'Ethereum',
+	  identifier: ETHEREUM_MINER,
+	  logo: 'assets/ethereum.png',
+	  currency: 'ETH',
+	  minimumPaymentThreshold: 0.05,
+	  parser: generateParser({
+	    [SPEED_REGEX]: /Speed\s+(.+)\sMh\/s/,
+	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
+	    [CONNECTING]: /not-connected/
+	  }),
+	  path: 'ethereum/ethminer.exe',
+	  args: ({
+	    address,
+	    servers
+	  }) => `--farm-recheck 200 -G -S ${servers[0]} -SF ${servers[1]} -O ${address}.raccoon`,
+	  environmentVariables: () => JSON.stringify({
+	    GPU_FORCE_64BIT_PTR: '0',
+	    GPU_MAX_HEAP_SIZE: '100',
+	    GPU_USE_SYNC_OBJECTS: '1',
+	    GPU_MAX_ALLOC_PERCENT: '100',
+	    GPU_SINGLE_ALLOC_PERCENT: '100'
+	  }),
+	  links: {
+	    wallet: 'https://www.myetherwallet.com/'
+	  },
+	  isValidAddress: address => /^0x[0-9a-fA-F]{40}$/i.test(address),
+	  addressHint: 'It should start with 0x and have 42 characters.',
+	  developerAddress: '0x799db2f010a5a9934eca801c5d702a7d96373b9d'
+	};
+
+	const MONERO_MINER = 'MONERO_MINER';
+	const monero = {
+	  name: 'Monero',
+	  identifier: MONERO_MINER,
+	  logo: 'assets/monero.png',
+	  currency: 'XMR',
+	  minimumPaymentThreshold: 0.1,
+	  parser: generateParser({
+	    [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
+	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
+	    [CONNECTING]: /not-connected/
+	  }),
+	  path: 'monero/xmr-stak.exe',
+	  args: ({
+	    address,
+	    servers
+	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon -r raccoon --amd amd.txt --cpu cpu.txt --nvidia nvidia.txt --config config.txt`,
+	  environmentVariables: () => JSON.stringify({
+	    XMRSTAK_NOWAIT: true
+	  }),
+	  links: {
+	    wallet: 'https://getmonero.org/'
+	  },
+	  isValidAddress: address => /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),
+	  addressHint: 'It should have 95 characters.',
+	  developerAddress: '47nCkeWhyJDEoaDPbtm7xc2QyQh2gbRMSdQ8V3NUyuFm6J3UuLiVGn57KjXhLAJD4SZ6jzcukSPRa3auNb1WTfmHRA8ikzr'
+	};
+
+	const miners = [ethereum, monero];
+	const minersByIdentifier = {
+	  [ETHEREUM_MINER]: ethereum,
+	  [MONERO_MINER]: monero
 	};
 
 	/**
@@ -1964,80 +2031,39 @@
 
 	var get_1 = get;
 
-	const ETHEREUM_MINER = 'ETHEREUM_MINER';
-	const ethereum = {
-	  name: 'Ethereum',
-	  identifier: ETHEREUM_MINER,
-	  logo: 'assets/ethereum.png',
-	  currency: 'ETH',
-	  minimumPaymentThreshold: 0.05,
-	  parser: generateParser({
-	    [SPEED_REGEX]: /Speed\s+(.+)\sMh\/s/,
-	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
-	    [CONNECTING]: /not-connected/
-	  }),
-	  path: 'ethereum/ethminer.exe',
-	  args: address => `--farm-recheck 200 -G -S eu1.ethermine.org:4444 -SF us1.ethermine.org:4444 -O ${address}.raccoon`,
-	  environmentVariables: () => JSON.stringify({
-	    GPU_FORCE_64BIT_PTR: '0',
-	    GPU_MAX_HEAP_SIZE: '100',
-	    GPU_USE_SYNC_OBJECTS: '1',
-	    GPU_MAX_ALLOC_PERCENT: '100',
-	    GPU_SINGLE_ALLOC_PERCENT: '100'
-	  }),
-	  links: {
-	    wallet: 'https://www.myetherwallet.com/',
-	    stats: address => `https://ethermine.org/miners/${address}/dashboard`,
-	    api: address => `https://api.ethermine.org/miner/${address}/dashboard`
-	  },
+	const ETHERMINE = 'ETHERMINE';
+	const ethermine = {
+	  name: 'Ethermine',
+	  identifier: ETHERMINE,
+	  servers: ['eu1.ethermine.org:4444', 'us1.ethermine.org:4444'],
+	  statsUrl: address => `https://ethermine.org/miners/${address}/dashboard`,
+	  apiUrl: address => `https://api.ethermine.org/miner/${address}/dashboard`,
 	  apiParser: result => ({
 	    unpaidBalance: (get_1(result, 'data.currentStatistics.unpaid') || 0) / 1000000000000000000,
 	    payoutThreshold: (get_1(result, 'data.settings.minPayout') || 1000000000000000000) / 1000000000000000000
-	  }),
-	  isValidAddress: address => /^0x[0-9a-fA-F]{40}$/i.test(address),
-	  addressHint: 'It should start with 0x and have 42 characters.',
-	  developerAddress: '0x799db2f010a5a9934eca801c5d702a7d96373b9d'
+	  })
 	};
 
-	const MONERO_MINER = 'MONERO_MINER';
-	const monero = {
-	  name: 'Monero',
-	  identifier: MONERO_MINER,
-	  logo: 'assets/monero.png',
-	  currency: 'XMR',
-	  minimumPaymentThreshold: 0.1,
-	  parser: generateParser({
-	    [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
-	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
-	    [CONNECTING]: /not-connected/
-	  }),
-	  path: 'monero/xmr-stak.exe',
-	  args: address => `--noUAC -i 0 -o pool.supportxmr.com:8080 -u ${address} --currency monero7 -p raccoon -r raccoon --amd amd.txt --cpu cpu.txt --config config.txt`,
-	  environmentVariables: () => JSON.stringify({
-	    XMRSTAK_NOWAIT: true
-	  }),
-	  links: {
-	    wallet: 'https://getmonero.org/',
-	    stats: () => 'https://supportxmr.com/#/dashboard',
-	    api: address => `https://supportxmr.com/api/miner/${address}/stats`
-	  },
+	const SUPPORT_XMR = 'SUPPORT_XMR';
+	const supportXMR = {
+	  name: 'SupportXMR',
+	  identifier: SUPPORT_XMR,
+	  servers: ['pool.supportxmr.com'],
+	  statsUrl: () => 'https://supportxmr.com/#/dashboard',
+	  apiUrl: address => `https://supportxmr.com/api/miner/${address}/stats`,
 	  apiParser: result => ({
 	    unpaidBalance: (get_1(result, 'amtDue') || 0) / 1000000000000,
 	    payoutThreshold: 0.3
-	  }),
-	  isValidAddress: address => /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),
-	  addressHint: 'It should have 95 characters.',
-	  developerAddress: '47nCkeWhyJDEoaDPbtm7xc2QyQh2gbRMSdQ8V3NUyuFm6J3UuLiVGn57KjXhLAJD4SZ6jzcukSPRa3auNb1WTfmHRA8ikzr'
+	  })
 	};
 
-	const getMiner = minerIdentifier => {
-	  switch (minerIdentifier) {
-	    case ETHEREUM_MINER:
-	      return ethereum;
-
-	    case MONERO_MINER:
-	      return monero;
-	  }
+	const miningPoolsByMinerIdentifier = {
+	  [ETHEREUM_MINER]: [ethermine],
+	  [MONERO_MINER]: [supportXMR]
+	};
+	const miningPoolsByIdentifier = {
+	  [ETHERMINE]: ethermine,
+	  [SUPPORT_XMR]: supportXMR
 	};
 
 	const TEST_MODE = {
@@ -2144,10 +2170,24 @@
 	      }
 	    });
 	    dispatch({
+	      type: SET_MINING_POOL,
+	      data: {
+	        minerIdentifier: ETHEREUM_MINER,
+	        miningPoolIdentifier: ETHERMINE
+	      }
+	    });
+	    dispatch({
 	      type: SET_MINING_ADDRESS,
 	      data: {
 	        address: monero.developerAddress,
 	        minerIdentifier: MONERO_MINER
+	      }
+	    });
+	    dispatch({
+	      type: SET_MINING_POOL,
+	      data: {
+	        minerIdentifier: MONERO_MINER,
+	        miningPoolIdentifier: SUPPORT_XMR
 	      }
 	    });
 	    dispatch({
@@ -2165,7 +2205,7 @@
 	        minerIdentifier
 	      }
 	    });
-	    const miner = getMiner(minerIdentifier);
+	    const miner = minersByIdentifier[minerIdentifier];
 	    const validAddress = miner.isValidAddress(address);
 	    if (validAddress) ;else {
 	      dispatch({
@@ -2178,6 +2218,17 @@
 	    }
 	    dispatch({
 	      type: UNSET_NOTIFICATION
+	    });
+	  };
+	};
+	const setMiningPool = (minerIdentifier, miningPoolIdentifier) => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_MINING_POOL,
+	      data: {
+	        minerIdentifier,
+	        miningPoolIdentifier
+	      }
 	    });
 	  };
 	};
@@ -2203,20 +2254,19 @@
 	  return (dispatch, getState) => {
 	    const {
 	      mining: {
-	        miners,
+	        miners: miners$$1,
 	        selectedMinerIdentifier: minerIdentifier
 	      }
 	    } = getState();
 	    const {
-	      address
-	    } = miners[minerIdentifier];
+	      address,
+	      miningPoolIdentifier
+	    } = miners$$1[minerIdentifier];
 	    const {
-	      links: {
-	        api
-	      },
+	      apiUrl,
 	      apiParser
-	    } = getMiner(minerIdentifier);
-	    fetch(api(address)).then(response => response.json()).then(result => {
+	    } = miningPoolsByIdentifier[miningPoolIdentifier];
+	    fetch(apiUrl(address)).then(response => response.json()).then(result => {
 	      dispatch({
 	        type: RECEIVE_WORKER_STATS,
 	        data: {
@@ -2242,11 +2292,14 @@
 	  return async (dispatch, getState) => {
 	    const {
 	      mining: {
-	        miners,
+	        miners: miners$$1,
 	        selectedMinerIdentifier
 	      }
 	    } = getState();
-	    const address = miners[selectedMinerIdentifier].address || 'default';
+	    const {
+	      address = 'default',
+	      miningPoolIdentifier
+	    } = miners$$1[selectedMinerIdentifier];
 	    if (handleDataByIdenfier[minerIdentifier]) return;
 	    const processManager = await getProcessManagerPlugin();
 	    const {
@@ -2254,7 +2307,10 @@
 	      path,
 	      args,
 	      environmentVariables
-	    } = getMiner(minerIdentifier);
+	    } = minersByIdentifier[minerIdentifier];
+	    const {
+	      servers
+	    } = miningPoolsByIdentifier[miningPoolIdentifier];
 	    dispatch({
 	      type: START_MINING,
 	      data: {
@@ -2299,10 +2355,14 @@
 	    };
 
 	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-	    processManager.launchProcess(path, args(address), environmentVariables(), true, ({
+	    const minerArgs = args({
+	      address,
+	      servers
+	    });
+	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data
 	    }) => {
-	      console.info(`%cStart mining ${data} with ${args(address)}`, 'color: blue');
+	      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
 	      dispatch({
 	        type: SET_PROCESS_ID,
 	        data: {
@@ -3020,9 +3080,11 @@
 	  selectedMinerIdentifier: MONERO_MINER,
 	  miners: {
 	    [ETHEREUM_MINER]: { ...defaultMinerProps,
+	      miningPoolIdentifier: ETHERMINE,
 	      address: ethereum.developerAddress
 	    },
 	    [MONERO_MINER]: { ...defaultMinerProps,
+	      miningPoolIdentifier: SUPPORT_XMR,
 	      address: monero.developerAddress
 	    }
 	  }
@@ -3040,6 +3102,10 @@
 
 	    case SELECT_MINER:
 	      set_1(newState, `selectedMinerIdentifier`, data);
+	      break;
+
+	    case SET_MINING_POOL:
+	      set_1(newState, `miners.${data.minerIdentifier}.miningPoolIdentifier`, data.miningPoolIdentifier);
 	      break;
 
 	    case REQUEST_MINING_METRICS:
@@ -47539,6 +47605,13 @@
 	      } = this.props;
 	      const address = event.target.value;
 	      setMiningAddress$$1(minerIdentifier, address);
+	    }), _defineProperty$1(this, "handleMiningPoolChange", event => {
+	      const {
+	        setMiningPool: setMiningPool$$1,
+	        minerIdentifier
+	      } = this.props;
+	      const miningPoolIdentifier = event.target.value;
+	      setMiningPool$$1(minerIdentifier, miningPoolIdentifier);
 	    }), _defineProperty$1(this, "handleCurrencyChange", event => {
 	      const {
 	        selectMiner: selectMiner$$1
@@ -47556,6 +47629,7 @@
 	      isMining,
 	      isValidAddress,
 	      selectedMinerIdentifier,
+	      miningPoolIdentifier,
 	      loadDefault: loadDefault$$1
 	    } = this.props;
 	    return react.createElement(enhanced, {
@@ -47576,8 +47650,8 @@
 	      },
 	      onChange: this.handleCurrencyChange,
 	      value: selectedMinerIdentifier
-	    }, [ethereum, monero].map(miner => react.createElement(MenuItem$2, {
-	      key: miner.name,
+	    }, miners.map(miner => react.createElement(MenuItem$2, {
+	      key: miner.identifier,
 	      value: miner.identifier
 	    }, miner.name, " (", miner.currency, ")")), react.createElement(MenuItem$2, {
 	      disabled: true,
@@ -47587,15 +47661,18 @@
 	    }, react.createElement(InputLabel$2, {
 	      htmlFor: "pool-select"
 	    }, "Mining Pool"), react.createElement(Select$2, {
-	      disabled: true,
 	      inputProps: {
 	        id: 'pool-select'
 	      },
-	      onChange: this.handleCurrencyChange,
-	      value: selectedMinerIdentifier
-	    }, react.createElement(MenuItem$2, {
-	      value: miner.identifier
-	    }, "Coming soon"))), react.createElement(TextField$2, {
+	      onChange: this.handleMiningPoolChange,
+	      value: miningPoolIdentifier
+	    }, miningPoolsByMinerIdentifier[selectedMinerIdentifier].map(miningPool => react.createElement(MenuItem$2, {
+	      key: miningPool.identifier,
+	      value: miningPool.identifier
+	    }, miningPool.name)), react.createElement(MenuItem$2, {
+	      disabled: true,
+	      value: null
+	    }, "More coming soon"))), react.createElement(TextField$2, {
 	      disabled: isMining,
 	      fullWidth: true,
 	      helperText: react.createElement(LinkEnhanced, {
@@ -47624,13 +47701,15 @@
 	  open: propTypes.bool.isRequired,
 	  miner: propTypes.object.isRequired,
 	  address: propTypes.string.isRequired,
+	  miningPoolIdentifier: propTypes.string.isRequired,
 	  minerIdentifier: propTypes.string.isRequired,
 	  isMining: propTypes.bool.isRequired,
 	  isValidAddress: propTypes.bool.isRequired,
 	  loadDefault: propTypes.func.isRequired,
 	  setMiningAddress: propTypes.func.isRequired,
 	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  selectMiner: propTypes.func.isRequired
+	  selectMiner: propTypes.func.isRequired,
+	  setMiningPool: propTypes.func.isRequired
 	};
 
 	const mapStateToProps$2 = ({
@@ -47638,17 +47717,21 @@
 	    cryptoDialogOpen
 	  },
 	  mining: {
-	    miners,
+	    miners: miners$$1,
 	    selectedMinerIdentifier
 	  },
 	  activeMiners
 	}) => {
-	  const miner = getMiner(selectedMinerIdentifier);
-	  const address = miners[selectedMinerIdentifier].address;
+	  const miner = minersByIdentifier[selectedMinerIdentifier];
+	  const {
+	    address,
+	    miningPoolIdentifier
+	  } = miners$$1[selectedMinerIdentifier];
 	  return {
 	    open: cryptoDialogOpen,
 	    minerIdentifier: selectedMinerIdentifier,
 	    address,
+	    miningPoolIdentifier,
 	    isValidAddress: miner.isValidAddress(address),
 	    miner,
 	    isMining: activeMiners[selectedMinerIdentifier].isMining,
@@ -47660,7 +47743,8 @@
 	  return {
 	    loadDefault: bindActionCreators(loadDefault, dispatch),
 	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-	    selectMiner: bindActionCreators(selectMiner, dispatch)
+	    selectMiner: bindActionCreators(selectMiner, dispatch),
+	    setMiningPool: bindActionCreators(setMiningPool, dispatch)
 	  };
 	};
 
@@ -47669,15 +47753,14 @@
 	class StatsDialog extends react_2 {
 	  render() {
 	    const {
-	      address,
-	      miner,
-	      open
+	      open,
+	      statsLink
 	    } = this.props;
 	    return react.createElement(enhanced, {
 	      open: open,
 	      title: "Stats"
-	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block.", ' ', react.createElement(LinkEnhanced, {
-	      to: miner.links.stats(address)
+	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block. ", react.createElement(LinkEnhanced, {
+	      to: statsLink
 	    }, "Open Pool Stats")));
 	  }
 
@@ -47685,8 +47768,7 @@
 
 	StatsDialog.propTypes = {
 	  open: propTypes.bool.isRequired,
-	  address: propTypes.string.isRequired,
-	  miner: propTypes.object.isRequired
+	  statsLink: propTypes.string.isRequired
 	};
 
 	const mapStateToProps$3 = ({
@@ -47698,11 +47780,16 @@
 	    selectedMinerIdentifier
 	  }
 	}) => {
-	  const miner = getMiner(selectedMinerIdentifier);
-	  const address = miners[selectedMinerIdentifier].address;
-	  return {
+	  const {
 	    address,
-	    miner,
+	    miningPoolIdentifier
+	  } = miners[selectedMinerIdentifier];
+	  const {
+	    statsUrl
+	  } = miningPoolsByIdentifier[miningPoolIdentifier];
+	  const statsLink = statsUrl(address);
+	  return {
+	    statsLink,
 	    open: statsDialogOpen
 	  };
 	};
@@ -48226,12 +48313,12 @@
 	const mapStateToProps$5 = ({
 	  mining: {
 	    selectedMinerIdentifier,
-	    miners
+	    miners: miners$$1
 	  }
 	}) => {
 	  return {
-	    miner: getMiner(selectedMinerIdentifier),
-	    workerStats: miners[selectedMinerIdentifier].workerStats
+	    miner: minersByIdentifier[selectedMinerIdentifier],
+	    workerStats: miners$$1[selectedMinerIdentifier].workerStats
 	  };
 	};
 
@@ -48453,7 +48540,7 @@
 	  }
 	}) => {
 	  return {
-	    miner: getMiner(selectedMinerIdentifier)
+	    miner: minersByIdentifier[selectedMinerIdentifier]
 	  };
 	};
 

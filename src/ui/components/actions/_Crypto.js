@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
-import { getMiner } from '../../../api/mining';
+import { minersByIdentifier } from '../../../api/mining';
 import { openCryptoDialog } from '../../../store/actions';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -37,7 +37,7 @@ CryptoButton.propTypes = {
 
 const mapStateToProps = ({ mining: { selectedMinerIdentifier } }) => {
   return {
-    miner: getMiner(selectedMinerIdentifier)
+    miner: minersByIdentifier[selectedMinerIdentifier]
   };
 };
 

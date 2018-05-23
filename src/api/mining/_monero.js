@@ -5,8 +5,6 @@ import {
   generateParser
 } from './_generateParser';
 
-import get from 'lodash/get';
-
 export const MONERO_MINER = 'MONERO_MINER';
 export const monero = {
   name: 'Monero',
@@ -20,18 +18,14 @@ export const monero = {
     [CONNECTING]: /not-connected/
   }),
   path: 'monero/xmr-stak.exe',
-  args: address =>
-    `--noUAC -i 0 -o pool.supportxmr.com:8080 -u ${address} --currency monero7 -p raccoon -r raccoon --amd amd.txt --cpu cpu.txt --config config.txt`,
+  args: ({ address, servers }) =>
+    `--noUAC -i 0 -o ${
+      servers[0]
+    } -u ${address} --currency monero7 -p raccoon -r raccoon --amd amd.txt --cpu cpu.txt --nvidia nvidia.txt --config config.txt`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true }),
   links: {
-    wallet: 'https://getmonero.org/',
-    stats: () => 'https://supportxmr.com/#/dashboard',
-    api: address => `https://supportxmr.com/api/miner/${address}/stats`
+    wallet: 'https://getmonero.org/'
   },
-  apiParser: result => ({
-    unpaidBalance: (get(result, 'amtDue') || 0) / 1000000000000,
-    payoutThreshold: 0.3
-  }),
   isValidAddress: address =>
     /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),
   addressHint: 'It should have 95 characters.',

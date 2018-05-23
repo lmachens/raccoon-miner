@@ -14,6 +14,7 @@ const persistConfig = {
   storage,
   blacklist: ['activeMiners', 'hardwareInfo']
 };
+
 const persistedReducer = persistReducer(persistConfig, reducers);
 
 const createStoreWithMiddleware = applyMiddleware(thunk, createRavenMiddleware(Raven))(createStore);

@@ -4,6 +4,7 @@ import {
   SELECT_MINER,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
+  SET_MINING_POOL,
   SET_MINING_SPEED,
   SET_NOTIFICATION,
   SET_PROCESS_ID,
@@ -11,7 +12,14 @@ import {
   STOP_MINING,
   UNSET_NOTIFICATION
 } from '../types';
-import { ETHEREUM_MINER, MONERO_MINER, ethereum, getMiner, monero } from '../../api/mining';
+import {
+  ETHEREUM_MINER,
+  MONERO_MINER,
+  ethereum,
+  minersByIdentifier,
+  monero
+} from '../../api/mining';
+import { ETHERMINE, SUPPORT_XMR, miningPoolsByIdentifier } from '../../api/pools';
 
 import { TEST_MODE } from '../../api/notifications';
 import { getProcessManagerPlugin } from '../../api/plugins';
@@ -28,8 +36,16 @@ export const loadDefault = () => {
       data: { address: ethereum.developerAddress, minerIdentifier: ETHEREUM_MINER }
     });
     dispatch({
+      type: SET_MINING_POOL,
+      data: { minerIdentifier: ETHEREUM_MINER, miningPoolIdentifier: ETHERMINE }
+    });
+    dispatch({
       type: SET_MINING_ADDRESS,
       data: { address: monero.developerAddress, minerIdentifier: MONERO_MINER }
+    });
+    dispatch({
+      type: SET_MINING_POOL,
+      data: { minerIdentifier: MONERO_MINER, miningPoolIdentifier: SUPPORT_XMR }
     });
     dispatch({
       type: SET_NOTIFICATION,
@@ -45,7 +61,7 @@ export const setMiningAddress = (minerIdentifier, address) => {
       data: { address, minerIdentifier }
     });
 
-    const miner = getMiner(minerIdentifier);
+    const miner = minersByIdentifier[minerIdentifier];
     const validAddress = miner.isValidAddress(address);
 
     if (validAddress) fetchWorkerStats(minerIdentifier);
@@ -60,6 +76,15 @@ export const setMiningAddress = (minerIdentifier, address) => {
     }
     dispatch({
       type: UNSET_NOTIFICATION
+    });
+  };
+};
+
+export const setMiningPool = (minerIdentifier, miningPoolIdentifier) => {
+  return dispatch => {
+    dispatch({
+      type: SET_MINING_POOL,
+      data: { minerIdentifier, miningPoolIdentifier }
     });
   };
 };
@@ -88,13 +113,10 @@ const fetchWorkerStats = () => {
     const {
       mining: { miners, selectedMinerIdentifier: minerIdentifier }
     } = getState();
-    const { address } = miners[minerIdentifier];
-    const {
-      links: { api },
-      apiParser
-    } = getMiner(minerIdentifier);
+    const { address, miningPoolIdentifier } = miners[minerIdentifier];
+    const { apiUrl, apiParser } = miningPoolsByIdentifier[miningPoolIdentifier];
 
-    fetch(api(address))
+    fetch(apiUrl(address))
       .then(response => response.json())
       .then(result => {
         dispatch({
@@ -124,10 +146,11 @@ export const startMining = minerIdentifier => {
     const {
       mining: { miners, selectedMinerIdentifier }
     } = getState();
-    const address = miners[selectedMinerIdentifier].address || 'default';
+    const { address = 'default', miningPoolIdentifier } = miners[selectedMinerIdentifier];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
-    const { parser, path, args, environmentVariables } = getMiner(minerIdentifier);
+    const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
+    const { servers } = miningPoolsByIdentifier[miningPoolIdentifier];
 
     dispatch({
       type: START_MINING,
@@ -163,9 +186,9 @@ export const startMining = minerIdentifier => {
       }
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-
-    processManager.launchProcess(path, args(address), environmentVariables(), true, ({ data }) => {
-      console.info(`%cStart mining ${data} with ${args(address)}`, 'color: blue');
+    const minerArgs = args({ address, servers });
+    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
+      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({
         type: SET_PROCESS_ID,
         data: {

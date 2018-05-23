@@ -13,12 +13,13 @@ import {
 } from '../generic';
 import { DoneIcon, ErrorIcon } from '../icons';
 import React, { PureComponent } from 'react';
-import { ethereum, getMiner, monero } from '../../../api/mining';
-import { loadDefault, selectMiner, setMiningAddress } from '../../../store/actions';
+import { loadDefault, selectMiner, setMiningAddress, setMiningPool } from '../../../store/actions';
+import { miners, minersByIdentifier } from '../../../api/mining';
 
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import { miningPoolsByMinerIdentifier } from '../../../api/pools';
 
 class CryptoDialog extends PureComponent {
   handleAddressChange = event => {
@@ -26,6 +27,13 @@ class CryptoDialog extends PureComponent {
 
     const address = event.target.value;
     setMiningAddress(minerIdentifier, address);
+  };
+
+  handleMiningPoolChange = event => {
+    const { setMiningPool, minerIdentifier } = this.props;
+
+    const miningPoolIdentifier = event.target.value;
+    setMiningPool(minerIdentifier, miningPoolIdentifier);
   };
 
   handleCurrencyChange = event => {
@@ -42,6 +50,7 @@ class CryptoDialog extends PureComponent {
       isMining,
       isValidAddress,
       selectedMinerIdentifier,
+      miningPoolIdentifier,
       loadDefault
     } = this.props;
 
@@ -67,8 +76,8 @@ class CryptoDialog extends PureComponent {
             onChange={this.handleCurrencyChange}
             value={selectedMinerIdentifier}
           >
-            {[ethereum, monero].map(miner => (
-              <MenuItem key={miner.name} value={miner.identifier}>
+            {miners.map(miner => (
+              <MenuItem key={miner.identifier} value={miner.identifier}>
                 {miner.name} ({miner.currency})
               </MenuItem>
             ))}
@@ -80,14 +89,20 @@ class CryptoDialog extends PureComponent {
         <FormControl margin="normal">
           <InputLabel htmlFor="pool-select">Mining Pool</InputLabel>
           <Select
-            disabled
             inputProps={{
               id: 'pool-select'
             }}
-            onChange={this.handleCurrencyChange}
-            value={selectedMinerIdentifier}
+            onChange={this.handleMiningPoolChange}
+            value={miningPoolIdentifier}
           >
-            <MenuItem value={miner.identifier}>Coming soon</MenuItem>
+            {miningPoolsByMinerIdentifier[selectedMinerIdentifier].map(miningPool => (
+              <MenuItem key={miningPool.identifier} value={miningPool.identifier}>
+                {miningPool.name}
+              </MenuItem>
+            ))}
+            <MenuItem disabled value={null}>
+              More coming soon
+            </MenuItem>
           </Select>
         </FormControl>
         <TextField
@@ -124,13 +139,15 @@ CryptoDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   miner: PropTypes.object.isRequired,
   address: PropTypes.string.isRequired,
+  miningPoolIdentifier: PropTypes.string.isRequired,
   minerIdentifier: PropTypes.string.isRequired,
   isMining: PropTypes.bool.isRequired,
   isValidAddress: PropTypes.bool.isRequired,
   loadDefault: PropTypes.func.isRequired,
   setMiningAddress: PropTypes.func.isRequired,
   selectedMinerIdentifier: PropTypes.string.isRequired,
-  selectMiner: PropTypes.func.isRequired
+  selectMiner: PropTypes.func.isRequired,
+  setMiningPool: PropTypes.func.isRequired
 };
 
 const mapStateToProps = ({
@@ -138,12 +155,13 @@ const mapStateToProps = ({
   mining: { miners, selectedMinerIdentifier },
   activeMiners
 }) => {
-  const miner = getMiner(selectedMinerIdentifier);
-  const address = miners[selectedMinerIdentifier].address;
+  const miner = minersByIdentifier[selectedMinerIdentifier];
+  const { address, miningPoolIdentifier } = miners[selectedMinerIdentifier];
   return {
     open: cryptoDialogOpen,
     minerIdentifier: selectedMinerIdentifier,
     address,
+    miningPoolIdentifier,
     isValidAddress: miner.isValidAddress(address),
     miner,
     isMining: activeMiners[selectedMinerIdentifier].isMining,
@@ -155,7 +173,8 @@ const mapDispatchToProps = dispatch => {
   return {
     loadDefault: bindActionCreators(loadDefault, dispatch),
     setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-    selectMiner: bindActionCreators(selectMiner, dispatch)
+    selectMiner: bindActionCreators(selectMiner, dispatch),
+    setMiningPool: bindActionCreators(setMiningPool, dispatch)
   };
 };
 

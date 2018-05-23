@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/lmachens/raccoon-miner/compare/v0.3.0...v0.4.0) (2018-05-23)
+
+
+### Bug Fixes
+
+* **mining:** remove configurations to support nvidia ([#25](https://github.com/lmachens/raccoon-miner/issues/25)) ([1565c32](https://github.com/lmachens/raccoon-miner/commit/1565c32))
+
+
+### Features
+
+* **mining-pools:** add selectable mining pools ([6292281](https://github.com/lmachens/raccoon-miner/commit/6292281))
+
+
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/lmachens/raccoon-miner/compare/v0.2.0...v0.3.0) (2018-05-23)
 

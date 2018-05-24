@@ -13,7 +13,9 @@
   },
   "externally_connectable": {
     "matches": [
-      "http://localhost:35729"
+      "https://widgetbot.io",
+      "https://supportxmr.com",
+      "https://ethermine.org"
     ]
   },
   "permissions": [],

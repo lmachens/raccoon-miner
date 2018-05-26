@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.5.0"></a>
+# [0.5.0](https://github.com/lmachens/raccoon-miner/compare/v0.4.1...v0.5.0) (2018-05-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/icons to v1.1.0 ([#35](https://github.com/lmachens/raccoon-miner/issues/35)) ([22a762e](https://github.com/lmachens/raccoon-miner/commit/22a762e))
+
+
+### Features
+
+* **ui:** adjust hash rate and balance tooltips ([1c1c2fd](https://github.com/lmachens/raccoon-miner/commit/1c1c2fd))
+* **ui:** grayscale mining button if mining is not active ([58ccf97](https://github.com/lmachens/raccoon-miner/commit/58ccf97))
+
+
+
 <a name="0.4.1"></a>
 ## [0.4.1](https://github.com/lmachens/raccoon-miner/compare/v0.4.0...v0.4.1) (2018-05-26)
 

@@ -49158,7 +49158,7 @@
 	    return react.createElement(enhance, {
 	      helperText: react.createElement(react_5, null, "The Hash Rate indicates your mining speed.", ' ', react.createElement(LinkEnhanced, {
 	        to: `https://gpustats.com/coin/${miner.currency}`
-	      }, "Get a list of hashrates by GPU"))
+	      }, "Get a list of hashrates by GPU."))
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"

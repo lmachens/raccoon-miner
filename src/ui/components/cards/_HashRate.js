@@ -23,7 +23,7 @@ class HashRateCard extends Component {
           <Fragment>
             The Hash Rate indicates your mining speed.{' '}
             <Link to={`https://gpustats.com/coin/${miner.currency}`}>
-              Get a list of hashrates by GPU
+              Get a list of hashrates by GPU.
             </Link>
           </Fragment>
         }

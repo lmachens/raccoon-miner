@@ -11,13 +11,6 @@
     "launcher_icon": "assets/launcher_icon.ico",
     "description": "Use your PC to mine crypto"
   },
-  "externally_connectable": {
-    "matches": [
-      "https://widgetbot.io",
-      "https://supportxmr.com",
-      "https://ethermine.org"
-    ]
-  },
   "permissions": [],
   "data": {
     "start_window": "main",
@@ -56,8 +49,9 @@
       "matches": [
         "https://*.google-analytics.com",
         "https://www.google-analytics.com",
-        "http://localhost:3000",
-        "https://raccoon-miner.now.sh"
+        "https://widgetbot.io",
+        "https://supportxmr.com",
+        "https://ethermine.org"
       ]
     }
   },

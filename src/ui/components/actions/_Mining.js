@@ -5,6 +5,7 @@ import { ActionButton } from './_ActionButton';
 import { Avatar } from '../generic';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
+import classNames from 'classnames';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core/styles';
@@ -21,6 +22,9 @@ const styles = {
     to: {
       transform: 'rotateY(360deg)'
     }
+  },
+  inactive: {
+    filter: 'grayscale(100%)'
   }
 };
 
@@ -40,7 +44,10 @@ class MiningButton extends PureComponent {
         onClick={this.handleMiningClick}
         title={isMining ? 'Stop' : 'Start'}
       >
-        <Avatar className={classes.avatar} src={'assets/mining.png'} />
+        <Avatar
+          className={classNames(classes.avatar, { [classes.inactive]: !isMining })}
+          src={'assets/mining.png'}
+        />
       </ActionButton>
     );
   }

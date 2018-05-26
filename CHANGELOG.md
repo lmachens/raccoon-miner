@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.1"></a>
+## [0.4.1](https://github.com/lmachens/raccoon-miner/compare/v0.4.0...v0.4.1) (2018-05-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-ga to v2.5.3 ([#32](https://github.com/lmachens/raccoon-miner/issues/32)) ([e49fb13](https://github.com/lmachens/raccoon-miner/commit/e49fb13))
+* **deps:** update react monorepo to v16.4.0 ([#28](https://github.com/lmachens/raccoon-miner/issues/28)) ([e47c8b6](https://github.com/lmachens/raccoon-miner/commit/e47c8b6))
+* **manifest:** add externally connectable for mining pools ([506f05d](https://github.com/lmachens/raccoon-miner/commit/506f05d))
+* **monero:** use_slow_memory to support nvidia ([0bf8473](https://github.com/lmachens/raccoon-miner/commit/0bf8473))
+* **stats:** add mining pool address to fix cors header issue ([1d9e75e](https://github.com/lmachens/raccoon-miner/commit/1d9e75e))
+
+
+
 <a name="0.4.0"></a>
 # [0.4.0](https://github.com/lmachens/raccoon-miner/compare/v0.3.0...v0.4.0) (2018-05-23)
 

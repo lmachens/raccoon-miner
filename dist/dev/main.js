@@ -49015,7 +49015,7 @@
 	      }
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "This is the balance reported by the mining pool"
+	      helperText: `This is the balance reported by the mining pool. The payout is automatically triggered when you reached the payment threshold of ${payoutThreshold} ${miner.currency}.`
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
@@ -49152,10 +49152,13 @@
 	  render() {
 	    const {
 	      classes,
-	      hashRate
+	      hashRate,
+	      miner
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "The Hash Rate indicates your mining speed"
+	      helperText: react.createElement(react_5, null, "The Hash Rate indicates your mining speed.", ' ', react.createElement(LinkEnhanced, {
+	        to: `https://gpustats.com/coin/${miner.currency}`
+	      }, "Get a list of hashrates by GPU"))
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
@@ -49168,7 +49171,8 @@
 
 	HashRateCard.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  hashRate: propTypes.number.isRequired
+	  hashRate: propTypes.number.isRequired,
+	  miner: propTypes.object.isRequired
 	};
 
 	const mapStateToProps$8 = ({
@@ -49178,6 +49182,7 @@
 	  activeMiners
 	}) => {
 	  return {
+	    miner: minersByIdentifier[selectedMinerIdentifier],
 	    hashRate: activeMiners[selectedMinerIdentifier].currentSpeed
 	  };
 	};

@@ -1,9 +1,10 @@
-import React, { Component } from 'react';
-import { StatusCard, Typography } from '../generic';
+import { Link, StatusCard, Typography } from '../generic';
+import React, { Component, Fragment } from 'react';
 
 import PropTypes from 'prop-types';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
+import { minersByIdentifier } from '../../../api/mining';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
@@ -14,10 +15,19 @@ const styles = {
 
 class HashRateCard extends Component {
   render() {
-    const { classes, hashRate } = this.props;
+    const { classes, hashRate, miner } = this.props;
 
     return (
-      <StatusCard helperText="The Hash Rate indicates your mining speed">
+      <StatusCard
+        helperText={
+          <Fragment>
+            The Hash Rate indicates your mining speed.{' '}
+            <Link to={`https://gpustats.com/coin/${miner.currency}`}>
+              Get a list of hashrates by GPU
+            </Link>
+          </Fragment>
+        }
+      >
         <Typography className={classes.load} variant="display1">
           {hashRate}H/s
         </Typography>
@@ -29,11 +39,13 @@ class HashRateCard extends Component {
 
 HashRateCard.propTypes = {
   classes: PropTypes.object.isRequired,
-  hashRate: PropTypes.number.isRequired
+  hashRate: PropTypes.number.isRequired,
+  miner: PropTypes.object.isRequired
 };
 
 const mapStateToProps = ({ mining: { selectedMinerIdentifier }, activeMiners }) => {
   return {
+    miner: minersByIdentifier[selectedMinerIdentifier],
     hashRate: activeMiners[selectedMinerIdentifier].currentSpeed
   };
 };

@@ -22,7 +22,11 @@ class BalanceCard extends Component {
     } = this.props;
 
     return (
-      <StatusCard helperText="This is the balance reported by the mining pool">
+      <StatusCard
+        helperText={`This is the balance reported by the mining pool. The payout is automatically triggered when you reached the payment threshold of ${payoutThreshold} ${
+          miner.currency
+        }.`}
+      >
         <Typography className={classes.load} variant="display1">
           {(unpaidBalance || 0).toFixed(10)} {miner.currency}
         </Typography>

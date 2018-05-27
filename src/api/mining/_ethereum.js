@@ -19,7 +19,9 @@ export const ethereum = {
   }),
   path: 'ethereum/ethminer.exe',
   args: ({ address, servers }) =>
-    `--farm-recheck 200 -G -S ${servers[0]} -SF ${servers[1]} -O ${address}.raccoon`,
+    `--farm-recheck 500 -G -P stratum+tcp://${address}.raccoon@${
+      servers[0]
+    } -P stratum+tcp://${address}.raccoon@${servers[1]}`,
   environmentVariables: () =>
     JSON.stringify({
       GPU_FORCE_64BIT_PTR: '0',

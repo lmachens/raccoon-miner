@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.6.0"></a>
+# [0.6.0](https://github.com/lmachens/raccoon-miner/compare/v0.5.0...v0.6.0) (2018-05-27)
+
+
+### Features
+
+* **mining:** update ethminer  to 0.15.0.dev11 ([dbc279d](https://github.com/lmachens/raccoon-miner/commit/dbc279d))
+
+
+
 <a name="0.5.0"></a>
 # [0.5.0](https://github.com/lmachens/raccoon-miner/compare/v0.4.1...v0.5.0) (2018-05-26)
 

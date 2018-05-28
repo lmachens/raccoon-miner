@@ -29,7 +29,8 @@ class HashRateCard extends Component {
         }
       >
         <Typography className={classes.load} variant="display1">
-          {hashRate}H/s
+          {hashRate}
+          {miner.speedUnit}
         </Typography>
         <Typography variant="caption">Hash Rate</Typography>
       </StatusCard>

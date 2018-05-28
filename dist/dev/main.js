@@ -775,6 +775,7 @@
 	  identifier: ETHEREUM_MINER,
 	  logo: 'assets/ethereum.png',
 	  currency: 'ETH',
+	  speedUnit: 'Mh/s',
 	  minimumPaymentThreshold: 0.05,
 	  parser: generateParser({
 	    [SPEED_REGEX]: /Speed\s+(.+)\sMh\/s/,
@@ -807,6 +808,7 @@
 	  identifier: MONERO_MINER,
 	  logo: 'assets/monero.png',
 	  currency: 'XMR',
+	  speedUnit: 'H/s',
 	  minimumPaymentThreshold: 0.1,
 	  parser: generateParser({
 	    [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
@@ -49163,7 +49165,7 @@
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, hashRate, "H/s"), react.createElement(Typography$2, {
+	    }, hashRate, miner.speedUnit), react.createElement(Typography$2, {
 	      variant: "caption"
 	    }, "Hash Rate"));
 	  }

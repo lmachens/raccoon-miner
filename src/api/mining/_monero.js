@@ -22,7 +22,7 @@ export const monero = {
   args: ({ address, servers }) =>
     `--noUAC -i 0 -o ${
       servers[0]
-    } -u ${address} --currency monero7 -p raccoon -r raccoon --amd amd.txt --cpu cpu.txt --nvidia nvidia.txt --config config.txt`,
+    } -u ${address} --currency monero7 -p raccoon --amd amd.txt --cpu cpu.txt --nvidia nvidia.txt --config config.txt`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true }),
   links: {
     wallet: 'https://getmonero.org/'

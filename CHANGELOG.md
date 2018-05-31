@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.7.0](https://github.com/lmachens/raccoon-miner/compare/v0.6.0...v0.7.0) (2018-05-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.1.0 ([#34](https://github.com/lmachens/raccoon-miner/issues/34)) ([130bcc9](https://github.com/lmachens/raccoon-miner/commit/130bcc9))
+* **deps:** update dependency redux-thunk to v2.3.0 ([#44](https://github.com/lmachens/raccoon-miner/issues/44)) ([ba02dc4](https://github.com/lmachens/raccoon-miner/commit/ba02dc4))
+* **hashrate:** change unit to Mh/s for ethereum ([68dd7e7](https://github.com/lmachens/raccoon-miner/commit/68dd7e7))
+
+
+### Features
+
+* **faq:** add questions for anti virus and payout ([364f89f](https://github.com/lmachens/raccoon-miner/commit/364f89f))
+* **release:** bundle production build to reduce file size ([2709cd5](https://github.com/lmachens/raccoon-miner/commit/2709cd5))
+
+
+
 <a name="0.6.0"></a>
 # [0.6.0](https://github.com/lmachens/raccoon-miner/compare/v0.5.0...v0.6.0) (2018-05-27)
 

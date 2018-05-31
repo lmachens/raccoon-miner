@@ -12,7 +12,6 @@ export const ethereum = {
   logo: 'assets/ethereum.png',
   currency: 'ETH',
   speedUnit: 'Mh/s',
-  minimumPaymentThreshold: 0.05,
   parser: generateParser({
     [SPEED_REGEX]: /Speed\s+(.+)\sMh\/s/,
     [CONNECTION_FAILED_REGEX]: /Could not resolve host/,

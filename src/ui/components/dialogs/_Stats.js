@@ -10,7 +10,7 @@ class StatsDialog extends PureComponent {
     const { open, statsLink } = this.props;
 
     return (
-      <FullScreenDialog open={open} title="Stats">
+      <FullScreenDialog open={open} title="Stats (under construction)">
         <DialogContentText>
           A mining pool is the pooling of resources by miners, who share their processing power over
           a network, to split the reward equally, according to the amount of work they contributed

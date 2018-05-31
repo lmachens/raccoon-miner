@@ -10,7 +10,7 @@ const version = packageJson.version;
 // create a file to stream archive data to.
 const filename = `${__dirname}/raccoon_miner_${version}.zip`;
 const output = fs.createWriteStream(filename);
-const folder = 'dist/dev';
+const folder = 'dist/production';
 const gitHubReleaseToken = env.CONVENTIONAL_GITHUB_RELEASER_TOKEN;
 
 zipFolder({ filename, output, folder }, () => {

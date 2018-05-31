@@ -12,7 +12,6 @@ export const monero = {
   logo: 'assets/monero.png',
   currency: 'XMR',
   speedUnit: 'H/s',
-  minimumPaymentThreshold: 0.1,
   parser: generateParser({
     [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
     [CONNECTION_FAILED_REGEX]: /Could not resolve host/,

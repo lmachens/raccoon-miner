@@ -2,20 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-# [0.8.0](https://github.com/lmachens/raccoon-miner/compare/v0.7.0...v0.8.0) (2018-06-04)
-
-
-### Bug Fixes
-
-* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.2.0 ([#54](https://github.com/lmachens/raccoon-miner/issues/54)) ([a65fecf](https://github.com/lmachens/raccoon-miner/commit/a65fecf))
-* **faq:** fix typo in payout question ([96710b8](https://github.com/lmachens/raccoon-miner/commit/96710b8))
-* **react:** fix status card propType warning ([6cba956](https://github.com/lmachens/raccoon-miner/commit/6cba956))
+# [0.9.0](https://github.com/lmachens/raccoon-miner/compare/v0.8.0...v0.9.0) (2018-06-04)
 
 
 ### Features
 
-* **advanced:** replace stats with advanced dialog and add logs ([889fa6e](https://github.com/lmachens/raccoon-miner/commit/889fa6e))
-* **hardware:** show max and active cpus and gpus ([25606dd](https://github.com/lmachens/raccoon-miner/commit/25606dd))
+* **support:** add feedback page ([a8d375a](https://github.com/lmachens/raccoon-miner/commit/a8d375a))
 
 
 

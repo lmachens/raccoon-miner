@@ -2,20 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-# [0.7.0](https://github.com/lmachens/raccoon-miner/compare/v0.6.0...v0.7.0) (2018-05-31)
+# [0.8.0](https://github.com/lmachens/raccoon-miner/compare/v0.7.0...v0.8.0) (2018-06-04)
 
 
 ### Bug Fixes
 
-* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.1.0 ([#34](https://github.com/lmachens/raccoon-miner/issues/34)) ([130bcc9](https://github.com/lmachens/raccoon-miner/commit/130bcc9))
-* **deps:** update dependency redux-thunk to v2.3.0 ([#44](https://github.com/lmachens/raccoon-miner/issues/44)) ([ba02dc4](https://github.com/lmachens/raccoon-miner/commit/ba02dc4))
-* **hashrate:** change unit to Mh/s for ethereum ([68dd7e7](https://github.com/lmachens/raccoon-miner/commit/68dd7e7))
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.2.0 ([#54](https://github.com/lmachens/raccoon-miner/issues/54)) ([a65fecf](https://github.com/lmachens/raccoon-miner/commit/a65fecf))
+* **faq:** fix typo in payout question ([96710b8](https://github.com/lmachens/raccoon-miner/commit/96710b8))
+* **react:** fix status card propType warning ([6cba956](https://github.com/lmachens/raccoon-miner/commit/6cba956))
 
 
 ### Features
 
-* **faq:** add questions for anti virus and payout ([364f89f](https://github.com/lmachens/raccoon-miner/commit/364f89f))
-* **release:** bundle production build to reduce file size ([2709cd5](https://github.com/lmachens/raccoon-miner/commit/2709cd5))
+* **advanced:** replace stats with advanced dialog and add logs ([889fa6e](https://github.com/lmachens/raccoon-miner/commit/889fa6e))
+* **hardware:** show max and active cpus and gpus ([25606dd](https://github.com/lmachens/raccoon-miner/commit/25606dd))
 
 
 

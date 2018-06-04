@@ -38,7 +38,7 @@ const FAQ = () => (
       question="Why is my CPU or GPU at 100%?"
     />
     <FAQEntry
-      answer="This depends on the selected mining pool. Take a look at there conditions."
+      answer="This depends on the selected mining pool. Take a look at their conditions."
       question="When do I get a payout?"
     />
   </Fragment>

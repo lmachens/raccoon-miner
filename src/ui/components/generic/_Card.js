@@ -44,7 +44,11 @@ const StatusCard = ({ classes, className, helperText, children }) => (
 );
 
 StatusCard.propTypes = {
-  helperText: PropTypes.string,
+  helperText: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node,
+    PropTypes.string
+  ]),
   classes: PropTypes.object.isRequired,
   className: PropTypes.string,
   children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired

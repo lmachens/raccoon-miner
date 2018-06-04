@@ -38353,7 +38353,7 @@
 	})), children);
 
 	StatusCard.propTypes = {
-	  helperText: propTypes.string,
+	  helperText: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node, propTypes.string]),
 	  classes: propTypes.object.isRequired,
 	  className: propTypes.string,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired

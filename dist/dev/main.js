@@ -705,16 +705,11 @@
 	  };
 	};
 
-	const interval = 1;
+	const interval = 200;
 
-	const requestHardwareInfo = listener => {
-	  console.log('request hardware info');
-	  overwolf.benchmarking.requestHardwareInfo(interval, ({
-	    reason
-	  }) => {
-	    console.log(reason);
-
-	    if (reason === 'Permissions Required') {
+	const requestHardwareInfo = () => {
+	  overwolf.benchmarking.requestHardwareInfo(interval, result => {
+	    if (result.reason === 'Permissions Required') {
 	      overwolf.benchmarking.requestPermissions(({
 	        status
 	      }) => {
@@ -722,8 +717,6 @@
 	          requestHardwareInfo();
 	        }
 	      });
-	    } else {
-	      overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
 	    }
 	  });
 	};
@@ -731,6 +724,9 @@
 	const addHardwareInfoListener = listener => {
 	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
 	  requestHardwareInfo(listener);
+	};
+	const removeHardwareInfoListener = listener => {
+	  overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
 	};
 
 	const trackHardwareInfo = () => {
@@ -740,6 +736,7 @@
 	        type: RECEIVE_HARDWARE_INFO,
 	        data: hardwareInfo
 	      });
+	      removeHardwareInfoListener(hardwareInfoListener);
 	    };
 
 	    addHardwareInfoListener(hardwareInfoListener);

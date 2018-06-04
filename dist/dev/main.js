@@ -46915,7 +46915,7 @@
 	      line
 	    }) => react.createElement("div", {
 	      key: timestamp
-	    }, timestamp, ": ", line))));
+	    }, line))));
 	  }
 
 	}

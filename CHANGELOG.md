@@ -2,12 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-# [0.9.0](https://github.com/lmachens/raccoon-miner/compare/v0.8.0...v0.9.0) (2018-06-04)
+## [0.9.1](https://github.com/lmachens/raccoon-miner/compare/v0.9.0...v0.9.1) (2018-06-04)
 
 
-### Features
+### Bug Fixes
 
-* **support:** add feedback page ([a8d375a](https://github.com/lmachens/raccoon-miner/commit/a8d375a))
+* **hardware:** only fetch hardwareInfo once ([2dc9a8f](https://github.com/lmachens/raccoon-miner/commit/2dc9a8f))
 
 
 

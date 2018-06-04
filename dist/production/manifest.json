@@ -3,7 +3,7 @@
   "type": "WebApp",
   "meta": {
     "name": "Raccoon Miner",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "minimum-overwolf-version": "0.85.0.0",
     "author": "Leon Machens",
     "icon": "assets/icon.png",
@@ -55,5 +55,5 @@
       ]
     }
   },
-  "version": "0.7.0"
+  "version": "0.8.0"
 }

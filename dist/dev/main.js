@@ -5836,12 +5836,12 @@
 	var inherits = _inherits$1;
 
 	/**
-	 * Copyright 2014-2015, Facebook, Inc.
-	 * All rights reserved.
+	 * Copyright (c) 2014-present, Facebook, Inc.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 *
+	 * @providesModule warning
 	 */
 
 	/**
@@ -5851,9 +5851,33 @@
 	 * same logic and follow the same code paths.
 	 */
 
+	var __DEV__ = "development" !== 'production';
+
 	var warning$3 = function() {};
 
-	{
+	if (__DEV__) {
+	  var printWarning$1 = function printWarning(format, args) {
+	    var len = arguments.length;
+	    args = new Array(len > 2 ? len - 2 : 0);
+	    for (var key = 2; key < len; key++) {
+	      args[key - 2] = arguments[key];
+	    }
+	    var argIndex = 0;
+	    var message = 'Warning: ' +
+	      format.replace(/%s/g, function() {
+	        return args[argIndex++];
+	      });
+	    if (typeof console !== 'undefined') {
+	      console.error(message);
+	    }
+	    try {
+	      // --- Welcome to debugging React ---
+	      // This error was thrown as a convenience so that you can use this stack
+	      // to find the callsite that caused this warning to fire.
+	      throw new Error(message);
+	    } catch (x) {}
+	  };
+
 	  warning$3 = function(condition, format, args) {
 	    var len = arguments.length;
 	    args = new Array(len > 2 ? len - 2 : 0);
@@ -5862,37 +5886,17 @@
 	    }
 	    if (format === undefined) {
 	      throw new Error(
-	        '`warning(condition, format, ...args)` requires a warning ' +
-	        'message argument'
+	          '`warning(condition, format, ...args)` requires a warning ' +
+	          'message argument'
 	      );
 	    }
-
-	    if (format.length < 10 || (/^[s\W]*$/).test(format)) {
-	      throw new Error(
-	        'The warning format should be able to uniquely identify this ' +
-	        'warning. Please, use a more descriptive format than: ' + format
-	      );
-	    }
-
 	    if (!condition) {
-	      var argIndex = 0;
-	      var message = 'Warning: ' +
-	        format.replace(/%s/g, function() {
-	          return args[argIndex++];
-	        });
-	      if (typeof console !== 'undefined') {
-	        console.error(message);
-	      }
-	      try {
-	        // This error was thrown as a convenience so that you can use this stack
-	        // to find the callsite that caused this warning to fire.
-	        throw new Error(message);
-	      } catch(x) {}
+	      printWarning$1.apply(null, [format].concat(args));
 	    }
 	  };
 	}
 
-	var browser = warning$3;
+	var warning_1$1 = warning$3;
 
 	var hoistNonReactStatics = createCommonjsModule(function (module, exports) {
 	/**
@@ -6273,6 +6277,65 @@
 	});
 
 	unwrapExports(SheetsRegistry_1);
+
+	/**
+	 * Copyright 2014-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 */
+
+	/**
+	 * Similar to invariant but only logs a warning if the condition is not met.
+	 * This can be used to log issues in development environments in critical
+	 * paths. Removing the logging code for production environments will keep the
+	 * same logic and follow the same code paths.
+	 */
+
+	var warning$4 = function() {};
+
+	{
+	  warning$4 = function(condition, format, args) {
+	    var len = arguments.length;
+	    args = new Array(len > 2 ? len - 2 : 0);
+	    for (var key = 2; key < len; key++) {
+	      args[key - 2] = arguments[key];
+	    }
+	    if (format === undefined) {
+	      throw new Error(
+	        '`warning(condition, format, ...args)` requires a warning ' +
+	        'message argument'
+	      );
+	    }
+
+	    if (format.length < 10 || (/^[s\W]*$/).test(format)) {
+	      throw new Error(
+	        'The warning format should be able to uniquely identify this ' +
+	        'warning. Please, use a more descriptive format than: ' + format
+	      );
+	    }
+
+	    if (!condition) {
+	      var argIndex = 0;
+	      var message = 'Warning: ' +
+	        format.replace(/%s/g, function() {
+	          return args[argIndex++];
+	        });
+	      if (typeof console !== 'undefined') {
+	        console.error(message);
+	      }
+	      try {
+	        // This error was thrown as a convenience so that you can use this stack
+	        // to find the callsite that caused this warning to fire.
+	        throw new Error(message);
+	      } catch(x) {}
+	    }
+	  };
+	}
+
+	var browser = warning$4;
 
 	var SheetsManager_1 = createCommonjsModule(function (module, exports) {
 
@@ -6860,11 +6923,27 @@
 
 	  // Original styles object.
 	  function RuleList(options) {
+	    var _this = this;
+
 	    _classCallCheck(this, RuleList);
 
 	    this.map = {};
 	    this.raw = {};
 	    this.index = [];
+
+	    this.update = function (name, data) {
+	      var _options = _this.options,
+	          plugins = _options.jss.plugins,
+	          sheet = _options.sheet;
+
+	      if (typeof name === 'string') {
+	        plugins.onUpdate(data, _this.get(name), sheet);
+	      } else {
+	        for (var index = 0; index < _this.index.length; index++) {
+	          plugins.onUpdate(name, _this.index[index], sheet);
+	        }
+	      }
+	    };
 
 	    this.options = options;
 	    this.classes = options.classes;
@@ -6886,12 +6965,12 @@
 	  _createClass(RuleList, [{
 	    key: 'add',
 	    value: function add(name, decl, options) {
-	      var _options = this.options,
-	          parent = _options.parent,
-	          sheet = _options.sheet,
-	          jss = _options.jss,
-	          Renderer = _options.Renderer,
-	          generateClassName = _options.generateClassName;
+	      var _options2 = this.options,
+	          parent = _options2.parent,
+	          sheet = _options2.sheet,
+	          jss = _options2.jss,
+	          Renderer = _options2.Renderer,
+	          generateClassName = _options2.generateClassName;
 
 
 	      options = _extends({
@@ -7004,28 +7083,12 @@
 	     */
 
 	  }, {
-	    key: 'update',
-	    value: function update(name, data) {
-	      var _options2 = this.options,
-	          plugins = _options2.jss.plugins,
-	          sheet = _options2.sheet;
+	    key: 'link',
 
-	      if (typeof name === 'string') {
-	        plugins.onUpdate(data, this.get(name), sheet);
-	        return;
-	      }
-
-	      for (var index = 0; index < this.index.length; index++) {
-	        plugins.onUpdate(name, this.index[index], sheet);
-	      }
-	    }
 
 	    /**
 	     * Link renderable rules with CSSRuleList.
 	     */
-
-	  }, {
-	    key: 'link',
 	    value: function link(cssRules) {
 	      var map = this.options.sheet.renderer.getUnescapedKeysMap(this.index);
 
@@ -7118,9 +7181,21 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+	/* eslint-disable-next-line no-use-before-define */
 	var StyleSheet = function () {
 	  function StyleSheet(styles, options) {
+	    var _this = this;
+
 	    _classCallCheck(this, StyleSheet);
+
+	    this.update = function (name, data) {
+	      if (typeof name === 'string') {
+	        _this.rules.update(name, data);
+	      } else {
+	        _this.rules.update(name);
+	      }
+	      return _this;
+	    };
 
 	    this.attached = false;
 	    this.deployed = false;
@@ -7134,8 +7209,8 @@
 	    this.renderer = new options.Renderer(this);
 	    this.rules = new _RuleList2['default'](this.options);
 
-	    for (var name in styles) {
-	      this.rules.add(name, styles[name]);
+	    for (var _name in styles) {
+	      this.rules.add(_name, styles[_name]);
 	    }
 
 	    this.rules.process();
@@ -7230,8 +7305,8 @@
 	    key: 'addRules',
 	    value: function addRules(styles, options) {
 	      var added = [];
-	      for (var name in styles) {
-	        added.push(this.addRule(name, styles[name], options));
+	      for (var _name2 in styles) {
+	        added.push(this.addRule(_name2, styles[_name2], options));
 	      }
 	      return added;
 	    }
@@ -7309,18 +7384,12 @@
 	     */
 
 	  }, {
-	    key: 'update',
-	    value: function update(name, data) {
-	      this.rules.update(name, data);
-	      return this;
-	    }
+	    key: 'toString',
+
 
 	    /**
 	     * Convert rules to a CSS string.
 	     */
-
-	  }, {
-	    key: 'toString',
 	    value: function toString(options) {
 	      return this.rules.toString(options);
 	    }
@@ -7921,14 +7990,17 @@
 	   * Generate plugins which will register all rules.
 	   */
 	};
-	exports['default'] = Object.keys(classes).map(function (key) {
+	var plugins = Object.keys(classes).map(function (key) {
 	  // https://jsperf.com/indexof-vs-substr-vs-regex-at-the-beginning-3
 	  var re = new RegExp('^' + key);
+	  var RuleClass = classes[key];
 	  var onCreateRule = function onCreateRule(name, decl, options) {
-	    return re.test(name) ? new classes[key](name, decl, options) : null;
+	    return re.test(name) ? new RuleClass(name, decl, options) : null;
 	  };
 	  return { onCreateRule: onCreateRule };
 	});
+
+	exports['default'] = plugins;
 	});
 
 	unwrapExports(rules);
@@ -8701,7 +8773,7 @@
 	    _classCallCheck(this, Jss);
 
 	    this.id = instanceCounter++;
-	    this.version = "9.8.1";
+	    this.version = "9.8.2";
 	    this.plugins = new _PluginsRegistry2['default']();
 	    this.options = {
 	      createGenerateClassName: _createGenerateClassName2['default'],
@@ -10428,7 +10500,7 @@
 	exports.darken = darken;
 	exports.lighten = lighten;
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	//  weak
 
@@ -10698,7 +10770,7 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _deepmerge = interopRequireDefault(require$$2);
 
@@ -10957,7 +11029,7 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	/* eslint-disable no-param-reassign */
 	// Follow https://material.google.com/motion/duration-easing.html#duration-easing-natural-easing-curves
@@ -11114,7 +11186,7 @@
 
 	var _deepmerge = interopRequireDefault(require$$2);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _createTypography = interopRequireDefault(createTypography_1);
 
@@ -11227,7 +11299,12 @@
 	});
 	exports.default = createGenerateClassName;
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
+
+	/* eslint-disable no-underscore-dangle */
+	// People might bundle this classname generator twice.
+	// We need to use a global.
+	commonjsGlobal.__MUI_GENERATOR_COUNTER__ = 0; // Returns a function which generates unique class names based on counters.
 	// When new generator function is created, rule counter is reset.
 	// We need to reset the rule counter for SSR for each request.
 	//
@@ -11289,7 +11366,7 @@
 
 	var _objectSpread2 = interopRequireDefault(objectSpread);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _deepmerge = interopRequireDefault(require$$2);
 
@@ -11386,7 +11463,7 @@
 
 	var _propTypes = interopRequireDefault(propTypes);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _hoistNonReactStatics = interopRequireDefault(hoistNonReactStatics);
 
@@ -11752,7 +11829,7 @@
 
 	var _typeof2 = interopRequireDefault(_typeof_1);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	//  weak
 	function capitalize(string) {
@@ -11855,7 +11932,7 @@
 
 	var _classnames = interopRequireDefault(classnames);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
@@ -30145,7 +30222,7 @@
 
 	var _keycode = interopRequireDefault(keycode);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _contains = interopRequireDefault(contains);
 
@@ -32306,7 +32383,7 @@
 	      minWidth: theme.spacing.unit * 11,
 	      minHeight: 36,
 	      padding: "".concat(theme.spacing.unit, "px ").concat(theme.spacing.unit * 2, "px"),
-	      borderRadius: 2,
+	      borderRadius: 4,
 	      color: theme.palette.text.primary,
 	      transition: theme.transitions.create(['background-color', 'box-shadow'], {
 	        duration: theme.transitions.duration.short
@@ -32332,7 +32409,7 @@
 	      alignItems: 'inherit',
 	      justifyContent: 'inherit'
 	    },
-	    flatPrimary: {
+	    textPrimary: {
 	      color: theme.palette.primary.main,
 	      '&:hover': {
 	        backgroundColor: (0, colorManipulator.fade)(theme.palette.primary.main, theme.palette.action.hoverOpacity),
@@ -32342,7 +32419,7 @@
 	        }
 	      }
 	    },
-	    flatSecondary: {
+	    textSecondary: {
 	      color: theme.palette.secondary.main,
 	      '&:hover': {
 	        backgroundColor: (0, colorManipulator.fade)(theme.palette.secondary.main, theme.palette.action.hoverOpacity),
@@ -32352,14 +32429,16 @@
 	        }
 	      }
 	    },
+	    flat: {},
+	    flatPrimary: {},
+	    flatSecondary: {},
 	    outlined: {
-	      border: "1px solid ".concat(theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)'),
-	      borderRadius: 4
+	      border: "1px solid ".concat(theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)')
 	    },
 	    colorInherit: {
 	      color: 'inherit'
 	    },
-	    raised: {
+	    contained: {
 	      color: theme.palette.getContrastText(theme.palette.grey[300]),
 	      backgroundColor: theme.palette.grey[300],
 	      boxShadow: theme.shadows[2],
@@ -32385,7 +32464,7 @@
 	        }
 	      }
 	    },
-	    raisedPrimary: {
+	    containedPrimary: {
 	      color: theme.palette.primary.contrastText,
 	      backgroundColor: theme.palette.primary.main,
 	      '&:hover': {
@@ -32396,7 +32475,7 @@
 	        }
 	      }
 	    },
-	    raisedSecondary: {
+	    containedSecondary: {
 	      color: theme.palette.secondary.contrastText,
 	      backgroundColor: theme.palette.secondary.main,
 	      '&:hover': {
@@ -32407,6 +32486,9 @@
 	        }
 	      }
 	    },
+	    raised: {},
+	    raisedPrimary: {},
+	    raisedSecondary: {},
 	    focusVisible: {},
 	    disabled: {},
 	    fab: {
@@ -32461,9 +32543,9 @@
 	      variant = props.variant,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "color", "disabled", "disableFocusRipple", "fullWidth", "focusVisibleClassName", "mini", "size", "variant"]);
 	  var fab = variant === 'fab';
-	  var raised = variant === 'raised';
-	  var flat = !raised && !fab;
-	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.raised, raised || fab), (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, flat && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, flat && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, !flat && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, !flat && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), _classNames), classNameProp);
+	  var contained = variant === 'contained' || variant === 'raised';
+	  var text = !contained && !fab;
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.contained, contained || fab), (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), (0, _defineProperty2.default)(_classNames, classes.textPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.textSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.flat, text), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.containedPrimary, !text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.containedSecondary, !text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raised, contained || fab), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.text, variant === 'text'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), _classNames), classNameProp);
 	  return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
 	    className: className,
 	    disabled: disabled,
@@ -32553,7 +32635,7 @@
 	  /**
 	   * The type of button.
 	   */
-	  variant: _propTypes.default.oneOf(['flat', 'outlined', 'raised', 'fab'])
+	  variant: _propTypes.default.oneOf(['text', 'flat', 'outlined', 'contained', 'raised', 'fab'])
 	};
 	Button.defaultProps = {
 	  color: 'default',
@@ -32564,7 +32646,7 @@
 	  mini: false,
 	  size: 'medium',
 	  type: 'button',
-	  variant: 'flat'
+	  variant: 'text'
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -34278,6 +34360,50 @@
 
 	var SettingsIcon = unwrapExports(Settings);
 
+	var Add = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(react);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("g", null, _react.default.createElement("path", {
+	  d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+	})), 'Add');
+
+	exports.default = _default;
+	});
+
+	var AddIcon = unwrapExports(Add);
+
+	var Remove = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(react);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("g", null, _react.default.createElement("path", {
+	  d: "M19 13H5v-2h14v2z"
+	})), 'Remove');
+
+	exports.default = _default;
+	});
+
+	var RemoveIcon = unwrapExports(Remove);
+
 	var IconButton_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -34542,7 +34668,6 @@
 	var _objectSpread = _interopDefault(objectSpread);
 	var React = _interopDefault(react);
 	var PropTypes = _interopDefault(propTypes);
-	var shallowEqual = _interopDefault(shallowEqual_1);
 	var warning = _interopDefault(browser);
 
 	function defineProperty(object, property, attr) {
@@ -34644,8 +34769,8 @@
 
 	var EventListener =
 	/*#__PURE__*/
-	function (_React$Component) {
-	  _inherits(EventListener, _React$Component);
+	function (_React$PureComponent) {
+	  _inherits(EventListener, _React$PureComponent);
 
 	  function EventListener() {
 	    _classCallCheck(this, EventListener);
@@ -34656,42 +34781,24 @@
 	  _createClass(EventListener, [{
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
-	      this.addListeners();
-	    }
-	  }, {
-	    key: "shouldComponentUpdate",
-	    value: function shouldComponentUpdate(nextProps) {
-	      return !shallowEqual(this.props, nextProps);
-	    }
-	  }, {
-	    key: "componentWillUpdate",
-	    value: function componentWillUpdate() {
-	      this.removeListeners();
+	      this.applyListeners(on);
 	    }
 	  }, {
 	    key: "componentDidUpdate",
-	    value: function componentDidUpdate() {
-	      this.addListeners();
+	    value: function componentDidUpdate(prevProps) {
+	      this.applyListeners(off, prevProps);
+	      this.applyListeners(on);
 	    }
 	  }, {
 	    key: "componentWillUnmount",
 	    value: function componentWillUnmount() {
-	      this.removeListeners();
-	    }
-	  }, {
-	    key: "addListeners",
-	    value: function addListeners() {
-	      this.applyListeners(on);
-	    }
-	  }, {
-	    key: "removeListeners",
-	    value: function removeListeners() {
 	      this.applyListeners(off);
 	    }
 	  }, {
 	    key: "applyListeners",
 	    value: function applyListeners(onOrOff) {
-	      var target = this.props.target;
+	      var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.props;
+	      var target = props.target;
 
 	      if (target) {
 	        var element = target;
@@ -34700,7 +34807,7 @@
 	          element = window[target];
 	        }
 
-	        forEachListener(this.props, onOrOff.bind(null, element));
+	        forEachListener(props, onOrOff.bind(null, element));
 	      }
 	    }
 	  }, {
@@ -34711,7 +34818,7 @@
 	  }]);
 
 	  return EventListener;
-	}(React.Component);
+	}(React.PureComponent);
 
 	EventListener.propTypes = {
 	  /**
@@ -34757,92 +34864,6 @@
 
 	unwrapExports(activeElement_1);
 
-	var RootRef_1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = void 0;
-
-	var _classCallCheck2 = interopRequireDefault(classCallCheck);
-
-	var _createClass2 = interopRequireDefault(createClass);
-
-	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
-
-	var _inherits2 = interopRequireDefault(inherits);
-
-	var _react = interopRequireDefault(react);
-
-	var _reactDom = interopRequireDefault(reactDom);
-
-	var _propTypes = interopRequireDefault(propTypes);
-
-	/**
-	 * Helper component to allow attaching a ref to a
-	 * child element that may not accept refs (functional component).
-	 * It's higly inspired by https://github.com/facebook/react/issues/11401#issuecomment-340543801
-	 */
-	var RootRef =
-	/*#__PURE__*/
-	function (_React$Component) {
-	  (0, _inherits2.default)(RootRef, _React$Component);
-
-	  function RootRef() {
-	    (0, _classCallCheck2.default)(this, RootRef);
-	    return (0, _possibleConstructorReturn2.default)(this, (RootRef.__proto__ || Object.getPrototypeOf(RootRef)).apply(this, arguments));
-	  }
-
-	  (0, _createClass2.default)(RootRef, [{
-	    key: "componentDidMount",
-	    value: function componentDidMount() {
-	      this.props.rootRef(_reactDom.default.findDOMNode(this));
-	    }
-	  }, {
-	    key: "componentWillUnmount",
-	    value: function componentWillUnmount() {
-	      this.props.rootRef(null);
-	    }
-	  }, {
-	    key: "render",
-	    value: function render() {
-	      return this.props.children;
-	    }
-	  }]);
-	  return RootRef;
-	}(_react.default.Component);
-
-	RootRef.propTypes = {
-	  children: _propTypes.default.element.isRequired,
-	  rootRef: _propTypes.default.func.isRequired
-	};
-	var _default = RootRef;
-	exports.default = _default;
-	});
-
-	unwrapExports(RootRef_1);
-
-	var RootRef$1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	Object.defineProperty(exports, "default", {
-	  enumerable: true,
-	  get: function get() {
-	    return _RootRef.default;
-	  }
-	});
-
-	var _RootRef = interopRequireDefault(RootRef_1);
-	});
-
-	unwrapExports(RootRef$1);
-
 	var exactProp_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -34880,6 +34901,142 @@
 
 	unwrapExports(exactProp_1);
 	var exactProp_2 = exactProp_1.specialProperty;
+
+	var RootRef_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _react = interopRequireDefault(react);
+
+	var _reactDom = interopRequireDefault(reactDom);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _exactProp = interopRequireDefault(exactProp_1);
+
+	/**
+	 * Helper component to allow attaching a ref to a
+	 * wrapped element to access the underlying DOM element.
+	 *
+	 * It's higly inspired by https://github.com/facebook/react/issues/11401#issuecomment-340543801.
+	 * For example:
+	 * ```jsx
+	 * import React from 'react';
+	 * import RootRef from '@material-ui/core/RootRef';
+	 *
+	 * class MyComponent extends React.Component {
+	 *   constructor(props) {
+	 *     super(props);
+	 *     this.domRef = React.createRef();
+	 *   }
+	 *
+	 *   componentDidMount() {
+	 *     console.log(this.domRef.current); // DOM node
+	 *   }
+	 *
+	 *   render() {
+	 *     return (
+	 *       <RootRef rootRef={this.domRef}>
+	 *         <SomeChildComponent />
+	 *       </RootRef>
+	 *     );
+	 *   }
+	 * }
+	 * ```
+	 */
+	var RootRef =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(RootRef, _React$Component);
+
+	  function RootRef() {
+	    (0, _classCallCheck2.default)(this, RootRef);
+	    return (0, _possibleConstructorReturn2.default)(this, (RootRef.__proto__ || Object.getPrototypeOf(RootRef)).apply(this, arguments));
+	  }
+
+	  (0, _createClass2.default)(RootRef, [{
+	    key: "componentDidMount",
+	    value: function componentDidMount() {
+	      var rootRef = this.props.rootRef;
+
+	      var node = _reactDom.default.findDOMNode(this);
+
+	      if (typeof rootRef === 'function') {
+	        rootRef(node);
+	      } else if (rootRef) {
+	        rootRef.current = node;
+	      }
+	    }
+	  }, {
+	    key: "componentWillUnmount",
+	    value: function componentWillUnmount() {
+	      var rootRef = this.props.rootRef;
+
+	      if (typeof rootRef === 'function') {
+	        rootRef(null);
+	      } else if (rootRef) {
+	        rootRef.current = null;
+	      }
+	    }
+	  }, {
+	    key: "render",
+	    value: function render() {
+	      return this.props.children;
+	    }
+	  }]);
+	  return RootRef;
+	}(_react.default.Component);
+
+	RootRef.propTypes = {
+	  /**
+	   * The wrapped element.
+	   */
+	  children: _propTypes.default.element.isRequired,
+
+	  /**
+	   * Provide a way to access the DOM node of the wrapped element.
+	   * You can provide a callback ref or a `React.createRef()` ref.
+	   */
+	  rootRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]).isRequired
+	};
+	RootRef.propTypes = (0, _exactProp.default)(RootRef.propTypes, 'RootRef');
+	var _default = RootRef;
+	exports.default = _default;
+	});
+
+	unwrapExports(RootRef_1);
+
+	var RootRef$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _RootRef.default;
+	  }
+	});
+
+	var _RootRef = interopRequireDefault(RootRef_1);
+	});
+
+	unwrapExports(RootRef$1);
 
 	var Portal_1 = createCommonjsModule(function (module, exports) {
 
@@ -36235,7 +36392,7 @@
 
 	var _classnames = interopRequireDefault(classnames);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _keycode = interopRequireDefault(keycode);
 
@@ -36310,11 +36467,11 @@
 	    }
 	  }]);
 
-	  function Modal(props, context) {
+	  function Modal(props) {
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Modal);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props, context));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props));
 	    _this.dialogElement = null;
 	    _this.mounted = false;
 	    _this.mountNode = null;
@@ -36993,7 +37150,7 @@
 
 	var _reactDom = interopRequireDefault(reactDom);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _contains = interopRequireDefault(contains);
 
@@ -37317,7 +37474,8 @@
 	        role: role,
 	        ref: function ref(node) {
 	          _this2.transitionEl = node;
-	        }
+	        },
+	        timeout: transitionDuration
 	      }, TransitionProps), _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	        className: classes.paper,
 	        elevation: elevation
@@ -37617,7 +37775,7 @@
 
 	var _propTypes = interopRequireDefault(propTypes);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _brcast = interopRequireDefault(require$$9);
 
@@ -37773,6 +37931,20 @@
 
 	unwrapExports(MuiThemeProvider_1);
 
+	var createStyles_1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = createStyles;
+
+	function createStyles(s) {
+	  return s;
+	}
+	});
+
+	unwrapExports(createStyles_1);
+
 	var styles = createCommonjsModule(function (module, exports) {
 
 
@@ -37804,6 +37976,12 @@
 	    return _MuiThemeProvider.default;
 	  }
 	});
+	Object.defineProperty(exports, "createStyles", {
+	  enumerable: true,
+	  get: function get() {
+	    return _createStyles.default;
+	  }
+	});
 	Object.defineProperty(exports, "withStyles", {
 	  enumerable: true,
 	  get: function get() {
@@ -37824,6 +38002,8 @@
 	var _jssPreset = interopRequireDefault(jssPreset_1);
 
 	var _MuiThemeProvider = interopRequireDefault(MuiThemeProvider_1);
+
+	var _createStyles = interopRequireDefault(createStyles_1);
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
@@ -39236,8 +39416,6 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _toConsumableArray2 = interopRequireDefault(toConsumableArray);
-
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
 
 	var _createClass2 = interopRequireDefault(createClass);
@@ -39381,7 +39559,12 @@
 	      var list = _reactDom.default.findDOMNode(this.list);
 
 	      var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
-	      var items = (0, _toConsumableArray2.default)(list.children);
+	      var items = [];
+
+	      for (var i = 0; i < list.children.length; i += 1) {
+	        items.push(list.children[i]);
+	      }
+
 	      var currentFocusIndex = items.indexOf(currentFocus);
 
 	      if (currentFocusIndex !== -1) {
@@ -39625,7 +39808,7 @@
 	 * @param {String} message The warning message.
 	 * @returns {void}
 	 */
-	function warning$4(message) {
+	function warning$5(message) {
 	  /* eslint-disable no-console */
 	  if (typeof console !== 'undefined' && typeof console.error === 'function') {
 	    console.error(message);
@@ -39654,7 +39837,7 @@
 	  }
 	  didWarnAboutReceivingStore = true;
 
-	  warning$4('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
+	  warning$5('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
 	}
 
 	function createProvider() {
@@ -40437,7 +40620,7 @@
 
 	function verifyPlainObject(value, displayName, methodName) {
 	  if (!isPlainObject$1(value)) {
-	    warning$4(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
+	    warning$5(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
 	  }
 	}
 
@@ -40586,7 +40769,7 @@
 	    throw new Error('Unexpected value for ' + methodName + ' in ' + displayName + '.');
 	  } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
 	    if (!selector.hasOwnProperty('dependsOnOwnProps')) {
-	      warning$4('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
+	      warning$5('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
 	    }
 	  }
 	}
@@ -41042,11 +41225,11 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(Textarea, _React$Component);
 
-	  function Textarea(props, context) {
+	  function Textarea(props) {
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Textarea);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Textarea.__proto__ || Object.getPrototypeOf(Textarea)).call(this, props, context)); // <Input> expects the components it renders to respond to 'value'
+	    _this = (0, _possibleConstructorReturn2.default)(this, (Textarea.__proto__ || Object.getPrototypeOf(Textarea)).call(this, props)); // <Input> expects the components it renders to respond to 'value'
 	    // so that it can check whether they are filled.
 
 	    _this.state = {
@@ -41396,8 +41579,7 @@
 	        left: 0,
 	        bottom: 0,
 	        // Doing the other way around crash on IE11 "''" https://github.com/cssinjs/jss/issues/242
-	        content: '"need text here to prevent subpixel zoom issue"',
-	        color: 'transparent',
+	        content: '"\\00a0"',
 	        position: 'absolute',
 	        right: 0,
 	        transition: theme.transitions.create('border-bottom-color', {
@@ -42041,7 +42223,7 @@
 	};
 	/**
 	 * Provides context such as filled/focused/error/required for form inputs.
-	 * Relying on the context provides high flexibilty and ensures that the state always stay
+	 * Relying on the context provides high flexibilty and ensures that the state always stays
 	 * consitent across the children of the `FormControl`.
 	 * This context is used by the following components:
 	 *  - FormLabel
@@ -42058,11 +42240,11 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(FormControl, _React$Component);
 
-	  function FormControl(props, context) {
+	  function FormControl(props) {
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, FormControl);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (FormControl.__proto__ || Object.getPrototypeOf(FormControl)).call(this, props, context)); // We need to iterate through the children and find the Input in order
+	    _this = (0, _possibleConstructorReturn2.default)(this, (FormControl.__proto__ || Object.getPrototypeOf(FormControl)).call(this, props)); // We need to iterate through the children and find the Input in order
 	    // to fully support server side rendering.
 
 	    _this.state = {
@@ -43010,11 +43192,15 @@
 	/* eslint-disable react/no-multi-comp */
 	// eslint-disable-next-line import/no-mutable-exports
 
-	var GridWrapper = Grid;
+	var GridWrapper = (0, _withStyles.default)(styles, {
+	  name: 'MuiGrid'
+	})(Grid);
 
 	{
+	  var GridStyled = GridWrapper;
+
 	  GridWrapper = function GridWrapper(props) {
-	    return _react.default.createElement(Grid, props);
+	    return _react.default.createElement(GridStyled, props);
 	  };
 
 	  var requireProp = (0, _requirePropFactory.default)('Grid');
@@ -43031,12 +43217,11 @@
 	    xs: requireProp('item'),
 	    zeroMinWidth: requireProp('zeroMinWidth')
 	  };
+	  GridWrapper.Naked = GridStyled;
+	  GridWrapper.options = GridStyled.options;
 	}
 
-	var _default = (0, _withStyles.default)(styles, {
-	  name: 'MuiGrid'
-	})(GridWrapper);
-
+	var _default = GridWrapper;
 	exports.default = _default;
 	});
 
@@ -43805,9 +43990,9 @@
 	      secondaryProp = props.secondary,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableTypography", "inset", "primary", "secondary"]);
 	  var dense = context.dense;
-	  var primary = primaryProp || children;
+	  var primary = primaryProp != null ? primaryProp : children;
 
-	  if (primary && !disableTypography) {
+	  if (primary != null && !disableTypography) {
 	    primary = _react.default.createElement(_Typography.default, {
 	      variant: "subheading",
 	      className: (0, _classnames.default)(classes.primary, (0, _defineProperty2.default)({}, classes.textDense, dense)),
@@ -43817,7 +44002,7 @@
 
 	  var secondary = secondaryProp;
 
-	  if (secondary && !disableTypography) {
+	  if (secondary != null && !disableTypography) {
 	    secondary = _react.default.createElement(_Typography.default, {
 	      variant: "body1",
 	      className: (0, _classnames.default)(classes.secondary, (0, _defineProperty2.default)({}, classes.textDense, dense)),
@@ -45505,11 +45690,11 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(SwitchBase, _React$Component);
 
-	  function SwitchBase(props, context) {
+	  function SwitchBase(props) {
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, SwitchBase);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (SwitchBase.__proto__ || Object.getPrototypeOf(SwitchBase)).call(this, props, context));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (SwitchBase.__proto__ || Object.getPrototypeOf(SwitchBase)).call(this, props));
 	    _this.state = {};
 	    _this.input = null;
 	    _this.isControlled = null;
@@ -46110,7 +46295,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _warning = interopRequireDefault(browser);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _propTypes = interopRequireDefault(propTypes);
 
@@ -46139,7 +46324,7 @@
 	 * - [Input](/api/input)
 	 * - [FormHelperText](/api/form-helper-text)
 	 *
-	 * If you wish to alter the properties applied to the native input, you can do as follow:
+	 * If you wish to alter the properties applied to the native input, you can do so as follows:
 	 *
 	 * ```jsx
 	 * const inputProps = {
@@ -46151,8 +46336,8 @@
 	 *
 	 * For advanced cases, please look at the source of TextField by clicking on the
 	 * "Edit this page" button above. Consider either:
-	 * - using the upper case props for passing values direct to the components.
-	 * - using the underlying components directly as shown in the demos.
+	 * - using the upper case props for passing values directly to the components
+	 * - using the underlying components directly as shown in the demos
 	 */
 	function TextField(props) {
 	  var autoComplete = props.autoComplete,
@@ -46549,7 +46734,7 @@
 	  answer: "This is normal when mining is active. Mining is a load intensive process which uses all ressources available.",
 	  question: "Why is my CPU or GPU at 100%?"
 	}), react.createElement(FAQEntry, {
-	  answer: "This depends on the selected mining pool. Take a look at there conditions.",
+	  answer: "This depends on the selected mining pool. Take a look at their conditions.",
 	  question: "When do I get a payout?"
 	}));
 
@@ -47362,6 +47547,20 @@
 	const styles$8 = {
 	  load: {
 	    fontSize: '1.5rem'
+	  },
+	  decrease: {
+	    position: 'absolute',
+	    bottom: 0,
+	    left: 0
+	  },
+	  increase: {
+	    position: 'absolute',
+	    bottom: 0,
+	    right: 0
+	  },
+	  iconButton: {
+	    height: 24,
+	    width: 24
 	  }
 	};
 
@@ -47369,23 +47568,41 @@
 	  render() {
 	    const {
 	      classes,
-	      totalLoad
+	      cpus,
+	      maxCPUs
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "Your current CPU load"
+	      helperText: "The number of CPUs you use for mining"
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, totalLoad.toString(), "%"), react.createElement(Typography$2, {
+	    }, cpus, "/", maxCPUs), react.createElement(Typography$2, {
 	      variant: "caption"
-	    }, "CPU"));
+	    }, "CPU"), react.createElement(InfoButton, {
+	      className: classes.decrease,
+	      iconProps: {
+	        className: classes.iconButton
+	      },
+	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, react.createElement(RemoveIcon, {
+	      className: classes.helpIcon
+	    })), react.createElement(InfoButton, {
+	      className: classes.increase,
+	      iconProps: {
+	        className: classes.iconButton
+	      },
+	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, react.createElement(AddIcon, {
+	      className: classes.helpIcon
+	    })));
 	  }
 
 	}
 
 	CpusCard.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  totalLoad: propTypes.number.isRequired
+	  cpus: propTypes.number.isRequired,
+	  maxCPUs: propTypes.number.isRequired
 	};
 
 	const mapStateToProps$6 = ({
@@ -47393,14 +47610,9 @@
 	    Cpus
 	  }
 	}) => {
-	  if (!Cpus.length) return {
-	    totalLoad: 0
-	  };
-	  const firstCpu = Cpus[0];
-	  const firstCpuLoad = firstCpu.Load.find(load => load.Name === 'CPU Total');
-	  const totalLoad = parseInt(firstCpuLoad.Value / firstCpuLoad.Max * 100);
 	  return {
-	    totalLoad
+	    cpus: Cpus.length,
+	    maxCPUs: Cpus.length
 	  };
 	};
 
@@ -47409,6 +47621,20 @@
 	const styles$9 = {
 	  load: {
 	    fontSize: '1.5rem'
+	  },
+	  decrease: {
+	    position: 'absolute',
+	    bottom: 0,
+	    left: 0
+	  },
+	  increase: {
+	    position: 'absolute',
+	    bottom: 0,
+	    right: 0
+	  },
+	  iconButton: {
+	    height: 24,
+	    width: 24
 	  }
 	};
 
@@ -47416,23 +47642,41 @@
 	  render() {
 	    const {
 	      classes,
-	      totalLoad
+	      gpus,
+	      maxGPUs
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "Your current GPU load"
+	      helperText: "The number of GPUs you use for mining."
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, totalLoad.toString(), "%"), react.createElement(Typography$2, {
+	    }, gpus, "/", maxGPUs), react.createElement(Typography$2, {
 	      variant: "caption"
-	    }, "GPU"));
+	    }, "GPU"), react.createElement(InfoButton, {
+	      className: classes.decrease,
+	      iconProps: {
+	        className: classes.iconButton
+	      },
+	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, react.createElement(RemoveIcon, {
+	      className: classes.helpIcon
+	    })), react.createElement(InfoButton, {
+	      className: classes.increase,
+	      iconProps: {
+	        className: classes.iconButton
+	      },
+	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, react.createElement(AddIcon, {
+	      className: classes.helpIcon
+	    })));
 	  }
 
 	}
 
 	GpusCard.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  totalLoad: propTypes.number.isRequired
+	  gpus: propTypes.number.isRequired,
+	  maxGPUs: propTypes.number.isRequired
 	};
 
 	const mapStateToProps$7 = ({
@@ -47442,14 +47686,9 @@
 	    }
 	  }
 	}) => {
-	  if (!Gpus.length) return {
-	    totalLoad: 0
-	  };
-	  const firstGpu = Gpus[0];
-	  const firstGpuLoad = firstGpu.Load.find(load => load.Name === 'GPU Core');
-	  const totalLoad = parseInt(firstGpuLoad.Value / firstGpuLoad.Max * 100);
 	  return {
-	    totalLoad
+	    gpus: Gpus.length,
+	    maxGPUs: Gpus.length
 	  };
 	};
 

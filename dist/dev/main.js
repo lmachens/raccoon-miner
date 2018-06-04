@@ -705,9 +705,9 @@
 	  };
 	};
 
-	const interval = 1000;
+	const interval = 1;
 
-	const requestHardwareInfo = () => {
+	const requestHardwareInfo = listener => {
 	  console.log('request hardware info');
 	  overwolf.benchmarking.requestHardwareInfo(interval, ({
 	    reason
@@ -722,13 +722,15 @@
 	          requestHardwareInfo();
 	        }
 	      });
+	    } else {
+	      overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
 	    }
 	  });
 	};
 
 	const addHardwareInfoListener = listener => {
 	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
-	  requestHardwareInfo();
+	  requestHardwareInfo(listener);
 	};
 
 	const trackHardwareInfo = () => {
@@ -750,8 +752,7 @@
 	const generateParser = regex => line => {
 	  const result = {
 	    timestamp: Date.now()
-	  };
-	  console.info(`%c${line}`, 'color: orange');
+	  }; //console.info(`%c${line}`, 'color: orange');
 
 	  if (regex.SPEED_REGEX) {
 	    const parsed = line.match(regex.SPEED_REGEX);
@@ -46715,6 +46716,55 @@
 	  width: "100%"
 	});
 
+	class Feedback extends react_2 {
+	  constructor(...args) {
+	    var _temp;
+
+	    return _temp = super(...args), _defineProperty$1(this, "state", {
+	      title: '',
+	      comment: ''
+	    }), _defineProperty$1(this, "handleChange", field => event => {
+	      this.setState({
+	        [field]: event.target.value
+	      });
+	    }), _defineProperty$1(this, "handleSubmit", () => {
+	      const {
+	        title,
+	        comment
+	      } = this.state;
+	      Raven.captureMessage(`${title}\n${comment}`);
+	      this.setState({
+	        title: '',
+	        comment: ''
+	      });
+	    }), _temp;
+	  }
+
+	  render() {
+	    const {
+	      title,
+	      comment
+	    } = this.state;
+	    return react.createElement(react_5, null, react.createElement(TextField$2, {
+	      margin: "normal",
+	      onChange: this.handleChange('title'),
+	      placeholder: "Title",
+	      value: title
+	    }), react.createElement(TextField$2, {
+	      margin: "normal",
+	      multiline: true,
+	      onChange: this.handleChange('comment'),
+	      placeholder: "Leave a comment",
+	      rows: 8,
+	      value: comment
+	    }), react.createElement(Button$2, {
+	      disabled: title.length === 0 || comment.length === 0,
+	      onClick: this.handleSubmit
+	    }, "Submit"));
+	  }
+
+	}
+
 	const FAQEntry = ({
 	  question,
 	  answer
@@ -46751,6 +46801,7 @@
 
 	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
 	const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
+	const SUPPORT_DIALOG_FEEDBACK = 'SUPPORT_DIALOG_FEEDBACK';
 
 	class SupportDialog extends react_2 {
 	  constructor(...args) {
@@ -46783,6 +46834,13 @@
 	      selected: tab === SUPPORT_DIALOG_FAQ
 	    }, react.createElement(ListItemText$2, {
 	      primary: "FAQ"
+	    })), react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SUPPORT_DIALOG_FEEDBACK,
+	      onClick: this.handleTabClick(SUPPORT_DIALOG_FEEDBACK),
+	      selected: tab === SUPPORT_DIALOG_FEEDBACK
+	    }, react.createElement(ListItemText$2, {
+	      primary: "Feedback"
 	    }))];
 	    let content;
 
@@ -46790,6 +46848,8 @@
 	      content = react.createElement(Discord, null);
 	    } else if (tab === SUPPORT_DIALOG_FAQ) {
 	      content = react.createElement(FAQ, null);
+	    } else if (tab === SUPPORT_DIALOG_FEEDBACK) {
+	      content = react.createElement(Feedback, null);
 	    }
 
 	    return react.createElement(enhanced, {

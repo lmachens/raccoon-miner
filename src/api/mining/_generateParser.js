@@ -6,7 +6,7 @@ export const generateParser = regex => line => {
   const result = {
     timestamp: Date.now()
   };
-  console.info(`%c${line}`, 'color: orange');
+  //console.info(`%c${line}`, 'color: orange');
   if (regex.SPEED_REGEX) {
     const parsed = line.match(regex.SPEED_REGEX);
     if (parsed) result.speed = parseFloat(parsed[1]);

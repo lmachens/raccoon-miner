@@ -1,6 +1,6 @@
-const interval = 1000;
+const interval = 1;
 
-const requestHardwareInfo = () => {
+const requestHardwareInfo = listener => {
   console.log('request hardware info');
   overwolf.benchmarking.requestHardwareInfo(interval, ({ reason }) => {
     console.log(reason);
@@ -10,11 +10,13 @@ const requestHardwareInfo = () => {
           requestHardwareInfo();
         }
       });
+    } else {
+      overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
     }
   });
 };
 
 export const addHardwareInfoListener = listener => {
   overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
-  requestHardwareInfo();
+  requestHardwareInfo(listener);
 };

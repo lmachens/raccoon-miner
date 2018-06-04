@@ -1,4 +1,4 @@
-import { Discord, FAQ } from '../support';
+import { Discord, FAQ, Feedback } from '../support';
 import { FullScreenDialog, ListItemText, MenuItem } from '../generic';
 import React, { PureComponent } from 'react';
 
@@ -9,6 +9,7 @@ import { setSupportDialogTab } from '../../../store/actions';
 
 export const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
 export const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
+export const SUPPORT_DIALOG_FEEDBACK = 'SUPPORT_DIALOG_FEEDBACK';
 
 class SupportDialog extends PureComponent {
   handleTabClick = tab => () => {
@@ -36,6 +37,14 @@ class SupportDialog extends PureComponent {
         selected={tab === SUPPORT_DIALOG_FAQ}
       >
         <ListItemText primary="FAQ" />
+      </MenuItem>,
+      <MenuItem
+        button
+        key={SUPPORT_DIALOG_FEEDBACK}
+        onClick={this.handleTabClick(SUPPORT_DIALOG_FEEDBACK)}
+        selected={tab === SUPPORT_DIALOG_FEEDBACK}
+      >
+        <ListItemText primary="Feedback" />
       </MenuItem>
     ];
 
@@ -44,6 +53,8 @@ class SupportDialog extends PureComponent {
       content = <Discord />;
     } else if (tab === SUPPORT_DIALOG_FAQ) {
       content = <FAQ />;
+    } else if (tab === SUPPORT_DIALOG_FEEDBACK) {
+      content = <Feedback />;
     }
 
     return (

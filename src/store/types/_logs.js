@@ -1,0 +1,1 @@
+export const APPEND_MINING_LOG = 'APPEND_MINING_LOG';

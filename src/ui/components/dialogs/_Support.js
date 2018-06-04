@@ -73,5 +73,8 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhance = connect(mapStateToProps, mapDispatchToProps)(SupportDialog);
+const enhance = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SupportDialog);
 export { enhance as SupportDialog };

@@ -3,9 +3,9 @@ export * from './_Support';
 
 import React, { Fragment, PureComponent } from 'react';
 
+import { AdvancedDialog } from './_Advanced';
 import { CryptoDialog } from './_Crypto';
 import { SettingsDialog } from './_Settings';
-import { StatsDialog } from './_Stats';
 import { SupportDialog } from './_Support';
 
 class Dialogs extends PureComponent {
@@ -14,7 +14,7 @@ class Dialogs extends PureComponent {
       <Fragment>
         <CryptoDialog />
         <SettingsDialog />
-        <StatsDialog />
+        <AdvancedDialog />
         <SupportDialog />
       </Fragment>
     );

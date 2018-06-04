@@ -1,4 +1,5 @@
 import {
+  APPEND_MINING_LOG,
   CONNECTING_POOL,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
@@ -158,7 +159,8 @@ export const startMining = minerIdentifier => {
     });
 
     handleDataByIdenfier[minerIdentifier] = async ({ error, data }) => {
-      const { connecting, errorMsg, speed } = parser(error || data);
+      const line = error || data;
+      const { connecting, errorMsg, speed } = parser(line);
 
       if (connecting) {
         dispatch({
@@ -184,6 +186,13 @@ export const startMining = minerIdentifier => {
           }
         });
       }
+      dispatch({
+        type: APPEND_MINING_LOG,
+        data: {
+          timestamp: Date.now(),
+          line
+        }
+      });
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
     const minerArgs = args({ address, servers });

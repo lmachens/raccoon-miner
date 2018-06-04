@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
-import { openStatsDialog } from '../../../store/actions';
+import { openAdvancedDialog } from '../../../store/actions';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
@@ -16,28 +16,34 @@ const styles = {
   }
 };
 
-class StatsButton extends PureComponent {
+class AdvancedButton extends PureComponent {
   render() {
-    const { classes, openStatsDialog } = this.props;
+    const { classes, openAdvancedDialog } = this.props;
 
     return (
-      <ActionButton onClick={openStatsDialog} title="Stats">
+      <ActionButton onClick={openAdvancedDialog} title="Advanced">
         <AssessmentIcon className={classes.icon} />
       </ActionButton>
     );
   }
 }
 
-StatsButton.propTypes = {
+AdvancedButton.propTypes = {
   classes: PropTypes.object.isRequired,
-  openStatsDialog: PropTypes.func.isRequired
+  openAdvancedDialog: PropTypes.func.isRequired
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    openStatsDialog: bindActionCreators(openStatsDialog, dispatch)
+    openAdvancedDialog: bindActionCreators(openAdvancedDialog, dispatch)
   };
 };
 
-const enhance = compose(withStyles(styles), connect(null, mapDispatchToProps))(StatsButton);
-export { enhance as StatsButton };
+const enhance = compose(
+  withStyles(styles),
+  connect(
+    null,
+    mapDispatchToProps
+  )
+)(AdvancedButton);
+export { enhance as AdvancedButton };

@@ -1,8 +1,8 @@
 import {
   CLOSE_DIALOG,
+  OPEN_ADVANCED_DIALOG,
   OPEN_CRYPTO_DIALOG,
   OPEN_SETTINGS_DIALOG,
-  OPEN_STATS_DIALOG,
   OPEN_SUPPORT_DIALOG,
   SET_SETTINGS_DIALOG_TAB,
   SET_SUPPORT_DIALOG_TAB
@@ -12,7 +12,7 @@ import { SETTINGS_DIALOG_GENERAL, SUPPORT_DIALOG_DISCORD } from '../../ui/compon
 const closeAllState = {
   cryptoDialogOpen: false,
   settingsDialogOpen: false,
-  statsDialogOpen: false,
+  advancedDialogOpen: false,
   supportDialogOpen: false
 };
 
@@ -20,7 +20,7 @@ export const dialogs = (
   state = {
     cryptoDialogOpen: false,
     settingsDialogOpen: false,
-    statsDialogOpen: false,
+    advancedDialogOpen: false,
     supportDialogOpen: false,
     settingsDialogTab: SETTINGS_DIALOG_GENERAL,
     supportDialogTab: SUPPORT_DIALOG_DISCORD
@@ -34,8 +34,8 @@ export const dialogs = (
       return { ...state, ...closeAllState, cryptoDialogOpen: true };
     case OPEN_SETTINGS_DIALOG:
       return { ...state, ...closeAllState, settingsDialogOpen: true };
-    case OPEN_STATS_DIALOG:
-      return { ...state, ...closeAllState, statsDialogOpen: true };
+    case OPEN_ADVANCED_DIALOG:
+      return { ...state, ...closeAllState, advancedDialogOpen: true };
     case OPEN_SUPPORT_DIALOG:
       return { ...state, ...closeAllState, supportDialogOpen: true };
     case SET_SETTINGS_DIALOG_TAB:

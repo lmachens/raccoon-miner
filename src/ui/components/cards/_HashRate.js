@@ -51,5 +51,8 @@ const mapStateToProps = ({ mining: { selectedMinerIdentifier }, activeMiners }) 
   };
 };
 
-const enhance = compose(withStyles(styles), connect(mapStateToProps))(HashRateCard);
+const enhance = compose(
+  withStyles(styles),
+  connect(mapStateToProps)
+)(HashRateCard);
 export { enhance as HashRateCard };

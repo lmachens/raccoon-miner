@@ -625,12 +625,14 @@
 	const CLOSE_DIALOG = 'CLOSE_DIALOG';
 	const OPEN_CRYPTO_DIALOG = 'OPEN_CRYPTO_DIALOG';
 	const OPEN_SETTINGS_DIALOG = 'OPEN_SETTINGS_DIALOG';
-	const OPEN_STATS_DIALOG = 'OPEN_STATS_DIALOG';
+	const OPEN_ADVANCED_DIALOG = 'OPEN_ADVANCED_DIALOG';
 	const OPEN_SUPPORT_DIALOG = 'OPEN_SUPPORT_DIALOG';
 	const SET_SETTINGS_DIALOG_TAB = 'SET_SETTINGS_DIALOG_TAB';
 	const SET_SUPPORT_DIALOG_TAB = 'SET_SUPPORT_DIALOG_TAB';
 
 	const RECEIVE_HARDWARE_INFO = 'RECEIVE_HARDWARE_INFO';
+
+	const APPEND_MINING_LOG = 'APPEND_MINING_LOG';
 
 	const CONNECTING_POOL = 'CONNECTING_POOL';
 	const SET_MINING_ADDRESS = 'SET_MINING_ADDRESS';
@@ -672,10 +674,10 @@
 	    });
 	  };
 	};
-	const openStatsDialog = () => {
+	const openAdvancedDialog = () => {
 	  return dispatch => {
 	    dispatch({
-	      type: OPEN_STATS_DIALOG
+	      type: OPEN_ADVANCED_DIALOG
 	    });
 	  };
 	};
@@ -2323,11 +2325,12 @@
 	      error,
 	      data
 	    }) => {
+	      const line = error || data;
 	      const {
 	        connecting,
 	        errorMsg,
 	        speed
-	      } = parser(error || data);
+	      } = parser(line);
 
 	      if (connecting) {
 	        dispatch({
@@ -2353,6 +2356,14 @@
 	          }
 	        });
 	      }
+
+	      dispatch({
+	        type: APPEND_MINING_LOG,
+	        data: {
+	          timestamp: Date.now(),
+	          line
+	        }
+	      });
 	    };
 
 	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
@@ -46816,6 +46827,75 @@
 
 	const enhance$2 = connect(mapStateToProps$1, mapDispatchToProps$2)(SupportDialog);
 
+	const styles$5 = {
+	  logs: {
+	    overflow: 'auto',
+	    display: 'flex',
+	    flexDirection: 'column-reverse'
+	  }
+	};
+
+	class AdvancedDialog extends react_2 {
+	  render() {
+	    const {
+	      classes,
+	      open,
+	      logs,
+	      statsLink
+	    } = this.props;
+	    return react.createElement(enhanced, {
+	      open: open,
+	      title: "Advanced (under construction)"
+	    }, react.createElement(DialogContentText$2, null, "Here you can see advanced details like the mining logs. To get more details from the mining pool, click on ", react.createElement(LinkEnhanced, {
+	      to: statsLink
+	    }, "Open Pool Stats"), "."), react.createElement("code", {
+	      className: classes.logs
+	    }, logs.length === 0 && 'No logs available', logs.map(({
+	      timestamp,
+	      line
+	    }) => react.createElement("div", {
+	      key: timestamp
+	    }, timestamp, ": ", line))));
+	  }
+
+	}
+
+	AdvancedDialog.propTypes = {
+	  classes: propTypes.object.isRequired,
+	  open: propTypes.bool.isRequired,
+	  statsLink: propTypes.string.isRequired,
+	  logs: propTypes.array.isRequired
+	};
+
+	const mapStateToProps$2 = ({
+	  dialogs: {
+	    advancedDialogOpen
+	  },
+	  mining: {
+	    miners,
+	    selectedMinerIdentifier
+	  },
+	  logs: {
+	    mining: miningLogs
+	  }
+	}) => {
+	  const {
+	    address,
+	    miningPoolIdentifier
+	  } = miners[selectedMinerIdentifier];
+	  const {
+	    statsUrl
+	  } = miningPoolsByIdentifier[miningPoolIdentifier];
+	  const statsLink = statsUrl(address);
+	  return {
+	    statsLink,
+	    open: advancedDialogOpen,
+	    logs: miningLogs
+	  };
+	};
+
+	const enhance$3 = compose$1(styles_3(styles$5), connect(mapStateToProps$2))(AdvancedDialog);
+
 	class CryptoDialog extends react_2 {
 	  constructor(...args) {
 	    var _temp;
@@ -46934,7 +47014,7 @@
 	  setMiningPool: propTypes.func.isRequired
 	};
 
-	const mapStateToProps$2 = ({
+	const mapStateToProps$3 = ({
 	  dialogs: {
 	    cryptoDialogOpen
 	  },
@@ -46970,57 +47050,11 @@
 	  };
 	};
 
-	const enhance$3 = connect(mapStateToProps$2, mapDispatchToProps$3)(CryptoDialog);
-
-	class StatsDialog extends react_2 {
-	  render() {
-	    const {
-	      open,
-	      statsLink
-	    } = this.props;
-	    return react.createElement(enhanced, {
-	      open: open,
-	      title: "Stats (under construction)"
-	    }, react.createElement(DialogContentText$2, null, "A mining pool is the pooling of resources by miners, who share their processing power over a network, to split the reward equally, according to the amount of work they contributed to the probability of finding a block. ", react.createElement(LinkEnhanced, {
-	      to: statsLink
-	    }, "Open Pool Stats")));
-	  }
-
-	}
-
-	StatsDialog.propTypes = {
-	  open: propTypes.bool.isRequired,
-	  statsLink: propTypes.string.isRequired
-	};
-
-	const mapStateToProps$3 = ({
-	  dialogs: {
-	    statsDialogOpen
-	  },
-	  mining: {
-	    miners,
-	    selectedMinerIdentifier
-	  }
-	}) => {
-	  const {
-	    address,
-	    miningPoolIdentifier
-	  } = miners[selectedMinerIdentifier];
-	  const {
-	    statsUrl
-	  } = miningPoolsByIdentifier[miningPoolIdentifier];
-	  const statsLink = statsUrl(address);
-	  return {
-	    statsLink,
-	    open: statsDialogOpen
-	  };
-	};
-
-	const enhance$4 = connect(mapStateToProps$3)(StatsDialog);
+	const enhance$4 = connect(mapStateToProps$3, mapDispatchToProps$3)(CryptoDialog);
 
 	class Dialogs extends react_2 {
 	  render() {
-	    return react.createElement(react_5, null, react.createElement(enhance$3, null), react.createElement(enhance$1, null), react.createElement(enhance$4, null), react.createElement(enhance$2, null));
+	    return react.createElement(react_5, null, react.createElement(enhance$4, null), react.createElement(enhance$1, null), react.createElement(enhance$3, null), react.createElement(enhance$2, null));
 	  }
 
 	}
@@ -47028,13 +47062,13 @@
 	const closeAllState = {
 	  cryptoDialogOpen: false,
 	  settingsDialogOpen: false,
-	  statsDialogOpen: false,
+	  advancedDialogOpen: false,
 	  supportDialogOpen: false
 	};
 	const dialogs = (state = {
 	  cryptoDialogOpen: false,
 	  settingsDialogOpen: false,
-	  statsDialogOpen: false,
+	  advancedDialogOpen: false,
 	  supportDialogOpen: false,
 	  settingsDialogTab: SETTINGS_DIALOG_GENERAL,
 	  supportDialogTab: SUPPORT_DIALOG_DISCORD
@@ -47060,10 +47094,10 @@
 	        settingsDialogOpen: true
 	      };
 
-	    case OPEN_STATS_DIALOG:
+	    case OPEN_ADVANCED_DIALOG:
 	      return { ...state,
 	        ...closeAllState,
-	        statsDialogOpen: true
+	        advancedDialogOpen: true
 	      };
 
 	    case OPEN_SUPPORT_DIALOG:
@@ -47106,6 +47140,26 @@
 	    case RECEIVE_HARDWARE_INFO:
 	      return { ...data
 	      };
+
+	    default:
+	      return state;
+	  }
+	};
+
+	const logs = (state = {
+	  mining: []
+	}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case APPEND_MINING_LOG:
+	      {
+	        const mining = [data, ...state.mining.slice(0, 100)];
+	        return { ...state,
+	          mining
+	        };
+	      }
 
 	    default:
 	      return state;
@@ -47164,6 +47218,7 @@
 	const reducers = combineReducers({
 	  dialogs,
 	  hardwareInfo,
+	  logs,
 	  mining,
 	  activeMiners,
 	  notifications,
@@ -47303,7 +47358,7 @@
 	  store$1.dispatch(trackWorkerStats());
 	});
 
-	const styles$5 = {
+	const styles$6 = {
 	  children: {
 	    overflow: 'auto',
 	    height: 'calc(100% - 64px)'
@@ -47354,9 +47409,9 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$5), connect(mapStateToProps$4))(AppLayout);
+	const enhance$5 = compose$1(styles_3(styles$6), connect(mapStateToProps$4))(AppLayout);
 
-	const styles$6 = {
+	const styles$7 = {
 	  wrapper: {
 	    margin: 20,
 	    textAlign: 'center'
@@ -47374,7 +47429,7 @@
 	  classes: propTypes.object.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired
 	};
-	const enhance$6 = styles_3(styles$6)(PageLayout);
+	const enhance$6 = styles_3(styles$7)(PageLayout);
 
 	var CssBaseline_1 = createCommonjsModule(function (module, exports) {
 
@@ -47496,7 +47551,7 @@
 
 	var CssBaseline$2 = unwrapExports(CssBaseline$1);
 
-	const styles$7 = {
+	const styles$8 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -47542,9 +47597,9 @@
 	  };
 	};
 
-	const enhance$7 = compose$1(styles_3(styles$7), connect(mapStateToProps$5))(BalanceCard);
+	const enhance$7 = compose$1(styles_3(styles$8), connect(mapStateToProps$5))(BalanceCard);
 
-	const styles$8 = {
+	const styles$9 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  },
@@ -47616,9 +47671,9 @@
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$8), connect(mapStateToProps$6))(CpusCard);
+	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6))(CpusCard);
 
-	const styles$9 = {
+	const styles$10 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  },
@@ -47692,9 +47747,9 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$9), connect(mapStateToProps$7))(GpusCard);
+	const enhance$9 = compose$1(styles_3(styles$10), connect(mapStateToProps$7))(GpusCard);
 
-	const styles$10 = {
+	const styles$11 = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -47739,9 +47794,9 @@
 	  };
 	};
 
-	const enhance$10 = compose$1(styles_3(styles$10), connect(mapStateToProps$8))(HashRateCard);
+	const enhance$10 = compose$1(styles_3(styles$11), connect(mapStateToProps$8))(HashRateCard);
 
-	const styles$11 = {
+	const styles$12 = {
 	  container: {
 	    margin: 4,
 	    display: 'inline-block'
@@ -47780,9 +47835,45 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$11 = styles_3(styles$11)(ActionButton);
+	const enhance$11 = styles_3(styles$12)(ActionButton);
 
-	const styles$12 = {
+	const styles$13 = {
+	  icon: {
+	    width: 80,
+	    height: 80
+	  }
+	};
+
+	class AdvancedButton extends react_2 {
+	  render() {
+	    const {
+	      classes,
+	      openAdvancedDialog: openAdvancedDialog$$1
+	    } = this.props;
+	    return react.createElement(enhance$11, {
+	      onClick: openAdvancedDialog$$1,
+	      title: "Advanced"
+	    }, react.createElement(AssessmentIcon, {
+	      className: classes.icon
+	    }));
+	  }
+
+	}
+
+	AdvancedButton.propTypes = {
+	  classes: propTypes.object.isRequired,
+	  openAdvancedDialog: propTypes.func.isRequired
+	};
+
+	const mapDispatchToProps$4 = dispatch => {
+	  return {
+	    openAdvancedDialog: bindActionCreators(openAdvancedDialog, dispatch)
+	  };
+	};
+
+	const enhance$12 = compose$1(styles_3(styles$13), connect(null, mapDispatchToProps$4))(AdvancedButton);
+
+	const styles$14 = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -47823,15 +47914,15 @@
 	  };
 	};
 
-	const mapDispatchToProps$4 = dispatch => {
+	const mapDispatchToProps$5 = dispatch => {
 	  return {
 	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
 	  };
 	};
 
-	const enhance$12 = compose$1(styles_3(styles$12), connect(mapStateToProps$9, mapDispatchToProps$4))(CryptoButton);
+	const enhance$13 = compose$1(styles_3(styles$14), connect(mapStateToProps$9, mapDispatchToProps$5))(CryptoButton);
 
-	const styles$13 = {
+	const styles$15 = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -47907,16 +47998,16 @@
 	  };
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$13 = compose$1(styles_3(styles$13), connect(mapStateToProps$10, mapDispatchToProps$5))(MiningButton);
+	const enhance$14 = compose$1(styles_3(styles$15), connect(mapStateToProps$10, mapDispatchToProps$6))(MiningButton);
 
-	const styles$14 = {
+	const styles$16 = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -47944,51 +48035,15 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$6 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$14 = compose$1(styles_3(styles$14), connect(null, mapDispatchToProps$6))(SettingsButton);
+	const enhance$15 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$7))(SettingsButton);
 
-	const styles$15 = {
-	  icon: {
-	    width: 80,
-	    height: 80
-	  }
-	};
-
-	class StatsButton extends react_2 {
-	  render() {
-	    const {
-	      classes,
-	      openStatsDialog: openStatsDialog$$1
-	    } = this.props;
-	    return react.createElement(enhance$11, {
-	      onClick: openStatsDialog$$1,
-	      title: "Stats"
-	    }, react.createElement(AssessmentIcon, {
-	      className: classes.icon
-	    }));
-	  }
-
-	}
-
-	StatsButton.propTypes = {
-	  classes: propTypes.object.isRequired,
-	  openStatsDialog: propTypes.func.isRequired
-	};
-
-	const mapDispatchToProps$7 = dispatch => {
-	  return {
-	    openStatsDialog: bindActionCreators(openStatsDialog, dispatch)
-	  };
-	};
-
-	const enhance$15 = compose$1(styles_3(styles$15), connect(null, mapDispatchToProps$7))(StatsButton);
-
-	const styles$16 = {
+	const styles$17 = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -48022,9 +48077,9 @@
 	  };
 	};
 
-	const enhance$16 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$8))(SupportButton);
+	const enhance$16 = compose$1(styles_3(styles$17), connect(null, mapDispatchToProps$8))(SupportButton);
 
-	const styles$17 = {
+	const styles$18 = {
 	  center: {
 	    textAlign: 'center'
 	  }
@@ -48037,7 +48092,7 @@
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: classes.center
-	    }, react.createElement(enhance$12, null), react.createElement(enhance$15, null), react.createElement(enhance$13, null), react.createElement(enhance$14, null), react.createElement(enhance$16, null));
+	    }, react.createElement(enhance$13, null), react.createElement(enhance$12, null), react.createElement(enhance$14, null), react.createElement(enhance$15, null), react.createElement(enhance$16, null));
 	  }
 
 	}
@@ -48045,9 +48100,9 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$17 = styles_3(styles$17)(Actions);
+	const enhance$17 = styles_3(styles$18)(Actions);
 
-	const styles$18 = {
+	const styles$19 = {
 	  container: {
 	    margin: 16
 	  }
@@ -48086,7 +48141,7 @@
 	  };
 	};
 
-	const enhance$18 = compose$1(styles_3(styles$18), connect(mapStateToProps$11))(Notifications);
+	const enhance$18 = compose$1(styles_3(styles$19), connect(mapStateToProps$11))(Notifications);
 
 	class MiningPage extends react_2 {
 	  render() {

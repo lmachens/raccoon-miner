@@ -1,8 +1,8 @@
 import {
   CLOSE_DIALOG,
+  OPEN_ADVANCED_DIALOG,
   OPEN_CRYPTO_DIALOG,
   OPEN_SETTINGS_DIALOG,
-  OPEN_STATS_DIALOG,
   OPEN_SUPPORT_DIALOG,
   SET_SETTINGS_DIALOG_TAB,
   SET_SUPPORT_DIALOG_TAB
@@ -32,10 +32,10 @@ export const openSettingsDialog = () => {
   };
 };
 
-export const openStatsDialog = () => {
+export const openAdvancedDialog = () => {
   return dispatch => {
     dispatch({
-      type: OPEN_STATS_DIALOG
+      type: OPEN_ADVANCED_DIALOG
     });
   };
 };

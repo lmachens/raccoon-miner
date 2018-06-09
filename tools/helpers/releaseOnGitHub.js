@@ -4,6 +4,7 @@ var request = require('request');
 
 const releaseOnGitHub = ({ filename, gitHubReleaseToken, version }, callback) => {
   const auth = {
+    url: 'https://api.github.com/',
     type: 'oauth',
     token: gitHubReleaseToken
   };

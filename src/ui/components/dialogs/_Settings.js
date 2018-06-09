@@ -10,11 +10,11 @@ import {
   Switch
 } from '../generic';
 import React, { Fragment, PureComponent } from 'react';
+import { setSettings, setSettingsDialogTab } from '../../../store/actions';
 
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { setSettingsDialogTab } from '../../../store/actions';
 
 export const SETTINGS_DIALOG_GENERAL = 'SETTINGS_DIALOG_GENERAL';
 export const SETTINGS_DIALOG_MINING = 'SETTINGS_DIALOG_MINING';
@@ -26,8 +26,14 @@ class SettingsDialog extends PureComponent {
     setSettingsDialogTab(tab);
   };
 
+  handleSwitchChange = key => event => {
+    const { setSettings } = this.props;
+
+    setSettings({ [key]: event.target.checked });
+  };
+
   render() {
-    const { open, tab } = this.props;
+    const { open, tab, settings } = this.props;
 
     const menuItems = [
       <MenuItem
@@ -72,8 +78,14 @@ class SettingsDialog extends PureComponent {
         <Fragment>
           <DialogContentText>Mining configurations</DialogContentText>
           <FormControlLabel
-            control={<Switch checked={false} disabled value="stopMiningIngame" />}
-            label="Stop mining when in game"
+            control={
+              <Switch
+                checked={settings.stopMiningOnGameLaunch}
+                onChange={this.handleSwitchChange('stopMiningOnGameLaunch')}
+                value="stopMiningOnGameLaunch"
+              />
+            }
+            label="Stop mining on game launch"
           />
         </Fragment>
       );
@@ -90,21 +102,28 @@ class SettingsDialog extends PureComponent {
 SettingsDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   tab: PropTypes.string.isRequired,
-  setSettingsDialogTab: PropTypes.func.isRequired
+  setSettingsDialogTab: PropTypes.func.isRequired,
+  settings: PropTypes.object.isRequired,
+  setSettings: PropTypes.func.isRequired
 };
 
-const mapStateToProps = ({ dialogs: { settingsDialogOpen, settingsDialogTab } }) => {
+const mapStateToProps = ({ dialogs: { settingsDialogOpen, settingsDialogTab }, settings }) => {
   return {
     open: settingsDialogOpen,
-    tab: settingsDialogTab
+    tab: settingsDialogTab,
+    settings
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    setSettingsDialogTab: bindActionCreators(setSettingsDialogTab, dispatch)
+    setSettingsDialogTab: bindActionCreators(setSettingsDialogTab, dispatch),
+    setSettings: bindActionCreators(setSettings, dispatch)
   };
 };
 
-const enhance = connect(mapStateToProps, mapDispatchToProps)(SettingsDialog);
+const enhance = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SettingsDialog);
 export { enhance as SettingsDialog };

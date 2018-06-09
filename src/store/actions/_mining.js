@@ -1,6 +1,7 @@
 import {
   APPEND_MINING_LOG,
   CONNECTING_POOL,
+  CONTINUE_MINING,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
   SET_MINING_ADDRESS,
@@ -11,6 +12,7 @@ import {
   SET_PROCESS_ID,
   START_MINING,
   STOP_MINING,
+  SUSPEND_MINING,
   UNSET_NOTIFICATION
 } from '../types';
 import {
@@ -109,6 +111,18 @@ export const trackWorkerStats = () => {
   };
 };
 
+export const appendMiningLog = line => {
+  return dispatch => {
+    dispatch({
+      type: APPEND_MINING_LOG,
+      data: {
+        timestamp: Date.now(),
+        line
+      }
+    });
+  };
+};
+
 const fetchWorkerStats = () => {
   return (dispatch, getState) => {
     const {
@@ -186,13 +200,7 @@ export const startMining = minerIdentifier => {
           }
         });
       }
-      dispatch({
-        type: APPEND_MINING_LOG,
-        data: {
-          timestamp: Date.now(),
-          line
-        }
-      });
+      dispatch(appendMiningLog(line));
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
     const minerArgs = args({ address, servers });
@@ -228,6 +236,38 @@ export const stopMining = minerIdentifier => {
       processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
       processManager.terminateProcess(processId);
       delete handleDataByIdenfier[minerIdentifier];
+    }
+  };
+};
+
+export const suspendMining = () => {
+  return (dispatch, getState) => {
+    const {
+      mining: { miners, selectedMinerIdentifier }
+    } = getState();
+    const { isMining, isSuspended } = miners[selectedMinerIdentifier];
+    if (isMining && !isSuspended) {
+      dispatch(stopMining(selectedMinerIdentifier));
+      dispatch({
+        type: SUSPEND_MINING,
+        data: { selectedMinerIdentifier }
+      });
+    }
+  };
+};
+
+export const continueMining = () => {
+  return (dispatch, getState) => {
+    const {
+      mining: { miners, selectedMinerIdentifier }
+    } = getState();
+    const { isMining, isSuspended } = miners[selectedMinerIdentifier];
+    if (!isMining && isSuspended) {
+      dispatch(startMining(selectedMinerIdentifier));
+      dispatch({
+        type: CONTINUE_MINING,
+        data: { selectedMinerIdentifier }
+      });
     }
   };
 };

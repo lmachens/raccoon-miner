@@ -1,5 +1,11 @@
 import { applyMiddleware, createStore } from 'redux';
-import { fetchOverwolfUser, fetchVersion, trackHardwareInfo, trackWorkerStats } from './actions';
+import {
+  fetchOverwolfUser,
+  fetchVersion,
+  trackGameInfo,
+  trackHardwareInfo,
+  trackWorkerStats
+} from './actions';
 import { persistReducer, persistStore } from 'redux-persist';
 
 import createRavenMiddleware from 'raven-for-redux';
@@ -12,7 +18,7 @@ Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').insta
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['activeMiners', 'hardwareInfo']
+  blacklist: ['activeMiners', 'hardwareInfo', 'games']
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);
@@ -24,5 +30,6 @@ export const persistor = persistStore(store, null, () => {
   store.dispatch(fetchOverwolfUser());
   store.dispatch(fetchVersion());
   store.dispatch(trackHardwareInfo());
+  store.dispatch(trackGameInfo());
   store.dispatch(trackWorkerStats());
 });

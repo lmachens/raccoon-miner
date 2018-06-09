@@ -1,5 +1,6 @@
 import {
   CONNECTING_POOL,
+  CONTINUE_MINING,
   RECEIVE_MINING_METRICS,
   RECEIVE_WORKER_STATS,
   REQUEST_MINING_METRICS,
@@ -10,7 +11,8 @@ import {
   SET_MINING_SPEED,
   SET_PROCESS_ID,
   START_MINING,
-  STOP_MINING
+  STOP_MINING,
+  SUSPEND_MINING
 } from '../types';
 import { ETHEREUM_MINER, MONERO_MINER, ethereum, monero } from '../../api/mining';
 import { ETHERMINE, SUPPORT_XMR } from '../../api/pools';
@@ -84,6 +86,7 @@ export const mining = (
 const defaultActiveMinersProps = {
   processId: null,
   isMining: false,
+  isSuspended: false,
   currentSpeed: 0,
   errorMsg: null,
   connecting: false
@@ -122,6 +125,12 @@ export const activeMiners = (
       set(newState, `${data.minerIdentifier}.isMining`, false);
       set(newState, `${data.minerIdentifier}.currentSpeed`, 0);
       set(newState, `${data.minerIdentifier}.connecting`, false);
+      break;
+    case CONTINUE_MINING:
+      set(newState, `${data.minerIdentifier}.isSuspended`, false);
+      break;
+    case SUSPEND_MINING:
+      set(newState, `${data.minerIdentifier}.isSuspended`, true);
       break;
     default:
       return state;

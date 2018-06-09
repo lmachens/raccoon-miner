@@ -712,6 +712,13 @@
 	  };
 	};
 
+	const addGameLaunchedListener = listener => {
+	  overwolf.games.onGameLaunched.addListener(listener);
+	};
+	const addGameInfoUpdatedListener = listener => {
+	  overwolf.games.onGameInfoUpdated.addListener(listener);
+	};
+
 	const SPEED_REGEX = 'SPEED_REGEX';
 	const CONNECTION_FAILED_REGEX = 'CONNECTION_FAILED_REGEX';
 	const CONNECTING = 'CONNECTING';
@@ -2389,25 +2396,51 @@
 	    }
 	  };
 	};
-	const suspendMining = () => {
+	const suspendMining = gameTitle => {
 	  return (dispatch, getState) => {
 	    const {
+	      activeMiners,
 	      mining: {
-	        miners: miners$$1,
 	        selectedMinerIdentifier
 	      }
 	    } = getState();
 	    const {
 	      isMining,
 	      isSuspended
-	    } = miners$$1[selectedMinerIdentifier];
+	    } = activeMiners[selectedMinerIdentifier];
 
 	    if (isMining && !isSuspended) {
+	      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
 	      dispatch(stopMining(selectedMinerIdentifier));
 	      dispatch({
 	        type: SUSPEND_MINING,
 	        data: {
-	          selectedMinerIdentifier
+	          minerIdentifier: selectedMinerIdentifier
+	        }
+	      });
+	    }
+	  };
+	};
+	const continueMining = gameTitle => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (!isMining && isSuspended) {
+	      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
+	      dispatch(startMining(selectedMinerIdentifier));
+	      dispatch({
+	        type: CONTINUE_MINING,
+	        data: {
+	          minerIdentifier: selectedMinerIdentifier
 	        }
 	      });
 	    }
@@ -2430,51 +2463,57 @@
 	  };
 	};
 
-	const addGameInfoUpdatedListener = listener => {
-	  overwolf.games.onGameInfoUpdated.addListener(listener);
-	};
-
 	const trackGameInfo = () => {
 	  return (dispatch, getState) => {
-	    const gameInfoUpdatedListener = ({
-	      runningChanged,
-	      gameInfo: {
-	        isRunning,
-	        title,
-	        id
-	      }
+	    const gameLaunchedListener = ({
+	      title,
+	      id
 	    }) => {
 	      const {
 	        settings: {
 	          stopMiningOnGameLaunch
 	        }
 	      } = getState();
-	      if (!stopMiningOnGameLaunch || runningChanged) return;
+	      if (!stopMiningOnGameLaunch) return;
+	      dispatch({
+	        type: SET_GAME_IS_RUNNING,
+	        data: {
+	          title,
+	          id
+	        }
+	      });
+	      const notification = GAME_IS_RUNNING(title);
+	      dispatch(setNotification(notification));
+	      dispatch(suspendMining(title));
+	    };
 
-	      if (isRunning) {
-	        dispatch({
-	          type: SET_GAME_IS_RUNNING,
-	          data: {
-	            title,
-	            id
-	          }
-	        });
-	        const notification = GAME_IS_RUNNING(title);
-	        dispatch(appendMiningLog(notification.message));
-	        dispatch(setNotification(notification));
-	        dispatch(suspendMining());
-	      } else {
+	    const gameInfoUpdatedListener = ({
+	      runningChanged,
+	      gameInfo
+	    }) => {
+	      const {
+	        settings: {
+	          stopMiningOnGameLaunch
+	        }
+	      } = getState();
+	      if (!stopMiningOnGameLaunch) return;
+	      if (!runningChanged) return;
+	      const data = {
+	        title: gameInfo.title,
+	        id: gameInfo.id
+	      };
+
+	      if (!gameInfo.isRunning) {
 	        dispatch({
 	          type: SET_GAME_IS_TERMINATED,
-	          data: {
-	            title,
-	            id
-	          }
+	          data
 	        });
 	        dispatch(unsetNotification());
+	        dispatch(continueMining(gameInfo.title));
 	      }
 	    };
 
+	    addGameLaunchedListener(gameLaunchedListener);
 	    addGameInfoUpdatedListener(gameInfoUpdatedListener);
 	  };
 	};
@@ -49603,7 +49642,7 @@
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
-	  blacklist: ['activeMiners', 'hardwareInfo', 'games']
+	  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications']
 	};
 	const persistedReducer = persistReducer(persistConfig, reducers);
 	const createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);

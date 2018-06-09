@@ -18,7 +18,7 @@ Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').insta
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['activeMiners', 'hardwareInfo', 'games']
+  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications']
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);

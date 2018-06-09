@@ -240,33 +240,37 @@ export const stopMining = minerIdentifier => {
   };
 };
 
-export const suspendMining = () => {
+export const suspendMining = gameTitle => {
   return (dispatch, getState) => {
     const {
-      mining: { miners, selectedMinerIdentifier }
+      activeMiners,
+      mining: { selectedMinerIdentifier }
     } = getState();
-    const { isMining, isSuspended } = miners[selectedMinerIdentifier];
+    const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (isMining && !isSuspended) {
+      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
       dispatch(stopMining(selectedMinerIdentifier));
       dispatch({
         type: SUSPEND_MINING,
-        data: { selectedMinerIdentifier }
+        data: { minerIdentifier: selectedMinerIdentifier }
       });
     }
   };
 };
 
-export const continueMining = () => {
+export const continueMining = gameTitle => {
   return (dispatch, getState) => {
     const {
-      mining: { miners, selectedMinerIdentifier }
+      activeMiners,
+      mining: { selectedMinerIdentifier }
     } = getState();
-    const { isMining, isSuspended } = miners[selectedMinerIdentifier];
+    const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (!isMining && isSuspended) {
+      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
       dispatch(startMining(selectedMinerIdentifier));
       dispatch({
         type: CONTINUE_MINING,
-        data: { selectedMinerIdentifier }
+        data: { minerIdentifier: selectedMinerIdentifier }
       });
     }
   };

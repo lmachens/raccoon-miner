@@ -2,12 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [0.9.1](https://github.com/lmachens/raccoon-miner/compare/v0.9.0...v0.9.1) (2018-06-04)
+# [0.10.0](https://github.com/lmachens/raccoon-miner/compare/v0.9.1...v0.10.0) (2018-06-09)
 
 
 ### Bug Fixes
 
-* **hardware:** only fetch hardwareInfo once ([2dc9a8f](https://github.com/lmachens/raccoon-miner/commit/2dc9a8f))
+* **deps:** update dependency classnames to v2.2.6 ([#61](https://github.com/lmachens/raccoon-miner/issues/61)) ([9a9ab79](https://github.com/lmachens/raccoon-miner/commit/9a9ab79))
+* **deps:** update dependency redux-persist to v5.10.0 ([#57](https://github.com/lmachens/raccoon-miner/issues/57)) ([e820e45](https://github.com/lmachens/raccoon-miner/commit/e820e45))
+
+
+### Features
+
+* **mining:** update ethminer to 0.15.0rc1 ([64183ea](https://github.com/lmachens/raccoon-miner/commit/64183ea))
+* **settings:** stop mining on game launch ([394eb9a](https://github.com/lmachens/raccoon-miner/commit/394eb9a))
 
 
 

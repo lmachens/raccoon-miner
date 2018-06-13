@@ -13,6 +13,9 @@
   },
   "permissions": [],
   "data": {
+    "game_targeting": {
+      "type": "all"
+    },
     "start_window": "main",
     "windows": {
       "main": {

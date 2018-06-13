@@ -21,10 +21,10 @@
     "redux-thunk": "2.3.0"
   },
   "devDependencies": {
-    "@babel/core": "7.0.0-beta.50",
-    "@babel/plugin-proposal-class-properties": "7.0.0-beta.50",
-    "@babel/preset-env": "7.0.0-beta.50",
-    "@babel/preset-react": "7.0.0-beta.50",
+    "@babel/core": "7.0.0-beta.51",
+    "@babel/plugin-proposal-class-properties": "7.0.0-beta.51",
+    "@babel/preset-env": "7.0.0-beta.51",
+    "@babel/preset-react": "7.0.0-beta.51",
     "@storybook/react": "3.4.7",
     "archiver": "2.1.1",
     "babel-core": "7.0.0-bridge.0",

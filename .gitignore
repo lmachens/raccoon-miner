@@ -1,8 +1,8 @@
 !.vscode/*
-# Dependency directories
 node_modules/
 .env.json
 tools/*.zip
 **/monero/amd.txt
 **/monero/cpu.txt
 **/monero/nvidia.txt
+simple-io-plugin64.dll

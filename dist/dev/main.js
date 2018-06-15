@@ -51581,9 +51581,11 @@
 	var ReactGA = unwrapExports(reactGa);
 
 	// These envs will be replaced by rollup
+
+	/* eslint-disable no-undef */
 	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
-	const LISTEN_TO_FILES = ["main.js"];
-	const TRACKING_ID = "UA-115959266-2";
+	const HOT_RELOAD_FILES = ["main.js"];
+	const TRACKING_ID = "";
 
 	const initialize = () => {
 	  ReactGA.initialize(TRACKING_ID, {
@@ -51624,22 +51626,24 @@
 	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(MiningPage, null)))));
 	reactDom.render(App, document.getElementById('root'));
 
-	(async () => {
-	  const simpleIoPlugin = await getSimpleIoPlugin();
-	  simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
-	    if (LISTEN_TO_FILES.includes(fileIdentifier)) {
-	      setTimeout(() => {
-	        location.reload();
-	      }, 1000);
-	    }
-	  });
-	  const skipToEndOfFile = true;
-	  LISTEN_TO_FILES.forEach(fileName => {
-	    const path = `${APP_PATH}/${fileName}`;
-	    simpleIoPlugin.listenOnFile(fileName, path, skipToEndOfFile, () => {});
-	  });
-	  console.info('%cHot reload is active', 'color: blue');
-	})();
+	if (HOT_RELOAD_FILES) {
+	  (async () => {
+	    const simpleIoPlugin = await getSimpleIoPlugin();
+	    simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
+	      if (HOT_RELOAD_FILES.includes(fileIdentifier)) {
+	        setTimeout(() => {
+	          location.reload();
+	        }, 1000);
+	      }
+	    });
+	    const skipToEndOfFile = true;
+	    HOT_RELOAD_FILES.forEach(fileName => {
+	      const path = `${APP_PATH}/${fileName}`;
+	      simpleIoPlugin.listenOnFile(fileName, path, skipToEndOfFile, () => {});
+	    });
+	    console.info('%cHot reload is active', 'color: blue');
+	  })();
+	}
 
 }());
 //# sourceMappingURL=main.js.map

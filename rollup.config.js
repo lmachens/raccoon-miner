@@ -14,9 +14,9 @@ export default [
     plugins: [
       replace({
         'process.env.NODE_ENV': JSON.stringify('development'), // needed by react
-        'process.env.__APP_PATH__': JSON.stringify(`${process.cwd()}/dist/dev`.replace(/\\/g, '/')),
-        'process.env.__LISTEN_TO_FILES__': JSON.stringify(['main.js']),
-        'process.env.__TRACKING_ID__': JSON.stringify('UA-115959266-2')
+        __APP_PATH__: JSON.stringify(`${process.cwd()}/dist/dev`.replace(/\\/g, '/')),
+        __HOT_RELOAD_FILES__: JSON.stringify(['main.js']), // needed by hot reload
+        __TRACKING_ID__: JSON.stringify('')
       }),
       nodeResolve({
         module: true,

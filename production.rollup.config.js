@@ -15,11 +15,9 @@ export default [
     plugins: [
       replace({
         'process.env.NODE_ENV': JSON.stringify('production'), // needed by react
-        'process.env.__APP_PATH__': JSON.stringify(
-          `${process.cwd()}/dist/production`.replace(/\\/g, '/')
-        ),
-        'process.env.__LISTEN_TO_FILES__': JSON.stringify(['main.js']),
-        'process.env.__TRACKING_ID__': JSON.stringify('UA-115959266-2')
+        __APP_PATH__: JSON.stringify(`${process.cwd()}/dist/production`.replace(/\\/g, '/')),
+        __HOT_RELOAD_FILES__: JSON.stringify(false),
+        __TRACKING_ID__: JSON.stringify('UA-115959266-2')
       }),
       nodeResolve({
         module: true,

@@ -2,6 +2,8 @@ import ReactGA from 'react-ga';
 import { TRACKING_ID } from '../environment';
 
 export const initialize = () => {
+  if (!TRACKING_ID) return;
+
   ReactGA.initialize(TRACKING_ID, {
     debug: true
   });

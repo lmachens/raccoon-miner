@@ -8,12 +8,11 @@ import {
 } from './actions';
 import { persistReducer, persistStore } from 'redux-persist';
 
+import { RAVEN_URL } from '../api/environment';
 import createRavenMiddleware from 'raven-for-redux';
 import reducers from './reducers';
 import storage from 'redux-persist/lib/storage';
 import thunk from 'redux-thunk';
-
-Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
 
 const persistConfig = {
   key: 'root',
@@ -23,7 +22,13 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, reducers);
 
-const createStoreWithMiddleware = applyMiddleware(thunk, createRavenMiddleware(Raven))(createStore);
+let createStoreWithMiddleware;
+if (RAVEN_URL) {
+  Raven.config(RAVEN_URL).install();
+  createStoreWithMiddleware = applyMiddleware(thunk, createRavenMiddleware(Raven))(createStore);
+} else {
+  createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+}
 
 export const store = createStoreWithMiddleware(persistedReducer);
 export const persistor = persistStore(store, null, () => {

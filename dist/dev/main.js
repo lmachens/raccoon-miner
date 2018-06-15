@@ -3015,6 +3015,14 @@
 	  return persistor;
 	}
 
+	// These envs will be replaced by rollup
+
+	/* eslint-disable no-undef */
+	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
+	const HOT_RELOAD_FILES = ["main.js"];
+	const TRACKING_ID = false;
+	const RAVEN_URL = false;
+
 	var identity = function identity(x) {
 	  return x;
 	};
@@ -49638,14 +49646,21 @@
 	var thunk = createThunkMiddleware();
 	thunk.withExtraArgument = createThunkMiddleware;
 
-	Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
 	  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications']
 	};
 	const persistedReducer = persistReducer(persistConfig, reducers);
-	const createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
+	let createStoreWithMiddleware;
+
+	if (RAVEN_URL) {
+	  Raven.config(RAVEN_URL).install();
+	  createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
+	} else {
+	  createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
+	}
+
 	const store$1 = createStoreWithMiddleware(persistedReducer);
 	const persistor = persistStore(store$1, null, () => {
 	  store$1.dispatch(fetchOverwolfUser());
@@ -51580,14 +51595,8 @@
 
 	var ReactGA = unwrapExports(reactGa);
 
-	// These envs will be replaced by rollup
-
-	/* eslint-disable no-undef */
-	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
-	const HOT_RELOAD_FILES = ["main.js"];
-	const TRACKING_ID = "";
-
 	const initialize = () => {
+	  if (!TRACKING_ID) return;
 	  ReactGA.initialize(TRACKING_ID, {
 	    debug: true
 	  }); // Remove failing protocol check. @see: http://stackoverflow.com/a/22152353/1958200

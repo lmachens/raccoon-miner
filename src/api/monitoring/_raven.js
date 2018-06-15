@@ -1,7 +1,9 @@
 import { getOverwolfUser, getVersion } from '../utilities';
 
+import { RAVEN_URL } from '../environment';
+
 const installRaven = async () => {
-  window.Raven.config('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859').install();
+  window.Raven.config(RAVEN_URL).install();
 
   const version = await getVersion();
   const overwolfUser = await getOverwolfUser();

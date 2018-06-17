@@ -7,7 +7,7 @@ The app connects miner like for different currencies to mining pools with a smar
 
 ## Install app from releases
 
-Raccoon Miner is not released yet, but you can install from source.
+Raccoon Miner is not released yet, but you can install from source (Windows only).
 
 - Download `raccoon_miner_x.zip` from [releases](https://github.com/lmachens/raccoon-miner/releases). You might have to force download because of a security warning regarding the mining exe and dll files.
 - Extract the release

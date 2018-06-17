@@ -4,6 +4,7 @@ import {
   CONTINUE_MINING,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
+  SET_CORES,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
   SET_MINING_POOL,
@@ -25,6 +26,7 @@ import {
 import { ETHERMINE, SUPPORT_XMR, miningPoolsByIdentifier } from '../../api/pools';
 
 import { TEST_MODE } from '../../api/notifications';
+import { getMaxCores } from '../../api/benchmarking';
 import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
 
@@ -161,7 +163,7 @@ export const startMining = minerIdentifier => {
     const {
       mining: { miners, selectedMinerIdentifier }
     } = getState();
-    const { address = 'default', miningPoolIdentifier } = miners[selectedMinerIdentifier];
+    const { address = 'default', miningPoolIdentifier, cores } = miners[selectedMinerIdentifier];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
@@ -203,7 +205,7 @@ export const startMining = minerIdentifier => {
       dispatch(appendMiningLog(line));
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, servers });
+    const minerArgs = args({ address, servers, cores });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({
@@ -272,6 +274,51 @@ export const continueMining = gameTitle => {
         type: CONTINUE_MINING,
         data: { minerIdentifier: selectedMinerIdentifier }
       });
+    }
+  };
+};
+
+export const addCore = () => {
+  return (dispatch, getState) => {
+    const {
+      activeMiners,
+      mining: { miners, selectedMinerIdentifier },
+      hardwareInfo: { Cpus }
+    } = getState();
+    const { cores } = miners[selectedMinerIdentifier];
+
+    const maxCores = getMaxCores(Cpus);
+
+    if (cores + 1 > maxCores) return;
+    dispatch({
+      type: SET_CORES,
+      data: { minerIdentifier: selectedMinerIdentifier, cores: cores + 1 }
+    });
+
+    const { isMining } = activeMiners[selectedMinerIdentifier];
+    if (isMining) {
+      dispatch(stopMining(selectedMinerIdentifier));
+    }
+  };
+};
+
+export const removeCore = () => {
+  return (dispatch, getState) => {
+    const {
+      activeMiners,
+      mining: { miners, selectedMinerIdentifier }
+    } = getState();
+    const { cores } = miners[selectedMinerIdentifier];
+
+    if (cores - 1 < 0) return;
+    dispatch({
+      type: SET_CORES,
+      data: { minerIdentifier: selectedMinerIdentifier, cores: cores - 1 }
+    });
+
+    const { isMining } = activeMiners[selectedMinerIdentifier];
+    if (isMining) {
+      dispatch(stopMining(selectedMinerIdentifier));
     }
   };
 };

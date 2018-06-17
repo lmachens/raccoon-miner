@@ -622,6 +622,474 @@
 	  warning("You are currently using minified code outside of NODE_ENV === 'production'. " + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
 	}
 
+	var KEY_PREFIX = 'persist:';
+	var FLUSH = 'persist/FLUSH';
+	var REHYDRATE = 'persist/REHYDRATE';
+	var PAUSE = 'persist/PAUSE';
+	var PERSIST = 'persist/PERSIST';
+	var PURGE = 'persist/PURGE';
+	var REGISTER = 'persist/REGISTER';
+	var DEFAULT_VERSION = -1;
+
+	var _typeof$1 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	function autoMergeLevel1(inboundState, originalState, reducedState, _ref) {
+	  var debug = _ref.debug;
+
+	  var newState = _extends$1({}, reducedState);
+	  // only rehydrate if inboundState exists and is an object
+	  if (inboundState && (typeof inboundState === 'undefined' ? 'undefined' : _typeof$1(inboundState)) === 'object') {
+	    Object.keys(inboundState).forEach(function (key) {
+	      // ignore _persist data
+	      if (key === '_persist') return;
+	      // if reducer modifies substate, skip auto rehydration
+	      if (originalState[key] !== reducedState[key]) {
+	        if (debug) console.log('redux-persist/stateReconciler: sub state for key `%s` modified, skipping.', key);
+	        return;
+	      }
+	      // otherwise hard set the new value
+	      newState[key] = inboundState[key];
+	    });
+	  }
+
+	  if (debug && inboundState && (typeof inboundState === 'undefined' ? 'undefined' : _typeof$1(inboundState)) === 'object') console.log('redux-persist/stateReconciler: rehydrated keys \'' + Object.keys(inboundState).join(', ') + '\'');
+
+	  return newState;
+	}
+
+	/*
+	  autoMergeLevel1: 
+	    - merges 1 level of substate
+	    - skips substate if already modified
+	*/
+
+	// @TODO remove once flow < 0.63 support is no longer required.
+
+	function createPersistoid(config) {
+	  // defaults
+	  var blacklist = config.blacklist || null;
+	  var whitelist = config.whitelist || null;
+	  var transforms = config.transforms || [];
+	  var throttle = config.throttle || 0;
+	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
+	  var storage = config.storage;
+	  var serialize = config.serialize === false ? function (x) {
+	    return x;
+	  } : defaultSerialize;
+
+	  // initialize stateful values
+	  var lastState = {};
+	  var stagedState = {};
+	  var keysToProcess = [];
+	  var timeIterator = null;
+	  var writePromise = null;
+
+	  var update = function update(state) {
+	    // add any changed keys to the queue
+	    Object.keys(state).forEach(function (key) {
+	      if (!passWhitelistBlacklist(key)) return; // is keyspace ignored? noop
+	      if (lastState[key] === state[key]) return; // value unchanged? noop
+	      if (keysToProcess.indexOf(key) !== -1) return; // is key already queued? noop
+	      keysToProcess.push(key); // add key to queue
+	    });
+
+	    //if any key is missing in the new state which was present in the lastState,
+	    //add it for processing too
+	    Object.keys(lastState).forEach(function (key) {
+	      if (state[key] === undefined) {
+	        keysToProcess.push(key);
+	      }
+	    });
+
+	    // start the time iterator if not running (read: throttle)
+	    if (timeIterator === null) {
+	      timeIterator = setInterval(processNextKey, throttle);
+	    }
+
+	    lastState = state;
+	  };
+
+	  function processNextKey() {
+	    if (keysToProcess.length === 0) {
+	      if (timeIterator) clearInterval(timeIterator);
+	      timeIterator = null;
+	      return;
+	    }
+
+	    var key = keysToProcess.shift();
+	    var endState = transforms.reduce(function (subState, transformer) {
+	      return transformer.in(subState, key, lastState);
+	    }, lastState[key]);
+
+	    if (endState !== undefined) {
+	      try {
+	        stagedState[key] = serialize(endState);
+	      } catch (err) {
+	        console.error('redux-persist/createPersistoid: error serializing state', err);
+	      }
+	    } else {
+	      //if the endState is undefined, no need to persist the existing serialized content
+	      delete stagedState[key];
+	    }
+
+	    if (keysToProcess.length === 0) {
+	      writeStagedState();
+	    }
+	  }
+
+	  function writeStagedState() {
+	    // cleanup any removed keys just before write.
+	    Object.keys(stagedState).forEach(function (key) {
+	      if (lastState[key] === undefined) {
+	        delete stagedState[key];
+	      }
+	    });
+
+	    writePromise = storage.setItem(storageKey, serialize(stagedState)).catch(onWriteFail);
+	  }
+
+	  function passWhitelistBlacklist(key) {
+	    if (whitelist && whitelist.indexOf(key) === -1 && key !== '_persist') return false;
+	    if (blacklist && blacklist.indexOf(key) !== -1) return false;
+	    return true;
+	  }
+
+	  function onWriteFail(err) {
+	    // @TODO add fail handlers (typically storage full)
+	    if (err && "development" !== 'production') {
+	      console.error('Error storing data', err);
+	    }
+	  }
+
+	  var flush = function flush() {
+	    while (keysToProcess.length !== 0) {
+	      processNextKey();
+	    }
+	    return writePromise || Promise.resolve();
+	  };
+
+	  // return `persistoid`
+	  return {
+	    update: update,
+	    flush: flush
+	  };
+	}
+
+	// @NOTE in the future this may be exposed via config
+	function defaultSerialize(data) {
+	  return JSON.stringify(data);
+	}
+
+	function getStoredState(config) {
+	  var transforms = config.transforms || [];
+	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
+	  var storage = config.storage;
+	  var debug = config.debug;
+	  var deserialize = config.serialize === false ? function (x) {
+	    return x;
+	  } : defaultDeserialize;
+	  return storage.getItem(storageKey).then(function (serialized) {
+	    if (!serialized) return undefined;else {
+	      try {
+	        var state = {};
+	        var rawState = deserialize(serialized);
+	        Object.keys(rawState).forEach(function (key) {
+	          state[key] = transforms.reduceRight(function (subState, transformer) {
+	            return transformer.out(subState, key, rawState);
+	          }, deserialize(rawState[key]));
+	        });
+	        return state;
+	      } catch (err) {
+	        if (debug) console.log('redux-persist/getStoredState: Error restoring data ' + serialized, err);
+	        throw err;
+	      }
+	    }
+	  });
+	}
+
+	function defaultDeserialize(serial) {
+	  return JSON.parse(serial);
+	}
+
+	function purgeStoredState(config) {
+	  var storage = config.storage;
+	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
+	  return storage.removeItem(storageKey, warnIfRemoveError);
+	}
+
+	function warnIfRemoveError(err) {
+	  if (err && "development" !== 'production') {
+	    console.error('redux-persist/purgeStoredState: Error purging data stored state', err);
+	  }
+	}
+
+	var _extends$2 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+	var DEFAULT_TIMEOUT = 5000;
+	/*
+	  @TODO add validation / handling for:
+	  - persisting a reducer which has nested _persist
+	  - handling actions that fire before reydrate is called
+	*/
+	function persistReducer(config, baseReducer) {
+	  {
+	    if (!config) throw new Error('config is required for persistReducer');
+	    if (!config.key) throw new Error('key is required in persistor config');
+	    if (!config.storage) throw new Error("redux-persist: config.storage is required. Try using one of the provided storage engines `import storage from 'redux-persist/lib/storage'`");
+	  }
+
+	  var version = config.version !== undefined ? config.version : DEFAULT_VERSION;
+	  var debug = config.debug || false;
+	  var stateReconciler = config.stateReconciler === undefined ? autoMergeLevel1 : config.stateReconciler;
+	  var getStoredState$$1 = config.getStoredState || getStoredState;
+	  var timeout = config.timeout !== undefined ? config.timeout : DEFAULT_TIMEOUT;
+	  var _persistoid = null;
+	  var _purge = false;
+	  var _paused = true;
+	  var conditionalUpdate = function conditionalUpdate(state) {
+	    // update the persistoid only if we are rehydrated and not paused
+	    state._persist.rehydrated && _persistoid && !_paused && _persistoid.update(state);
+	    return state;
+	  };
+
+	  return function (state, action) {
+	    var _ref = state || {},
+	        _persist = _ref._persist,
+	        rest = _objectWithoutProperties(_ref, ['_persist']);
+
+	    var restState = rest;
+
+	    if (action.type === PERSIST) {
+	      var _sealed = false;
+	      var _rehydrate = function _rehydrate(payload, err) {
+	        // dev warning if we are already sealed
+	        if (_sealed) console.error('redux-persist: rehydrate for "' + config.key + '" called after timeout.', payload, err);
+
+	        // only rehydrate if we are not already sealed
+	        if (!_sealed) {
+	          action.rehydrate(config.key, payload, err);
+	          _sealed = true;
+	        }
+	      };
+	      timeout && setTimeout(function () {
+	        !_sealed && _rehydrate(undefined, new Error('redux-persist: persist timed out for persist key "' + config.key + '"'));
+	      }, timeout);
+
+	      // @NOTE PERSIST resumes if paused.
+	      _paused = false;
+
+	      // @NOTE only ever create persistoid once, ensure we call it at least once, even if _persist has already been set
+	      if (!_persistoid) _persistoid = createPersistoid(config);
+
+	      // @NOTE PERSIST can be called multiple times, noop after the first
+	      if (_persist) return state;
+	      if (typeof action.rehydrate !== 'function' || typeof action.register !== 'function') throw new Error('redux-persist: either rehydrate or register is not a function on the PERSIST action. This can happen if the action is being replayed. This is an unexplored use case, please open an issue and we will figure out a resolution.');
+
+	      action.register(config.key);
+
+	      getStoredState$$1(config).then(function (restoredState) {
+	        var migrate = config.migrate || function (s, v) {
+	          return Promise.resolve(s);
+	        };
+	        migrate(restoredState, version).then(function (migratedState) {
+	          _rehydrate(migratedState);
+	        }, function (migrateErr) {
+	          if (migrateErr) console.error('redux-persist: migration error', migrateErr);
+	          _rehydrate(undefined, migrateErr);
+	        });
+	      }, function (err) {
+	        _rehydrate(undefined, err);
+	      });
+
+	      return _extends$2({}, baseReducer(restState, action), {
+	        _persist: { version: version, rehydrated: false }
+	      });
+	    } else if (action.type === PURGE) {
+	      _purge = true;
+	      action.result(purgeStoredState(config));
+	      return _extends$2({}, baseReducer(restState, action), {
+	        _persist: _persist
+	      });
+	    } else if (action.type === FLUSH) {
+	      action.result(_persistoid && _persistoid.flush());
+	      return _extends$2({}, baseReducer(restState, action), {
+	        _persist: _persist
+	      });
+	    } else if (action.type === PAUSE) {
+	      _paused = true;
+	    } else if (action.type === REHYDRATE) {
+	      // noop on restState if purging
+	      if (_purge) return _extends$2({}, restState, {
+	        _persist: _extends$2({}, _persist, { rehydrated: true })
+
+	        // @NOTE if key does not match, will continue to default else below
+	      });if (action.key === config.key) {
+	        var reducedState = baseReducer(restState, action);
+	        var inboundState = action.payload;
+	        // only reconcile state if stateReconciler and inboundState are both defined
+	        var reconciledRest = stateReconciler !== false && inboundState !== undefined ? stateReconciler(inboundState, state, reducedState, config) : reducedState;
+
+	        var _newState = _extends$2({}, reconciledRest, {
+	          _persist: _extends$2({}, _persist, { rehydrated: true })
+	        });
+	        return conditionalUpdate(_newState);
+	      }
+	    }
+
+	    // if we have not already handled PERSIST, straight passthrough
+	    if (!_persist) return baseReducer(state, action);
+
+	    // run base reducer:
+	    // is state modified ? return original : return updated
+	    var newState = baseReducer(restState, action);
+	    if (newState === restState) return state;else {
+	      newState._persist = _persist;
+	      return conditionalUpdate(newState);
+	    }
+	  };
+	}
+
+	var _extends$4 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	var initialState = {
+	  registry: [],
+	  bootstrapped: false
+	};
+
+	var persistorReducer = function persistorReducer() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
+	  var action = arguments[1];
+
+	  switch (action.type) {
+	    case REGISTER:
+	      return _extends$4({}, state, { registry: [].concat(_toConsumableArray(state.registry), [action.key]) });
+	    case REHYDRATE:
+	      var firstIndex = state.registry.indexOf(action.key);
+	      var registry = [].concat(_toConsumableArray(state.registry));
+	      registry.splice(firstIndex, 1);
+	      return _extends$4({}, state, { registry: registry, bootstrapped: registry.length === 0 });
+	    default:
+	      return state;
+	  }
+	};
+
+	function persistStore(store, options, cb) {
+	  // help catch incorrect usage of passing PersistConfig in as PersistorOptions
+	  {
+	    var optionsToTest = options || {};
+	    var bannedKeys = ['blacklist', 'whitelist', 'transforms', 'storage', 'keyPrefix', 'migrate'];
+	    bannedKeys.forEach(function (k) {
+	      if (!!optionsToTest[k]) console.error('redux-persist: invalid option passed to persistStore: "' + k + '". You may be incorrectly passing persistConfig into persistStore, whereas it should be passed into persistReducer.');
+	    });
+	  }
+	  var boostrappedCb = cb || false;
+
+	  var _pStore = createStore(persistorReducer, initialState, options ? options.enhancer : undefined);
+	  var register = function register(key) {
+	    _pStore.dispatch({
+	      type: REGISTER,
+	      key: key
+	    });
+	  };
+
+	  var rehydrate = function rehydrate(key, payload, err) {
+	    var rehydrateAction = {
+	      type: REHYDRATE,
+	      payload: payload,
+	      err: err,
+	      key: key
+	      // dispatch to `store` to rehydrate and `persistor` to track result
+	    };store.dispatch(rehydrateAction);
+	    _pStore.dispatch(rehydrateAction);
+	    if (boostrappedCb && persistor.getState().bootstrapped) {
+	      boostrappedCb();
+	      boostrappedCb = false;
+	    }
+	  };
+
+	  var persistor = _extends$4({}, _pStore, {
+	    purge: function purge() {
+	      var results = [];
+	      store.dispatch({
+	        type: PURGE,
+	        result: function result(purgeResult) {
+	          results.push(purgeResult);
+	        }
+	      });
+	      return Promise.all(results);
+	    },
+	    flush: function flush() {
+	      var results = [];
+	      store.dispatch({
+	        type: FLUSH,
+	        result: function result(flushResult) {
+	          results.push(flushResult);
+	        }
+	      });
+	      return Promise.all(results);
+	    },
+	    pause: function pause() {
+	      store.dispatch({
+	        type: PAUSE
+	      });
+	    },
+	    persist: function persist() {
+	      store.dispatch({ type: PERSIST, register: register, rehydrate: rehydrate });
+	    }
+	  });
+
+	  persistor.persist();
+
+	  return persistor;
+	}
+
+	function createMigrate(migrations, config) {
+	  var _ref = config || {},
+	      debug = _ref.debug;
+
+	  return function (state, currentVersion) {
+	    if (!state) {
+	      if (debug) console.log('redux-persist: no inbound state, skipping migration');
+	      return Promise.resolve(undefined);
+	    }
+
+	    var inboundVersion = state._persist && state._persist.version !== undefined ? state._persist.version : DEFAULT_VERSION;
+	    if (inboundVersion === currentVersion) {
+	      if (debug) console.log('redux-persist: versions match, noop migration');
+	      return Promise.resolve(state);
+	    }
+	    if (inboundVersion > currentVersion) {
+	      console.error('redux-persist: downgrading version is not supported');
+	      return Promise.resolve(state);
+	    }
+
+	    var migrationKeys = Object.keys(migrations).map(function (ver) {
+	      return parseInt(ver);
+	    }).filter(function (key) {
+	      return currentVersion >= key && key > inboundVersion;
+	    }).sort(function (a, b) {
+	      return a - b;
+	    });
+
+	    if (debug) console.log('redux-persist: migrationKeys', migrationKeys);
+	    try {
+	      var migratedState = migrationKeys.reduce(function (state, versionKey) {
+	        if (debug) console.log('redux-persist: running migration for versionKey', versionKey);
+	        return migrations[versionKey](state);
+	      }, state);
+	      return Promise.resolve(migratedState);
+	    } catch (err) {
+	      return Promise.reject(err);
+	    }
+	  };
+	}
+
 	const CLOSE_DIALOG = 'CLOSE_DIALOG';
 	const OPEN_CRYPTO_DIALOG = 'OPEN_CRYPTO_DIALOG';
 	const OPEN_SETTINGS_DIALOG = 'OPEN_SETTINGS_DIALOG';
@@ -651,6 +1119,7 @@
 	const SET_MINING_POOL = 'SET_MINING_POOL';
 	const SUSPEND_MINING = 'SUSPEND_MINING';
 	const CONTINUE_MINING = 'CONTINUE_MINING';
+	const SET_CORES = 'SET_CORES';
 
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
@@ -792,8 +1261,9 @@
 	  path: 'monero/xmr-stak.exe',
 	  args: ({
 	    address,
-	    servers
-	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon --amd amd.txt --cpu cpu.txt --nvidia nvidia.txt --config config.txt`,
+	    servers,
+	    cores
+	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon --amd amd.txt --cpu cpus/cpu${cores}.txt --nvidia nvidia.txt --config config.txt`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  }),
@@ -895,11 +1365,10 @@
 
 	  try {
 	    value[symToStringTag] = undefined;
-	    var unmasked = true;
 	  } catch (e) {}
 
 	  var result = nativeObjectToString.call(value);
-	  if (unmasked) {
+	  {
 	    if (isOwn) {
 	      value[symToStringTag] = tag;
 	    } else {
@@ -2054,6 +2523,35 @@
 	  alert: false
 	});
 
+	const interval = 200;
+
+	const requestHardwareInfo = () => {
+	  overwolf.benchmarking.requestHardwareInfo(interval, result => {
+	    if (result.reason === 'Permissions Required') {
+	      overwolf.benchmarking.requestPermissions(({
+	        status
+	      }) => {
+	        if (status === 'success') {
+	          requestHardwareInfo();
+	        }
+	      });
+	    }
+	  });
+	};
+
+	const addHardwareInfoListener = listener => {
+	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
+	  requestHardwareInfo(listener);
+	};
+	const removeHardwareInfoListener = listener => {
+	  overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
+	};
+	const getMaxCores = cpus => {
+	  return cpus.reduce((pre, cur) => {
+	    return pre + cur.NumCores;
+	  }, 0);
+	};
+
 	const callOverwolfWithPromise = (method, ...params) => {
 	  return new Promise((resolve, reject) => {
 	    const handleResult = result => {
@@ -2291,7 +2789,8 @@
 	    } = getState();
 	    const {
 	      address = 'default',
-	      miningPoolIdentifier
+	      miningPoolIdentifier,
+	      cores
 	    } = miners$$1[selectedMinerIdentifier];
 	    if (handleDataByIdenfier[minerIdentifier]) return;
 	    const processManager = await getProcessManagerPlugin();
@@ -2353,7 +2852,8 @@
 	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
 	    const minerArgs = args({
 	      address,
-	      servers
+	      servers,
+	      cores
 	    });
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data
@@ -2446,6 +2946,68 @@
 	    }
 	  };
 	};
+	const addCore = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      },
+	      hardwareInfo: {
+	        Cpus
+	      }
+	    } = getState();
+	    const {
+	      cores
+	    } = miners$$1[selectedMinerIdentifier];
+	    const maxCores = getMaxCores(Cpus);
+	    if (cores + 1 > maxCores) return;
+	    dispatch({
+	      type: SET_CORES,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        cores: cores + 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+	const removeCore = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      cores
+	    } = miners$$1[selectedMinerIdentifier];
+	    if (cores - 1 < 0) return;
+	    dispatch({
+	      type: SET_CORES,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        cores: cores - 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
 
 	const setNotification = notification => {
 	  return dispatch => {
@@ -2518,30 +3080,6 @@
 	  };
 	};
 
-	const interval = 200;
-
-	const requestHardwareInfo = () => {
-	  overwolf.benchmarking.requestHardwareInfo(interval, result => {
-	    if (result.reason === 'Permissions Required') {
-	      overwolf.benchmarking.requestPermissions(({
-	        status
-	      }) => {
-	        if (status === 'success') {
-	          requestHardwareInfo();
-	        }
-	      });
-	    }
-	  });
-	};
-
-	const addHardwareInfoListener = listener => {
-	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
-	  requestHardwareInfo(listener);
-	};
-	const removeHardwareInfoListener = listener => {
-	  overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
-	};
-
 	const trackHardwareInfo = () => {
 	  return dispatch => {
 	    const hardwareInfoListener = hardwareInfo => {
@@ -2588,505 +3126,27 @@
 	  };
 	};
 
-	var KEY_PREFIX = 'persist:';
-	var FLUSH = 'persist/FLUSH';
-	var REHYDRATE = 'persist/REHYDRATE';
-	var PAUSE = 'persist/PAUSE';
-	var PERSIST = 'persist/PERSIST';
-	var PURGE = 'persist/PURGE';
-	var REGISTER = 'persist/REGISTER';
-	var DEFAULT_VERSION = -1;
-
-	var _typeof$1 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	var _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	function autoMergeLevel1(inboundState, originalState, reducedState, _ref) {
-	  var debug = _ref.debug;
-
-	  var newState = _extends$1({}, reducedState);
-	  // only rehydrate if inboundState exists and is an object
-	  if (inboundState && (typeof inboundState === 'undefined' ? 'undefined' : _typeof$1(inboundState)) === 'object') {
-	    Object.keys(inboundState).forEach(function (key) {
-	      // ignore _persist data
-	      if (key === '_persist') return;
-	      // if reducer modifies substate, skip auto rehydration
-	      if (originalState[key] !== reducedState[key]) {
-	        if (debug) console.log('redux-persist/stateReconciler: sub state for key `%s` modified, skipping.', key);
-	        return;
-	      }
-	      // otherwise hard set the new value
-	      newState[key] = inboundState[key];
-	    });
-	  }
-
-	  if (debug && inboundState && (typeof inboundState === 'undefined' ? 'undefined' : _typeof$1(inboundState)) === 'object') console.log('redux-persist/stateReconciler: rehydrated keys \'' + Object.keys(inboundState).join(', ') + '\'');
-
-	  return newState;
-	}
-
-	/*
-	  autoMergeLevel1: 
-	    - merges 1 level of substate
-	    - skips substate if already modified
-	*/
-
-	// @TODO remove once flow < 0.63 support is no longer required.
-
-	function createPersistoid(config) {
-	  // defaults
-	  var blacklist = config.blacklist || null;
-	  var whitelist = config.whitelist || null;
-	  var transforms = config.transforms || [];
-	  var throttle = config.throttle || 0;
-	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
-	  var storage = config.storage;
-	  var serialize = config.serialize === false ? function (x) {
-	    return x;
-	  } : defaultSerialize;
-
-	  // initialize stateful values
-	  var lastState = {};
-	  var stagedState = {};
-	  var keysToProcess = [];
-	  var timeIterator = null;
-	  var writePromise = null;
-
-	  var update = function update(state) {
-	    // add any changed keys to the queue
-	    Object.keys(state).forEach(function (key) {
-	      if (!passWhitelistBlacklist(key)) return; // is keyspace ignored? noop
-	      if (lastState[key] === state[key]) return; // value unchanged? noop
-	      if (keysToProcess.indexOf(key) !== -1) return; // is key already queued? noop
-	      keysToProcess.push(key); // add key to queue
-	    });
-
-	    //if any key is missing in the new state which was present in the lastState,
-	    //add it for processing too
-	    Object.keys(lastState).forEach(function (key) {
-	      if (state[key] === undefined) {
-	        keysToProcess.push(key);
-	      }
-	    });
-
-	    // start the time iterator if not running (read: throttle)
-	    if (timeIterator === null) {
-	      timeIterator = setInterval(processNextKey, throttle);
-	    }
-
-	    lastState = state;
-	  };
-
-	  function processNextKey() {
-	    if (keysToProcess.length === 0) {
-	      if (timeIterator) clearInterval(timeIterator);
-	      timeIterator = null;
-	      return;
-	    }
-
-	    var key = keysToProcess.shift();
-	    var endState = transforms.reduce(function (subState, transformer) {
-	      return transformer.in(subState, key, lastState);
-	    }, lastState[key]);
-
-	    if (endState !== undefined) {
-	      try {
-	        stagedState[key] = serialize(endState);
-	      } catch (err) {
-	        console.error('redux-persist/createPersistoid: error serializing state', err);
-	      }
-	    } else {
-	      //if the endState is undefined, no need to persist the existing serialized content
-	      delete stagedState[key];
-	    }
-
-	    if (keysToProcess.length === 0) {
-	      writeStagedState();
-	    }
-	  }
-
-	  function writeStagedState() {
-	    // cleanup any removed keys just before write.
-	    Object.keys(stagedState).forEach(function (key) {
-	      if (lastState[key] === undefined) {
-	        delete stagedState[key];
-	      }
-	    });
-
-	    writePromise = storage.setItem(storageKey, serialize(stagedState)).catch(onWriteFail);
-	  }
-
-	  function passWhitelistBlacklist(key) {
-	    if (whitelist && whitelist.indexOf(key) === -1 && key !== '_persist') return false;
-	    if (blacklist && blacklist.indexOf(key) !== -1) return false;
-	    return true;
-	  }
-
-	  function onWriteFail(err) {
-	    // @TODO add fail handlers (typically storage full)
-	    if (err && "development" !== 'production') {
-	      console.error('Error storing data', err);
-	    }
-	  }
-
-	  var flush = function flush() {
-	    while (keysToProcess.length !== 0) {
-	      processNextKey();
-	    }
-	    return writePromise || Promise.resolve();
-	  };
-
-	  // return `persistoid`
-	  return {
-	    update: update,
-	    flush: flush
-	  };
-	}
-
-	// @NOTE in the future this may be exposed via config
-	function defaultSerialize(data) {
-	  return JSON.stringify(data);
-	}
-
-	function getStoredState(config) {
-	  var transforms = config.transforms || [];
-	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
-	  var storage = config.storage;
-	  var debug = config.debug;
-	  var deserialize = config.serialize === false ? function (x) {
-	    return x;
-	  } : defaultDeserialize;
-	  return storage.getItem(storageKey).then(function (serialized) {
-	    if (!serialized) return undefined;else {
-	      try {
-	        var state = {};
-	        var rawState = deserialize(serialized);
-	        Object.keys(rawState).forEach(function (key) {
-	          state[key] = transforms.reduceRight(function (subState, transformer) {
-	            return transformer.out(subState, key, rawState);
-	          }, deserialize(rawState[key]));
-	        });
-	        return state;
-	      } catch (err) {
-	        if (debug) console.log('redux-persist/getStoredState: Error restoring data ' + serialized, err);
-	        throw err;
-	      }
-	    }
-	  });
-	}
-
-	function defaultDeserialize(serial) {
-	  return JSON.parse(serial);
-	}
-
-	function purgeStoredState(config) {
-	  var storage = config.storage;
-	  var storageKey = '' + (config.keyPrefix !== undefined ? config.keyPrefix : KEY_PREFIX) + config.key;
-	  return storage.removeItem(storageKey, warnIfRemoveError);
-	}
-
-	function warnIfRemoveError(err) {
-	  if (err && "development" !== 'production') {
-	    console.error('redux-persist/purgeStoredState: Error purging data stored state', err);
-	  }
-	}
-
-	var _extends$2 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-	var DEFAULT_TIMEOUT = 5000;
-	/*
-	  @TODO add validation / handling for:
-	  - persisting a reducer which has nested _persist
-	  - handling actions that fire before reydrate is called
-	*/
-	function persistReducer(config, baseReducer) {
-	  {
-	    if (!config) throw new Error('config is required for persistReducer');
-	    if (!config.key) throw new Error('key is required in persistor config');
-	    if (!config.storage) throw new Error("redux-persist: config.storage is required. Try using one of the provided storage engines `import storage from 'redux-persist/lib/storage'`");
-	  }
-
-	  var version = config.version !== undefined ? config.version : DEFAULT_VERSION;
-	  var debug = config.debug || false;
-	  var stateReconciler = config.stateReconciler === undefined ? autoMergeLevel1 : config.stateReconciler;
-	  var getStoredState$$1 = config.getStoredState || getStoredState;
-	  var timeout = config.timeout !== undefined ? config.timeout : DEFAULT_TIMEOUT;
-	  var _persistoid = null;
-	  var _purge = false;
-	  var _paused = true;
-	  var conditionalUpdate = function conditionalUpdate(state) {
-	    // update the persistoid only if we are rehydrated and not paused
-	    state._persist.rehydrated && _persistoid && !_paused && _persistoid.update(state);
-	    return state;
-	  };
-
-	  return function (state, action) {
-	    var _ref = state || {},
-	        _persist = _ref._persist,
-	        rest = _objectWithoutProperties(_ref, ['_persist']);
-
-	    var restState = rest;
-
-	    if (action.type === PERSIST) {
-	      var _sealed = false;
-	      var _rehydrate = function _rehydrate(payload, err) {
-	        // dev warning if we are already sealed
-	        if (_sealed) console.error('redux-persist: rehydrate for "' + config.key + '" called after timeout.', payload, err);
-
-	        // only rehydrate if we are not already sealed
-	        if (!_sealed) {
-	          action.rehydrate(config.key, payload, err);
-	          _sealed = true;
-	        }
-	      };
-	      timeout && setTimeout(function () {
-	        !_sealed && _rehydrate(undefined, new Error('redux-persist: persist timed out for persist key "' + config.key + '"'));
-	      }, timeout);
-
-	      // @NOTE PERSIST resumes if paused.
-	      _paused = false;
-
-	      // @NOTE only ever create persistoid once, ensure we call it at least once, even if _persist has already been set
-	      if (!_persistoid) _persistoid = createPersistoid(config);
-
-	      // @NOTE PERSIST can be called multiple times, noop after the first
-	      if (_persist) return state;
-	      if (typeof action.rehydrate !== 'function' || typeof action.register !== 'function') throw new Error('redux-persist: either rehydrate or register is not a function on the PERSIST action. This can happen if the action is being replayed. This is an unexplored use case, please open an issue and we will figure out a resolution.');
-
-	      action.register(config.key);
-
-	      getStoredState$$1(config).then(function (restoredState) {
-	        var migrate = config.migrate || function (s, v) {
-	          return Promise.resolve(s);
-	        };
-	        migrate(restoredState, version).then(function (migratedState) {
-	          _rehydrate(migratedState);
-	        }, function (migrateErr) {
-	          if (migrateErr) console.error('redux-persist: migration error', migrateErr);
-	          _rehydrate(undefined, migrateErr);
-	        });
-	      }, function (err) {
-	        _rehydrate(undefined, err);
-	      });
-
-	      return _extends$2({}, baseReducer(restState, action), {
-	        _persist: { version: version, rehydrated: false }
-	      });
-	    } else if (action.type === PURGE) {
-	      _purge = true;
-	      action.result(purgeStoredState(config));
-	      return _extends$2({}, baseReducer(restState, action), {
-	        _persist: _persist
-	      });
-	    } else if (action.type === FLUSH) {
-	      action.result(_persistoid && _persistoid.flush());
-	      return _extends$2({}, baseReducer(restState, action), {
-	        _persist: _persist
-	      });
-	    } else if (action.type === PAUSE) {
-	      _paused = true;
-	    } else if (action.type === REHYDRATE) {
-	      // noop on restState if purging
-	      if (_purge) return _extends$2({}, restState, {
-	        _persist: _extends$2({}, _persist, { rehydrated: true })
-
-	        // @NOTE if key does not match, will continue to default else below
-	      });if (action.key === config.key) {
-	        var reducedState = baseReducer(restState, action);
-	        var inboundState = action.payload;
-	        // only reconcile state if stateReconciler and inboundState are both defined
-	        var reconciledRest = stateReconciler !== false && inboundState !== undefined ? stateReconciler(inboundState, state, reducedState, config) : reducedState;
-
-	        var _newState = _extends$2({}, reconciledRest, {
-	          _persist: _extends$2({}, _persist, { rehydrated: true })
-	        });
-	        return conditionalUpdate(_newState);
-	      }
-	    }
-
-	    // if we have not already handled PERSIST, straight passthrough
-	    if (!_persist) return baseReducer(state, action);
-
-	    // run base reducer:
-	    // is state modified ? return original : return updated
-	    var newState = baseReducer(restState, action);
-	    if (newState === restState) return state;else {
-	      newState._persist = _persist;
-	      return conditionalUpdate(newState);
-	    }
-	  };
-	}
-
-	var _extends$4 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	var initialState = {
-	  registry: [],
-	  bootstrapped: false
-	};
-
-	var persistorReducer = function persistorReducer() {
-	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-	  var action = arguments[1];
-
-	  switch (action.type) {
-	    case REGISTER:
-	      return _extends$4({}, state, { registry: [].concat(_toConsumableArray(state.registry), [action.key]) });
-	    case REHYDRATE:
-	      var firstIndex = state.registry.indexOf(action.key);
-	      var registry = [].concat(_toConsumableArray(state.registry));
-	      registry.splice(firstIndex, 1);
-	      return _extends$4({}, state, { registry: registry, bootstrapped: registry.length === 0 });
-	    default:
-	      return state;
-	  }
-	};
-
-	function persistStore(store, options, cb) {
-	  // help catch incorrect usage of passing PersistConfig in as PersistorOptions
-	  {
-	    var optionsToTest = options || {};
-	    var bannedKeys = ['blacklist', 'whitelist', 'transforms', 'storage', 'keyPrefix', 'migrate'];
-	    bannedKeys.forEach(function (k) {
-	      if (!!optionsToTest[k]) console.error('redux-persist: invalid option passed to persistStore: "' + k + '". You may be incorrectly passing persistConfig into persistStore, whereas it should be passed into persistReducer.');
-	    });
-	  }
-	  var boostrappedCb = cb || false;
-
-	  var _pStore = createStore(persistorReducer, initialState, options ? options.enhancer : undefined);
-	  var register = function register(key) {
-	    _pStore.dispatch({
-	      type: REGISTER,
-	      key: key
-	    });
-	  };
-
-	  var rehydrate = function rehydrate(key, payload, err) {
-	    var rehydrateAction = {
-	      type: REHYDRATE,
-	      payload: payload,
-	      err: err,
-	      key: key
-	      // dispatch to `store` to rehydrate and `persistor` to track result
-	    };store.dispatch(rehydrateAction);
-	    _pStore.dispatch(rehydrateAction);
-	    if (boostrappedCb && persistor.getState().bootstrapped) {
-	      boostrappedCb();
-	      boostrappedCb = false;
-	    }
-	  };
-
-	  var persistor = _extends$4({}, _pStore, {
-	    purge: function purge() {
-	      var results = [];
-	      store.dispatch({
-	        type: PURGE,
-	        result: function result(purgeResult) {
-	          results.push(purgeResult);
-	        }
-	      });
-	      return Promise.all(results);
-	    },
-	    flush: function flush() {
-	      var results = [];
-	      store.dispatch({
-	        type: FLUSH,
-	        result: function result(flushResult) {
-	          results.push(flushResult);
-	        }
-	      });
-	      return Promise.all(results);
-	    },
-	    pause: function pause() {
-	      store.dispatch({
-	        type: PAUSE
-	      });
-	    },
-	    persist: function persist() {
-	      store.dispatch({ type: PERSIST, register: register, rehydrate: rehydrate });
-	    }
-	  });
-
-	  persistor.persist();
-
-	  return persistor;
-	}
-
 	// These envs will be replaced by rollup
 
 	/* eslint-disable no-undef */
 	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
 	const HOT_RELOAD_FILES = ["main.js"];
 	const TRACKING_ID = false;
-	const RAVEN_URL = false;
 
-	var identity = function identity(x) {
-	  return x;
-	};
-	var getUndefined = function getUndefined() {};
-	var filter = function filter() {
-	  return true;
-	};
-	function createRavenMiddleware(Raven) {
-	  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	  // TODO: Validate options.
-	  var _options$breadcrumbDa = options.breadcrumbDataFromAction,
-	      breadcrumbDataFromAction = _options$breadcrumbDa === undefined ? getUndefined : _options$breadcrumbDa,
-	      _options$actionTransf = options.actionTransformer,
-	      actionTransformer = _options$actionTransf === undefined ? identity : _options$actionTransf,
-	      _options$stateTransfo = options.stateTransformer,
-	      stateTransformer = _options$stateTransfo === undefined ? identity : _options$stateTransfo,
-	      _options$breadcrumbCa = options.breadcrumbCategory,
-	      breadcrumbCategory = _options$breadcrumbCa === undefined ? "redux-action" : _options$breadcrumbCa,
-	      _options$filterBreadc = options.filterBreadcrumbActions,
-	      filterBreadcrumbActions = _options$filterBreadc === undefined ? filter : _options$filterBreadc,
-	      getUserContext = options.getUserContext,
-	      getTags = options.getTags;
-
-
-	  return function (store) {
-	    var lastAction = void 0;
-
-	    Raven.setDataCallback(function (data, original) {
-	      var state = store.getState();
-	      var reduxExtra = {
-	        lastAction: actionTransformer(lastAction),
-	        state: stateTransformer(state)
-	      };
-	      data.extra = Object.assign(reduxExtra, data.extra);
-	      if (getUserContext) {
-	        data.user = getUserContext(state);
-	      }
-	      if (getTags) {
-	        data.tags = getTags(state);
-	      }
-	      return original ? original(data) : data;
-	    });
-
-	    return function (next) {
-	      return function (action) {
-	        // Log the action taken to Raven so that we have narrative context in our
-	        // error report.
-	        if (filterBreadcrumbActions(action)) {
-	          Raven.captureBreadcrumb({
-	            category: breadcrumbCategory,
-	            message: action.type,
-	            data: breadcrumbDataFromAction(action)
-	          });
-	        }
-
-	        lastAction = action;
-	        return next(action);
-	      };
+	const migrations = {
+	  1: state => {
+	    const {
+	      mining
+	    } = state;
+	    const newMining = { ...mining
 	    };
-	  };
-	}
-
-	var built = createRavenMiddleware;
+	    newMining.miners[ETHEREUM_MINER].cores = 0;
+	    newMining.miners[MONERO_MINER].cores = 1;
+	    return { ...state,
+	      mining: newMining
+	    };
+	  }
+	};
 
 	var defineProperty = (function() {
 	  try {
@@ -3260,7 +3320,8 @@
 	  workerStats: {
 	    unpaidBalance: 0,
 	    payoutThreshold: 1
-	  }
+	  },
+	  cores: 0
 	};
 	const mining = (state = {
 	  selectedMinerIdentifier: MONERO_MINER,
@@ -3307,6 +3368,10 @@
 
 	    case RECEIVE_WORKER_STATS:
 	      set_1(newState, `miners.${data.minerIdentifier}.workerStats`, data.workerStats);
+	      break;
+
+	    case SET_CORES:
+	      set_1(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
 	      break;
 
 	    default:
@@ -3814,7 +3879,7 @@
 
 	// TODO: this is special because it gets imported during build.
 
-	var ReactVersion = '16.4.0';
+	var ReactVersion = '16.4.1';
 
 	// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 	// nor polyfill, then a plain number is used for performance.
@@ -3844,18 +3909,6 @@
 	  }
 	  return null;
 	}
-
-	// Relying on the `invariant()` implementation lets us
-	// have preserve the format and params in the www builds.
-
-	// Exports ReactDOM.createRoot
-
-
-	// Experimental error-boundary API that can recover from errors within a single
-	// render phase
-
-	// Suspense
-	var enableSuspense = false;
 	// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 
 
@@ -3876,9 +3929,6 @@
 
 
 	// Gather advanced timing metrics for Profiler subtrees.
-
-
-	// Fires getDerivedStateFromProps for state *or* props changes
 
 
 	// Only used in www builds.
@@ -4677,7 +4727,7 @@
 	/**
 	 * Iterates through children that are typically specified as `props.children`.
 	 *
-	 * See https://reactjs.org/docs/react-api.html#react.children.foreach
+	 * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
 	 *
 	 * The provided forEachFunc(child, index) will be called for each
 	 * leaf child.
@@ -4729,7 +4779,7 @@
 	/**
 	 * Maps children that are typically specified as `props.children`.
 	 *
-	 * See https://reactjs.org/docs/react-api.html#react.children.map
+	 * See https://reactjs.org/docs/react-api.html#reactchildrenmap
 	 *
 	 * The provided mapFunction(child, key, index) will be called for each
 	 * leaf child.
@@ -4752,7 +4802,7 @@
 	 * Count the number of children that are typically specified as
 	 * `props.children`.
 	 *
-	 * See https://reactjs.org/docs/react-api.html#react.children.count
+	 * See https://reactjs.org/docs/react-api.html#reactchildrencount
 	 *
 	 * @param {?*} children Children tree container.
 	 * @return {number} The number of children.
@@ -4765,7 +4815,7 @@
 	 * Flatten a children object (typically specified as `props.children`) and
 	 * return an array with appropriately re-keyed children.
 	 *
-	 * See https://reactjs.org/docs/react-api.html#react.children.toarray
+	 * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
 	 */
 	function toArray(children) {
 	  var result = [];
@@ -4777,7 +4827,7 @@
 	 * Returns the first child in a collection of children and verifies that there
 	 * is only one child in the collection.
 	 *
-	 * See https://reactjs.org/docs/react-api.html#react.children.only
+	 * See https://reactjs.org/docs/react-api.html#reactchildrenonly
 	 *
 	 * The current implementation of this function assumes that a single child gets
 	 * passed without a wrapper, but the purpose of this helper function is to
@@ -4920,10 +4970,16 @@
 	      return '#text';
 	    } else if (typeof element.type === 'string') {
 	      return element.type;
-	    } else if (element.type === REACT_FRAGMENT_TYPE) {
+	    }
+
+	    var type = element.type;
+	    if (type === REACT_FRAGMENT_TYPE) {
 	      return 'React.Fragment';
+	    } else if (typeof type === 'object' && type !== null && type.$$typeof === REACT_FORWARD_REF_TYPE) {
+	      var functionName = type.render.displayName || type.render.name || '';
+	      return functionName !== '' ? 'ForwardRef(' + functionName + ')' : 'ForwardRef';
 	    } else {
-	      return element.type.displayName || element.type.name || 'Unknown';
+	      return type.displayName || type.name || 'Unknown';
 	    }
 	  };
 
@@ -5067,22 +5123,31 @@
 	 * @param {ReactElement} element
 	 */
 	function validatePropTypes(element) {
-	  var componentClass = element.type;
-	  if (typeof componentClass !== 'function') {
+	  var type = element.type;
+	  var name = void 0,
+	      propTypes = void 0;
+	  if (typeof type === 'function') {
+	    // Class or functional component
+	    name = type.displayName || type.name;
+	    propTypes = type.propTypes;
+	  } else if (typeof type === 'object' && type !== null && type.$$typeof === REACT_FORWARD_REF_TYPE) {
+	    // ForwardRef
+	    var functionName = type.render.displayName || type.render.name || '';
+	    name = functionName !== '' ? 'ForwardRef(' + functionName + ')' : 'ForwardRef';
+	    propTypes = type.propTypes;
+	  } else {
 	    return;
 	  }
-	  var name = componentClass.displayName || componentClass.name;
-	  var propTypes = componentClass.propTypes;
 	  if (propTypes) {
 	    currentlyValidatingElement = element;
 	    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
 	    currentlyValidatingElement = null;
-	  } else if (componentClass.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+	  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
 	    propTypesMisspellWarningShown = true;
 	    warning(false, 'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?', name || 'Unknown');
 	  }
-	  if (typeof componentClass.getDefaultProps === 'function') {
-	    !componentClass.getDefaultProps.isReactClassApproved ? warning(false, 'getDefaultProps is only used on classic React.createClass ' + 'definitions. Use a static property named `defaultProps` instead.') : void 0;
+	  if (typeof type.getDefaultProps === 'function') {
+	    !type.getDefaultProps.isReactClassApproved ? warning(false, 'getDefaultProps is only used on classic React.createClass ' + 'definitions. Use a static property named `defaultProps` instead.') : void 0;
 	  }
 	}
 
@@ -5232,10 +5297,6 @@
 	    assign: _assign
 	  }
 	};
-
-	if (enableSuspense) {
-	  React.Timeout = REACT_TIMEOUT_TYPE;
-	}
 
 	{
 	  _assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
@@ -6042,18 +6103,9 @@
 	 * @providesModule warning
 	 */
 
-	/**
-	 * Similar to invariant but only logs a warning if the condition is not met.
-	 * This can be used to log issues in development environments in critical
-	 * paths. Removing the logging code for production environments will keep the
-	 * same logic and follow the same code paths.
-	 */
-
-	var __DEV__ = "development" !== 'production';
-
 	var warning$3 = function() {};
 
-	if (__DEV__) {
+	{
 	  var printWarning$1 = function printWarning(format, args) {
 	    var len = arguments.length;
 	    args = new Array(len > 2 ? len - 2 : 0);
@@ -7064,14 +7116,9 @@
 	});
 	var CSS = commonjsGlobal.CSS;
 
-	var env = "development";
-
 	var escapeRegex = /([[\].#*$><+~=|^:(),"'`])/g;
 
 	exports['default'] = function (str) {
-	  // We don't need to escape it in production, because we are not using user's
-	  // input for selectors, we are generating a valid selector.
-	  if (env === 'production') return str;
 
 	  if (!CSS || !CSS.escape) {
 	    return str.replace(escapeRegex, '\\$1');
@@ -7640,9 +7687,6 @@
 
 	var maxRules = 1e10;
 
-
-	var env = "development";
-
 	/**
 	 * Returns a function which generates unique class names based on counters.
 	 * When new generator function is created, rule counter is reseted.
@@ -7651,7 +7695,7 @@
 
 	exports['default'] = function () {
 	  var ruleCounter = 0;
-	  var defaultPrefix = env === 'production' ? 'c' : '';
+	  var defaultPrefix = '';
 
 	  return function (rule, sheet) {
 	    ruleCounter += 1;
@@ -7666,10 +7710,6 @@
 	    if (sheet) {
 	      prefix = sheet.options.classNamePrefix || defaultPrefix;
 	      if (sheet.options.jss.id != null) jssId += sheet.options.jss.id;
-	    }
-
-	    if (env === 'production') {
-	      return '' + prefix + _moduleId2['default'] + jssId + ruleCounter;
 	    }
 
 	    return prefix + rule.key + '-' + _moduleId2['default'] + (jssId && '-' + jssId) + '-' + ruleCounter;
@@ -11230,6 +11270,8 @@
 	var _warning = interopRequireDefault(warning_1$1);
 
 	/* eslint-disable no-param-reassign */
+
+	/* eslint-disable no-restricted-globals */
 	// Follow https://material.google.com/motion/duration-easing.html#duration-easing-natural-easing-curves
 	// to learn the context in which each easing should be used.
 	var easing = {
@@ -11274,7 +11316,7 @@
 	exports.isString = isString;
 
 	var isNumber = function isNumber(value) {
-	  return !Number.isNaN(parseFloat(value));
+	  return !isNaN(parseFloat(value));
 	};
 	/**
 	 * @param {string|Array} props
@@ -12084,9 +12126,11 @@
 	    funcs[_key] = arguments[_key];
 	  }
 
-	  return funcs.filter(function (func) {
-	    return func != null;
-	  }).reduce(function (acc, func) {
+	  return funcs.reduce(function (acc, func) {
+	    if (func == null) {
+	      return acc;
+	    }
+
 	    (0, _warning.default)(typeof func === 'function', 'Material-UI: invalid Argument Type, must only provide functions, undefined, or null.');
 	    return function chainedFunction() {
 	      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -12530,7 +12574,7 @@
 	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
 
 	  /**
-	   * Properties applied to the `img` element when the component
+	   * Attributes applied to the `img` element when the component
 	   * is used to display an image.
 	   */
 	  imgProps: _propTypes.default.object,
@@ -14496,8 +14540,7 @@
 	  }
 
 	  function warn(action, result) {
-	    var warningCondition = false;
-	    !warningCondition ? warning(false, "This synthetic event is reused for performance reasons. If you're seeing this, " + "you're %s `%s` on a released/nullified synthetic event. %s. " + 'If you must keep the original synthetic event around, use event.persist(). ' + 'See https://fb.me/react-event-pooling for more information.', action, propName, result) : void 0;
+	    warning(false, "This synthetic event is reused for performance reasons. If you're seeing this, " + "you're %s `%s` on a released/nullified synthetic event. %s. " + 'If you must keep the original synthetic event around, use event.persist(). ' + 'See https://fb.me/react-event-pooling for more information.', action, propName, result);
 	  }
 	}
 
@@ -15101,7 +15144,9 @@
 	 * @return {DOMEventTarget} Target node.
 	 */
 	function getEventTarget(nativeEvent) {
-	  var target = nativeEvent.target || window;
+	  // Fallback to nativeEvent.srcElement for IE9
+	  // https://github.com/facebook/react/issues/12506
+	  var target = nativeEvent.target || nativeEvent.srcElement || window;
 
 	  // Normalize SVG <use> element events #4963
 	  if (target.correspondingUseElement) {
@@ -15998,20 +16043,28 @@
 	  }
 	}
 
-	function postMountWrapper(element, props) {
+	function postMountWrapper(element, props, isHydrating) {
 	  var node = element;
 
 	  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+	    var _initialValue = '' + node._wrapperState.initialValue;
+	    var currentValue = node.value;
+
 	    // Do not assign value if it is already set. This prevents user text input
 	    // from being lost during SSR hydration.
-	    if (node.value === '') {
-	      node.value = '' + node._wrapperState.initialValue;
+	    if (!isHydrating) {
+	      // Do not re-assign the value property if there is no change. This
+	      // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
+	      // prematurely marking required inputs as invalid
+	      if (_initialValue !== currentValue) {
+	        node.value = _initialValue;
+	      }
 	    }
 
 	    // value must be assigned before defaultValue. This fixes an issue where the
 	    // visually displayed value of date inputs disappears on mobile Safari and Chrome:
 	    // https://github.com/facebook/react/issues/7233
-	    node.defaultValue = '' + node._wrapperState.initialValue;
+	    node.defaultValue = _initialValue;
 	  }
 
 	  // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -16284,14 +16337,8 @@
 	  }
 	}
 
-	function handleControlledInputBlur(inst, node) {
-	  // TODO: In IE, inst is occasionally null. Why?
-	  if (inst == null) {
-	    return;
-	  }
-
-	  // Fiber and ReactDOM keep wrapper state in separate places
-	  var state = inst._wrapperState || node._wrapperState;
+	function handleControlledInputBlur(node) {
+	  var state = node._wrapperState;
 
 	  if (!state || !state.controlled || node.type !== 'number') {
 	    return;
@@ -16348,7 +16395,7 @@
 
 	    // When blurring, set the value attribute for number inputs
 	    if (topLevelType === TOP_BLUR) {
-	      handleControlledInputBlur(targetInst, targetNode);
+	      handleControlledInputBlur(targetNode);
 	    }
 	  }
 	};
@@ -17839,9 +17886,14 @@
 	 * Input selection module for React.
 	 */
 
+	/**
+	 * @hasSelectionCapabilities: we get the element types that support selection
+	 * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
+	 * and `selectionEnd` rows.
+	 */
 	function hasSelectionCapabilities(elem) {
 	  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-	  return nodeName && (nodeName === 'input' && elem.type === 'text' || nodeName === 'textarea' || elem.contentEditable === 'true');
+	  return nodeName && (nodeName === 'input' && (elem.type === 'text' || elem.type === 'search' || elem.type === 'tel' || elem.type === 'url' || elem.type === 'password') || nodeName === 'textarea' || elem.contentEditable === 'true');
 	}
 
 	function getSelectionInformation() {
@@ -17862,7 +17914,7 @@
 	  var priorFocusedElem = priorSelectionInformation.focusedElem;
 	  var priorSelectionRange = priorSelectionInformation.selectionRange;
 	  if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-	    if (hasSelectionCapabilities(priorFocusedElem)) {
+	    if (priorSelectionRange !== null && hasSelectionCapabilities(priorFocusedElem)) {
 	      setSelection(priorFocusedElem, priorSelectionRange);
 	    }
 
@@ -17879,7 +17931,9 @@
 	      }
 	    }
 
-	    priorFocusedElem.focus();
+	    if (typeof priorFocusedElem.focus === 'function') {
+	      priorFocusedElem.focus();
+	    }
 
 	    for (var i = 0; i < ancestors.length; i++) {
 	      var info = ancestors[i];
@@ -18101,11 +18155,11 @@
 	  BeforeInputEventPlugin: BeforeInputEventPlugin
 	});
 
-	{
-	  if (ExecutionEnvironment.canUseDOM && typeof requestAnimationFrame !== 'function') {
-	    warning(false, 'React depends on requestAnimationFrame. Make sure that you load a ' + 'polyfill in older browsers. https://fb.me/react-polyfills');
-	  }
-	}
+	// We capture a local reference to any global, in case it gets polyfilled after
+	// this module is initially evaluated.
+	// We want to be using a consistent implementation.
+
+	var localRequestAnimationFrame$1 = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : undefined;
 
 	/**
 	 * A scheduling library to allow scheduling work with more granular priority and
@@ -18128,32 +18182,42 @@
 	// layout, paint and other browser work is counted against the available time.
 	// The frame rate is dynamically adjusted.
 
+	// We capture a local reference to any global, in case it gets polyfilled after
+	// this module is initially evaluated.
+	// We want to be using a consistent implementation.
+	var localDate = Date;
+	var localSetTimeout = setTimeout;
+	var localClearTimeout = clearTimeout;
+
 	var hasNativePerformanceNow = typeof performance === 'object' && typeof performance.now === 'function';
 
 	var now$1 = void 0;
 	if (hasNativePerformanceNow) {
+	  var Performance = performance;
 	  now$1 = function () {
-	    return performance.now();
+	    return Performance.now();
 	  };
 	} else {
 	  now$1 = function () {
-	    return Date.now();
+	    return localDate.now();
 	  };
 	}
 
-	// TODO: There's no way to cancel, because Fiber doesn't atm.
 	var scheduleWork = void 0;
 	var cancelScheduledWork = void 0;
 
 	if (!ExecutionEnvironment.canUseDOM) {
-	  var callbackIdCounter = 0;
-	  // Timeouts are objects in Node.
-	  // For consistency, we'll use numbers in the public API anyway.
-	  var timeoutIds = {};
+	  var timeoutIds = new Map();
 
 	  scheduleWork = function (callback, options) {
-	    var callbackId = callbackIdCounter++;
-	    var timeoutId = setTimeout(function () {
+	    // keeping return type consistent
+	    var callbackConfig = {
+	      scheduledCallback: callback,
+	      timeoutTime: 0,
+	      next: null,
+	      prev: null
+	    };
+	    var timeoutId = localSetTimeout(function () {
 	      callback({
 	        timeRemaining: function () {
 	          return Infinity;
@@ -18162,33 +18226,28 @@
 	        didTimeout: false
 	      });
 	    });
-	    timeoutIds[callbackId] = timeoutId;
-	    return callbackId;
+	    timeoutIds.set(callback, timeoutId);
+	    return callbackConfig;
 	  };
 	  cancelScheduledWork = function (callbackId) {
-	    var timeoutId = timeoutIds[callbackId];
-	    delete timeoutIds[callbackId];
-	    clearTimeout(timeoutId);
+	    var callback = callbackId.scheduledCallback;
+	    var timeoutId = timeoutIds.get(callback);
+	    timeoutIds.delete(callbackId);
+	    localClearTimeout(timeoutId);
 	  };
 	} else {
-	  // We keep callbacks in a queue.
-	  // Calling scheduleWork will push in a new callback at the end of the queue.
-	  // When we get idle time, callbacks are removed from the front of the queue
-	  var pendingCallbacks = [];
+	  {
+	    if (typeof localRequestAnimationFrame$1 !== 'function') {
+	      warning(false, 'React depends on requestAnimationFrame. Make sure that you load a ' + 'polyfill in older browsers. https://fb.me/react-polyfills');
+	    }
+	  }
 
-	  var _callbackIdCounter = 0;
-	  var getCallbackId = function () {
-	    _callbackIdCounter++;
-	    return _callbackIdCounter;
+	  var localRequestAnimationFrame = typeof localRequestAnimationFrame$1 === 'function' ? localRequestAnimationFrame$1 : function (callback) {
+	    invariant(false, 'React depends on requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills');
 	  };
 
-	  // When a callback is scheduled, we register it by adding it's id to this
-	  // object.
-	  // If the user calls 'cancelScheduledWork' with the id of that callback, it will be
-	  // unregistered by removing the id from this object.
-	  // Then we skip calling any callback which is not registered.
-	  // This means cancelling is an O(1) time complexity instead of O(n).
-	  var registeredCallbackIds = {};
+	  var headOfPendingCallbacksLinkedList = null;
+	  var tailOfPendingCallbacksLinkedList = null;
 
 	  // We track what the next soonest timeoutTime is, to be able to quickly tell
 	  // if none of the scheduled callbacks have timed out.
@@ -18212,17 +18271,27 @@
 	    }
 	  };
 
-	  var safelyCallScheduledCallback = function (callback, callbackId) {
-	    if (!registeredCallbackIds[callbackId]) {
-	      // ignore cancelled callbacks
-	      return;
-	    }
+	  /**
+	   * Handles the case where a callback errors:
+	   * - don't catch the error, because this changes debugging behavior
+	   * - do start a new postMessage callback, to call any remaining callbacks,
+	   * - but only if there is an error, so there is not extra overhead.
+	   */
+	  var callUnsafely = function (callbackConfig, arg) {
+	    var callback = callbackConfig.scheduledCallback;
+	    var finishedCalling = false;
 	    try {
-	      callback(frameDeadlineObject);
-	      // Avoid using 'catch' to keep errors easy to debug
+	      callback(arg);
+	      finishedCalling = true;
 	    } finally {
-	      // always clean up the callbackId, even if the callback throws
-	      delete registeredCallbackIds[callbackId];
+	      // always remove it from linked list
+	      cancelScheduledWork(callbackConfig);
+
+	      if (!finishedCalling) {
+	        // an error must have been thrown
+	        isIdleScheduled = true;
+	        window.postMessage(messageKey, '*');
+	      }
 	    }
 	  };
 
@@ -18232,7 +18301,7 @@
 	   * Keeps doing this until there are none which have currently timed out.
 	   */
 	  var callTimedOutCallbacks = function () {
-	    if (pendingCallbacks.length === 0) {
+	    if (headOfPendingCallbacksLinkedList === null) {
 	      return;
 	    }
 
@@ -18249,24 +18318,38 @@
 	      // We know that none of them have timed out yet.
 	      return;
 	    }
-	    nextSoonestTimeoutTime = -1; // we will reset it below
+	    // NOTE: we intentionally wait to update the nextSoonestTimeoutTime until
+	    // after successfully calling any timed out callbacks.
+	    // If a timed out callback throws an error, we could get stuck in a state
+	    // where the nextSoonestTimeoutTime was set wrong.
+	    var updatedNextSoonestTimeoutTime = -1; // we will update nextSoonestTimeoutTime below
+	    var timedOutCallbacks = [];
 
-	    // keep checking until we don't find any more timed out callbacks
-	    frameDeadlineObject.didTimeout = true;
-	    for (var i = 0, len = pendingCallbacks.length; i < len; i++) {
-	      var currentCallbackConfig = pendingCallbacks[i];
+	    // iterate once to find timed out callbacks and find nextSoonestTimeoutTime
+	    var currentCallbackConfig = headOfPendingCallbacksLinkedList;
+	    while (currentCallbackConfig !== null) {
 	      var _timeoutTime = currentCallbackConfig.timeoutTime;
 	      if (_timeoutTime !== -1 && _timeoutTime <= currentTime) {
 	        // it has timed out!
-	        // call it
-	        var _callback = currentCallbackConfig.scheduledCallback;
-	        safelyCallScheduledCallback(_callback, currentCallbackConfig.callbackId);
+	        timedOutCallbacks.push(currentCallbackConfig);
 	      } else {
-	        if (_timeoutTime !== -1 && (nextSoonestTimeoutTime === -1 || _timeoutTime < nextSoonestTimeoutTime)) {
-	          nextSoonestTimeoutTime = _timeoutTime;
+	        if (_timeoutTime !== -1 && (updatedNextSoonestTimeoutTime === -1 || _timeoutTime < updatedNextSoonestTimeoutTime)) {
+	          updatedNextSoonestTimeoutTime = _timeoutTime;
 	        }
 	      }
+	      currentCallbackConfig = currentCallbackConfig.next;
 	    }
+
+	    if (timedOutCallbacks.length > 0) {
+	      frameDeadlineObject.didTimeout = true;
+	      for (var i = 0, len = timedOutCallbacks.length; i < len; i++) {
+	        callUnsafely(timedOutCallbacks[i], frameDeadlineObject);
+	      }
+	    }
+
+	    // NOTE: we intentionally wait to update the nextSoonestTimeoutTime until
+	    // after successfully calling any timed out callbacks.
+	    nextSoonestTimeoutTime = updatedNextSoonestTimeoutTime;
 	  };
 
 	  // We use the postMessage trick to defer idle work until after the repaint.
@@ -18277,7 +18360,7 @@
 	    }
 	    isIdleScheduled = false;
 
-	    if (pendingCallbacks.length === 0) {
+	    if (headOfPendingCallbacksLinkedList === null) {
 	      return;
 	    }
 
@@ -18286,19 +18369,18 @@
 
 	    var currentTime = now$1();
 	    // Next, as long as we have idle time, try calling more callbacks.
-	    while (frameDeadline - currentTime > 0 && pendingCallbacks.length > 0) {
-	      var latestCallbackConfig = pendingCallbacks.shift();
+	    while (frameDeadline - currentTime > 0 && headOfPendingCallbacksLinkedList !== null) {
+	      var latestCallbackConfig = headOfPendingCallbacksLinkedList;
 	      frameDeadlineObject.didTimeout = false;
-	      var latestCallback = latestCallbackConfig.scheduledCallback;
-	      var newCallbackId = latestCallbackConfig.callbackId;
-	      safelyCallScheduledCallback(latestCallback, newCallbackId);
+	      // callUnsafely will remove it from the head of the linked list
+	      callUnsafely(latestCallbackConfig, frameDeadlineObject);
 	      currentTime = now$1();
 	    }
-	    if (pendingCallbacks.length > 0) {
+	    if (headOfPendingCallbacksLinkedList !== null) {
 	      if (!isAnimationFrameScheduled) {
 	        // Schedule another animation callback so we retry later.
 	        isAnimationFrameScheduled = true;
-	        requestAnimationFrame(animationTick);
+	        localRequestAnimationFrame(animationTick);
 	      }
 	    }
 	  };
@@ -18333,7 +18415,7 @@
 	    }
 	  };
 
-	  scheduleWork = function (callback, options) {
+	  scheduleWork = function (callback, options) /* CallbackConfigType */{
 	    var timeoutTime = -1;
 	    if (options != null && typeof options.timeout === 'number') {
 	      timeoutTime = now$1() + options.timeout;
@@ -18342,28 +18424,100 @@
 	      nextSoonestTimeoutTime = timeoutTime;
 	    }
 
-	    var newCallbackId = getCallbackId();
 	    var scheduledCallbackConfig = {
 	      scheduledCallback: callback,
-	      callbackId: newCallbackId,
-	      timeoutTime: timeoutTime
+	      timeoutTime: timeoutTime,
+	      prev: null,
+	      next: null
 	    };
-	    pendingCallbacks.push(scheduledCallbackConfig);
+	    if (headOfPendingCallbacksLinkedList === null) {
+	      // Make this callback the head and tail of our list
+	      headOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+	      tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+	    } else {
+	      // Add latest callback as the new tail of the list
+	      scheduledCallbackConfig.prev = tailOfPendingCallbacksLinkedList;
+	      // renaming for clarity
+	      var oldTailOfPendingCallbacksLinkedList = tailOfPendingCallbacksLinkedList;
+	      if (oldTailOfPendingCallbacksLinkedList !== null) {
+	        oldTailOfPendingCallbacksLinkedList.next = scheduledCallbackConfig;
+	      }
+	      tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+	    }
 
-	    registeredCallbackIds[newCallbackId] = true;
 	    if (!isAnimationFrameScheduled) {
 	      // If rAF didn't already schedule one, we need to schedule a frame.
 	      // TODO: If this rAF doesn't materialize because the browser throttles, we
 	      // might want to still have setTimeout trigger scheduleWork as a backup to ensure
 	      // that we keep performing work.
 	      isAnimationFrameScheduled = true;
-	      requestAnimationFrame(animationTick);
+	      localRequestAnimationFrame(animationTick);
 	    }
-	    return newCallbackId;
+	    return scheduledCallbackConfig;
 	  };
 
-	  cancelScheduledWork = function (callbackId) {
-	    delete registeredCallbackIds[callbackId];
+	  cancelScheduledWork = function (callbackConfig /* CallbackConfigType */
+	  ) {
+	    if (callbackConfig.prev === null && headOfPendingCallbacksLinkedList !== callbackConfig) {
+	      // this callbackConfig has already been cancelled.
+	      // cancelScheduledWork should be idempotent, a no-op after first call.
+	      return;
+	    }
+
+	    /**
+	     * There are four possible cases:
+	     * - Head/nodeToRemove/Tail -> null
+	     *   In this case we set Head and Tail to null.
+	     * - Head -> ... middle nodes... -> Tail/nodeToRemove
+	     *   In this case we point the middle.next to null and put middle as the new
+	     *   Tail.
+	     * - Head/nodeToRemove -> ...middle nodes... -> Tail
+	     *   In this case we point the middle.prev at null and move the Head to
+	     *   middle.
+	     * - Head -> ... ?some nodes ... -> nodeToRemove -> ... ?some nodes ... -> Tail
+	     *   In this case we point the Head.next to the Tail and the Tail.prev to
+	     *   the Head.
+	     */
+	    var next = callbackConfig.next;
+	    var prev = callbackConfig.prev;
+	    callbackConfig.next = null;
+	    callbackConfig.prev = null;
+	    if (next !== null) {
+	      // we have a next
+
+	      if (prev !== null) {
+	        // we have a prev
+
+	        // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
+	        prev.next = next;
+	        next.prev = prev;
+	        return;
+	      } else {
+	        // there is a next but not a previous one;
+	        // callbackConfig is the head of a list of 2 or more other nodes.
+	        next.prev = null;
+	        headOfPendingCallbacksLinkedList = next;
+	        return;
+	      }
+	    } else {
+	      // there is no next callback config; this must the tail of the list
+
+	      if (prev !== null) {
+	        // we have a prev
+
+	        // callbackConfig is the tail of a list of 2 or more other nodes.
+	        prev.next = null;
+	        tailOfPendingCallbacksLinkedList = prev;
+	        return;
+	      } else {
+	        // there is no previous callback config;
+	        // callbackConfig is the only thing in the linked list,
+	        // so both head and tail point to it.
+	        headOfPendingCallbacksLinkedList = null;
+	        tailOfPendingCallbacksLinkedList = null;
+	        return;
+	      }
+	    }
 	  };
 	}
 
@@ -20288,7 +20442,7 @@
 	      // TODO: Make sure we check if this is still unmounted or do any clean
 	      // up necessary since we never stop tracking anymore.
 	      track(domElement);
-	      postMountWrapper(domElement, rawProps);
+	      postMountWrapper(domElement, rawProps, false);
 	      break;
 	    case 'textarea':
 	      // TODO: Make sure we check if this is still unmounted or do any clean
@@ -20726,7 +20880,7 @@
 	      // TODO: Make sure we check if this is still unmounted or do any clean
 	      // up necessary since we never stop tracking anymore.
 	      track(domElement);
-	      postMountWrapper(domElement, rawProps);
+	      postMountWrapper(domElement, rawProps, true);
 	      break;
 	    case 'textarea':
 	      // TODO: Make sure we check if this is still unmounted or do any clean
@@ -21143,21 +21297,6 @@
 
 	var validateDOMNesting$1 = validateDOMNesting;
 
-	// Renderers that don't support persistence
-	// can re-export everything from this module.
-
-	function shim() {
-	  invariant(false, 'The current renderer does not support persistence. This error is likely caused by a bug in React. Please file an issue.');
-	}
-
-	// Persistence (when unsupported)
-	var supportsPersistence = false;
-	var cloneInstance = shim;
-	var createContainerChildSet = shim;
-	var appendChildToContainerChildSet = shim;
-	var finalizeContainerChildren = shim;
-	var replaceContainerChildren = shim;
-
 	// Unused
 
 	var createElement = createElement$1;
@@ -21313,15 +21452,8 @@
 	}
 
 	var now = now$1;
-	var isPrimaryRenderer = true;
 	var scheduleDeferredCallback = scheduleWork;
 	var cancelDeferredCallback = cancelScheduledWork;
-
-	// -------------------
-	//     Mutation
-	// -------------------
-
-	var supportsMutation = true;
 
 	function commitMount(domElement, type, newProps, internalInstanceHandle) {
 	  // Despite the naming that might imply otherwise, this method only
@@ -21386,12 +21518,6 @@
 	    container.removeChild(child);
 	  }
 	}
-
-	// -------------------
-	//     Hydration
-	// -------------------
-
-	var supportsHydration = true;
 
 	function canHydrateInstance(instance, type, props) {
 	  if (instance.nodeType !== ELEMENT_NODE || type.toLowerCase() !== instance.nodeName.toLowerCase()) {
@@ -21502,38 +21628,9 @@
 	  }
 	}
 
-	// Exports ReactDOM.createRoot
-	var enableUserTimingAPI = true;
-
 	// Experimental error-boundary API that can recover from errors within a single
 	// render phase
 	var enableGetDerivedStateFromCatch = false;
-	// Suspense
-	var enableSuspense = false;
-	// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-	var debugRenderPhaseSideEffects = false;
-
-	// In some cases, StrictMode should also double-render lifecycles.
-	// This can be confusing for tests though,
-	// And it can be bad for performance in production.
-	// This feature flag can be used to control the behavior:
-	var debugRenderPhaseSideEffectsForStrictMode = true;
-
-	// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-	// replay the begin phase of a failed component inside invokeGuardedCallback.
-	var replayFailedUnitOfWorkWithInvokeGuardedCallback = true;
-
-	// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-	var warnAboutDeprecatedLifecycles = false;
-
-	// Warn about legacy context API
-	var warnAboutLegacyContextAPI = false;
-
-	// Gather advanced timing metrics for Profiler subtrees.
-	var enableProfilerTimer = true;
-
-	// Fires getDerivedStateFromProps for state *or* props changes
-	var fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 	// Only used in www builds.
 
@@ -21705,13 +21802,13 @@
 	};
 
 	function recordEffect() {
-	  if (enableUserTimingAPI) {
+	  {
 	    effectCountInCurrentCommit++;
 	  }
 	}
 
 	function recordScheduleUpdate() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (isCommitting) {
 	      hasScheduledUpdateInCurrentCommit = true;
 	    }
@@ -21722,7 +21819,7 @@
 	}
 
 	function startRequestCallbackTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (supportsUserTiming && !isWaitingForCallback) {
 	      isWaitingForCallback = true;
 	      beginMark('(Waiting for async callback...)');
@@ -21731,7 +21828,7 @@
 	}
 
 	function stopRequestCallbackTimer(didExpire, expirationTime) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (supportsUserTiming) {
 	      isWaitingForCallback = false;
 	      var warning$$1 = didExpire ? 'React was blocked by main thread' : null;
@@ -21741,7 +21838,7 @@
 	}
 
 	function startWorkTimer(fiber) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
 	      return;
 	    }
@@ -21755,7 +21852,7 @@
 	}
 
 	function cancelWorkTimer(fiber) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
 	      return;
 	    }
@@ -21767,7 +21864,7 @@
 	}
 
 	function stopWorkTimer(fiber) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
 	      return;
 	    }
@@ -21782,7 +21879,7 @@
 	}
 
 	function stopFailedWorkTimer(fiber) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
 	      return;
 	    }
@@ -21798,7 +21895,7 @@
 	}
 
 	function startPhaseTimer(fiber, phase) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21812,7 +21909,7 @@
 	}
 
 	function stopPhaseTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21826,7 +21923,7 @@
 	}
 
 	function startWorkLoopTimer(nextUnitOfWork) {
-	  if (enableUserTimingAPI) {
+	  {
 	    currentFiber = nextUnitOfWork;
 	    if (!supportsUserTiming) {
 	      return;
@@ -21841,7 +21938,7 @@
 	}
 
 	function stopWorkLoopTimer(interruptedBy, didCompleteRoot) {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21865,7 +21962,7 @@
 	}
 
 	function startCommitTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21877,7 +21974,7 @@
 	}
 
 	function stopCommitTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21898,7 +21995,7 @@
 	}
 
 	function startCommitSnapshotEffectsTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21908,7 +22005,7 @@
 	}
 
 	function stopCommitSnapshotEffectsTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21919,7 +22016,7 @@
 	}
 
 	function startCommitHostEffectsTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21929,7 +22026,7 @@
 	}
 
 	function stopCommitHostEffectsTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21940,7 +22037,7 @@
 	}
 
 	function startCommitLifeCyclesTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -21950,7 +22047,7 @@
 	}
 
 	function stopCommitLifeCyclesTimer() {
-	  if (enableUserTimingAPI) {
+	  {
 	    if (!supportsUserTiming) {
 	      return;
 	    }
@@ -22335,7 +22432,9 @@
 
 	  this.alternate = null;
 
-	  if (enableProfilerTimer) {
+	  {
+	    this.actualDuration = 0;
+	    this.actualStartTime = 0;
 	    this.selfBaseTime = 0;
 	    this.treeBaseTime = 0;
 	  }
@@ -22406,6 +22505,15 @@
 	    workInProgress.nextEffect = null;
 	    workInProgress.firstEffect = null;
 	    workInProgress.lastEffect = null;
+
+	    {
+	      // We intentionally reset, rather than copy, actualDuration & actualStartTime.
+	      // This prevents time from endlessly accumulating in new commits.
+	      // This has the downside of resetting values for different priority renders,
+	      // But works for yielding (the common case) and should support resuming.
+	      workInProgress.actualDuration = 0;
+	      workInProgress.actualStartTime = 0;
+	    }
 	  }
 
 	  workInProgress.expirationTime = expirationTime;
@@ -22420,7 +22528,7 @@
 	  workInProgress.index = current.index;
 	  workInProgress.ref = current.ref;
 
-	  if (enableProfilerTimer) {
+	  {
 	    workInProgress.selfBaseTime = current.selfBaseTime;
 	    workInProgress.treeBaseTime = current.treeBaseTime;
 	  }
@@ -22531,13 +22639,6 @@
 	  var fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
 	  fiber.type = REACT_PROFILER_TYPE;
 	  fiber.expirationTime = expirationTime;
-	  if (enableProfilerTimer) {
-	    fiber.stateNode = {
-	      elapsedPauseTimeAtStart: 0,
-	      duration: 0,
-	      startTime: 0
-	    };
-	  }
 
 	  return fiber;
 	}
@@ -22600,7 +22701,9 @@
 	  target.lastEffect = source.lastEffect;
 	  target.expirationTime = source.expirationTime;
 	  target.alternate = source.alternate;
-	  if (enableProfilerTimer) {
+	  {
+	    target.actualDuration = source.actualDuration;
+	    target.actualStartTime = source.actualStartTime;
 	    target.selfBaseTime = source.selfBaseTime;
 	    target.treeBaseTime = source.treeBaseTime;
 	  }
@@ -22999,180 +23102,11 @@
 	  };
 	}
 
-	// This lets us hook into Fiber to debug what it's doing.
-	// See https://github.com/facebook/react/pull/8033.
-	// This is not part of the public API, not even for React DevTools.
-	// You may only inject a debugTool if you work on React Fiber itself.
-	var ReactFiberInstrumentation = {
-	  debugTool: null
-	};
-
-	var ReactFiberInstrumentation_1 = ReactFiberInstrumentation;
-
-	// TODO: Offscreen updates
-
-	function markPendingPriorityLevel(root, expirationTime) {
-	  if (enableSuspense) {
-	    // Update the latest and earliest pending times
-	    var earliestPendingTime = root.earliestPendingTime;
-	    if (earliestPendingTime === NoWork) {
-	      // No other pending updates.
-	      root.earliestPendingTime = root.latestPendingTime = expirationTime;
-	    } else {
-	      if (earliestPendingTime > expirationTime) {
-	        // This is the earliest pending update.
-	        root.earliestPendingTime = expirationTime;
-	      } else {
-	        var latestPendingTime = root.latestPendingTime;
-	        if (latestPendingTime < expirationTime) {
-	          // This is the latest pending update
-	          root.latestPendingTime = expirationTime;
-	        }
-	      }
-	    }
-	  }
-	}
-
 	function markCommittedPriorityLevels(root, currentTime, earliestRemainingTime) {
-	  if (enableSuspense) {
-	    if (earliestRemainingTime === NoWork) {
-	      // Fast path. There's no remaining work. Clear everything.
-	      root.earliestPendingTime = NoWork;
-	      root.latestPendingTime = NoWork;
-	      root.earliestSuspendedTime = NoWork;
-	      root.latestSuspendedTime = NoWork;
-	      root.latestPingedTime = NoWork;
-	      return;
-	    }
-
-	    // Let's see if the previous latest known pending level was just flushed.
-	    var latestPendingTime = root.latestPendingTime;
-	    if (latestPendingTime !== NoWork) {
-	      if (latestPendingTime < earliestRemainingTime) {
-	        // We've flushed all the known pending levels.
-	        root.earliestPendingTime = root.latestPendingTime = NoWork;
-	      } else {
-	        var earliestPendingTime = root.earliestPendingTime;
-	        if (earliestPendingTime < earliestRemainingTime) {
-	          // We've flushed the earliest known pending level. Set this to the
-	          // latest pending time.
-	          root.earliestPendingTime = root.latestPendingTime;
-	        }
-	      }
-	    }
-
-	    // Now let's handle the earliest remaining level in the whole tree. We need to
-	    // decide whether to treat it as a pending level or as suspended. Check
-	    // it falls within the range of known suspended levels.
-
-	    var earliestSuspendedTime = root.earliestSuspendedTime;
-	    if (earliestSuspendedTime === NoWork) {
-	      // There's no suspended work. Treat the earliest remaining level as a
-	      // pending level.
-	      markPendingPriorityLevel(root, earliestRemainingTime);
-	      return;
-	    }
-
-	    var latestSuspendedTime = root.latestSuspendedTime;
-	    if (earliestRemainingTime > latestSuspendedTime) {
-	      // The earliest remaining level is later than all the suspended work. That
-	      // means we've flushed all the suspended work.
-	      root.earliestSuspendedTime = NoWork;
-	      root.latestSuspendedTime = NoWork;
-	      root.latestPingedTime = NoWork;
-
-	      // There's no suspended work. Treat the earliest remaining level as a
-	      // pending level.
-	      markPendingPriorityLevel(root, earliestRemainingTime);
-	      return;
-	    }
-
-	    if (earliestRemainingTime < earliestSuspendedTime) {
-	      // The earliest remaining time is earlier than all the suspended work.
-	      // Treat it as a pending update.
-	      markPendingPriorityLevel(root, earliestRemainingTime);
-	      return;
-	    }
-
-	    // The earliest remaining time falls within the range of known suspended
-	    // levels. We should treat this as suspended work.
-	  }
-	}
-
-	function markSuspendedPriorityLevel(root, suspendedTime) {
-	  if (enableSuspense) {
-	    // First, check the known pending levels and update them if needed.
-	    var earliestPendingTime = root.earliestPendingTime;
-	    var latestPendingTime = root.latestPendingTime;
-	    if (earliestPendingTime === suspendedTime) {
-	      if (latestPendingTime === suspendedTime) {
-	        // Both known pending levels were suspended. Clear them.
-	        root.earliestPendingTime = root.latestPendingTime = NoWork;
-	      } else {
-	        // The earliest pending level was suspended. Clear by setting it to the
-	        // latest pending level.
-	        root.earliestPendingTime = latestPendingTime;
-	      }
-	    } else if (latestPendingTime === suspendedTime) {
-	      // The latest pending level was suspended. Clear by setting it to the
-	      // latest pending level.
-	      root.latestPendingTime = earliestPendingTime;
-	    }
-
-	    // Next, if we're working on the lowest known suspended level, clear the ping.
-	    // TODO: What if a promise suspends and pings before the root completes?
-	    var latestSuspendedTime = root.latestSuspendedTime;
-	    if (latestSuspendedTime === suspendedTime) {
-	      root.latestPingedTime = NoWork;
-	    }
-
-	    // Finally, update the known suspended levels.
-	    var earliestSuspendedTime = root.earliestSuspendedTime;
-	    if (earliestSuspendedTime === NoWork) {
-	      // No other suspended levels.
-	      root.earliestSuspendedTime = root.latestSuspendedTime = suspendedTime;
-	    } else {
-	      if (earliestSuspendedTime > suspendedTime) {
-	        // This is the earliest suspended level.
-	        root.earliestSuspendedTime = suspendedTime;
-	      } else if (latestSuspendedTime < suspendedTime) {
-	        // This is the latest suspended level
-	        root.latestSuspendedTime = suspendedTime;
-	      }
-	    }
-	  }
-	}
-
-	function markPingedPriorityLevel(root, pingedTime) {
-	  if (enableSuspense) {
-	    var latestSuspendedTime = root.latestSuspendedTime;
-	    if (latestSuspendedTime !== NoWork && latestSuspendedTime <= pingedTime) {
-	      var latestPingedTime = root.latestPingedTime;
-	      if (latestPingedTime === NoWork || latestPingedTime < pingedTime) {
-	        root.latestPingedTime = pingedTime;
-	      }
-	    }
-	  }
 	}
 
 	function findNextPendingPriorityLevel(root) {
-	  if (enableSuspense) {
-	    var earliestSuspendedTime = root.earliestSuspendedTime;
-	    var earliestPendingTime = root.earliestPendingTime;
-	    if (earliestSuspendedTime === NoWork) {
-	      // Fast path. There's no suspended work.
-	      return earliestPendingTime;
-	    }
-
-	    // First, check if there's known pending work.
-	    if (earliestPendingTime !== NoWork) {
-	      return earliestPendingTime;
-	    }
-
-	    // Finally, if a suspended level was pinged, work on that. Otherwise there's
-	    // nothing to work on.
-	    return root.latestPingedTime;
-	  } else {
+	  {
 	    return root.current.expirationTime;
 	  }
 	}
@@ -23449,7 +23383,7 @@
 	        if (typeof _payload === 'function') {
 	          // Updater function
 	          {
-	            if (debugRenderPhaseSideEffects || debugRenderPhaseSideEffectsForStrictMode && workInProgress.mode & StrictMode) {
+	            if (workInProgress.mode & StrictMode) {
 	              _payload.call(instance, prevState, nextProps);
 	            }
 	          }
@@ -23470,7 +23404,7 @@
 	        if (typeof _payload2 === 'function') {
 	          // Updater function
 	          {
-	            if (debugRenderPhaseSideEffects || debugRenderPhaseSideEffectsForStrictMode && workInProgress.mode & StrictMode) {
+	            if (workInProgress.mode & StrictMode) {
 	              _payload2.call(instance, prevState, nextProps);
 	            }
 	          }
@@ -23698,7 +23632,7 @@
 	function pushProvider(providerFiber) {
 	  var context = providerFiber.type._context;
 
-	  if (isPrimaryRenderer) {
+	  {
 	    push(changedBitsCursor, context._changedBits, providerFiber);
 	    push(valueCursor, context._currentValue, providerFiber);
 	    push(providerCursor, providerFiber, providerFiber);
@@ -23708,17 +23642,6 @@
 	    {
 	      !(context._currentRenderer === undefined || context._currentRenderer === null || context._currentRenderer === rendererSigil) ? warning(false, 'Detected multiple renderers concurrently rendering the ' + 'same context provider. This is currently unsupported.') : void 0;
 	      context._currentRenderer = rendererSigil;
-	    }
-	  } else {
-	    push(changedBitsCursor, context._changedBits2, providerFiber);
-	    push(valueCursor, context._currentValue2, providerFiber);
-	    push(providerCursor, providerFiber, providerFiber);
-
-	    context._currentValue2 = providerFiber.pendingProps.value;
-	    context._changedBits2 = providerFiber.stateNode;
-	    {
-	      !(context._currentRenderer2 === undefined || context._currentRenderer2 === null || context._currentRenderer2 === rendererSigil) ? warning(false, 'Detected multiple renderers concurrently rendering the ' + 'same context provider. This is currently unsupported.') : void 0;
-	      context._currentRenderer2 = rendererSigil;
 	    }
 	  }
 	}
@@ -23732,21 +23655,18 @@
 	  pop(changedBitsCursor, providerFiber);
 
 	  var context = providerFiber.type._context;
-	  if (isPrimaryRenderer) {
+	  {
 	    context._currentValue = currentValue;
 	    context._changedBits = changedBits;
-	  } else {
-	    context._currentValue2 = currentValue;
-	    context._changedBits2 = changedBits;
 	  }
 	}
 
 	function getContextCurrentValue(context) {
-	  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+	  return context._currentValue;
 	}
 
 	function getContextChangedBits(context) {
-	  return isPrimaryRenderer ? context._changedBits : context._changedBits2;
+	  return context._changedBits;
 	}
 
 	var NO_CONTEXT = {};
@@ -23830,9 +23750,6 @@
 	}
 
 	function recordCommitTime() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  commitTime = now();
 	}
 
@@ -23853,57 +23770,39 @@
 	var totalElapsedPauseTime = 0;
 
 	function checkActualRenderTimeStackEmpty() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  {
 	    !(fiberStack$1.length === 0) ? warning(false, 'Expected an empty stack. Something was not reset properly.') : void 0;
 	  }
 	}
 
 	function markActualRenderTimeStarted(fiber) {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  {
 	    fiberStack$1.push(fiber);
 	  }
-	  var stateNode = fiber.stateNode;
-	  stateNode.elapsedPauseTimeAtStart = totalElapsedPauseTime;
-	  stateNode.startTime = now();
+
+	  fiber.actualDuration = now() - fiber.actualDuration - totalElapsedPauseTime;
+	  fiber.actualStartTime = now();
 	}
 
 	function pauseActualRenderTimerIfRunning() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  if (timerPausedAt === 0) {
 	    timerPausedAt = now();
 	  }
 	}
 
 	function recordElapsedActualRenderTime(fiber) {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  {
-	    !(fiber === fiberStack$1.pop()) ? warning(false, 'Unexpected Fiber popped.') : void 0;
+	    !(fiber === fiberStack$1.pop()) ? warning(false, 'Unexpected Fiber (%s) popped.', getComponentName(fiber)) : void 0;
 	  }
-	  var stateNode = fiber.stateNode;
-	  stateNode.duration += now() - (totalElapsedPauseTime - stateNode.elapsedPauseTimeAtStart) - stateNode.startTime;
+
+	  fiber.actualDuration = now() - totalElapsedPauseTime - fiber.actualDuration;
 	}
 
 	function resetActualRenderTimer() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  totalElapsedPauseTime = 0;
 	}
 
 	function resumeActualRenderTimerIfPaused() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  if (timerPausedAt > 0) {
 	    totalElapsedPauseTime += now() - timerPausedAt;
 	    timerPausedAt = 0;
@@ -23920,18 +23819,12 @@
 	var baseStartTime = -1;
 
 	function recordElapsedBaseRenderTimeIfRunning(fiber) {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  if (baseStartTime !== -1) {
 	    fiber.selfBaseTime = now() - baseStartTime;
 	  }
 	}
 
 	function startBaseRenderTimer() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  {
 	    if (baseStartTime !== -1) {
 	      warning(false, 'Cannot start base timer that is already running. ' + 'This error is likely caused by a bug in React. ' + 'Please file an issue.');
@@ -23941,9 +23834,6 @@
 	}
 
 	function stopBaseRenderTimerIfRunning() {
-	  if (!enableProfilerTimer) {
-	    return;
-	  }
 	  baseStartTime = -1;
 	}
 
@@ -24006,7 +23896,7 @@
 	  var prevState = workInProgress.memoizedState;
 
 	  {
-	    if (debugRenderPhaseSideEffects || debugRenderPhaseSideEffectsForStrictMode && workInProgress.mode & StrictMode) {
+	    if (workInProgress.mode & StrictMode) {
 	      // Invoke the function an extra time to help detect side-effects.
 	      getDerivedStateFromProps(nextProps, prevState);
 	    }
@@ -24189,7 +24079,7 @@
 
 	  // Instantiate twice to help detect side-effects.
 	  {
-	    if (debugRenderPhaseSideEffects || debugRenderPhaseSideEffectsForStrictMode && workInProgress.mode & StrictMode) {
+	    if (workInProgress.mode & StrictMode) {
 	      new ctor(props, context); // eslint-disable-line no-new
 	    }
 	  }
@@ -24315,10 +24205,6 @@
 	      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(workInProgress, instance);
 
 	      ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, instance);
-	    }
-
-	    if (warnAboutDeprecatedLifecycles) {
-	      ReactStrictModeWarnings.recordDeprecationWarnings(workInProgress, instance);
 	    }
 	  }
 
@@ -24497,10 +24383,8 @@
 	  }
 
 	  if (typeof getDerivedStateFromProps === 'function') {
-	    if (fireGetDerivedStateFromPropsOnStateUpdates || oldProps !== newProps) {
-	      applyDerivedStateFromProps(workInProgress, getDerivedStateFromProps, newProps);
-	      newState = workInProgress.memoizedState;
-	    }
+	    applyDerivedStateFromProps(workInProgress, getDerivedStateFromProps, newProps);
+	    newState = workInProgress.memoizedState;
 	  }
 
 	  var shouldUpdate = checkHasForceUpdateAfterProcessing() || checkShouldComponentUpdate(workInProgress, oldProps, newProps, oldState, newState, newContext);
@@ -25382,7 +25266,8 @@
 	    // Handle top level unkeyed fragments as if they were arrays.
 	    // This leads to an ambiguity between <>{[...]}</> and <>...</>.
 	    // We treat the ambiguous cases above the same.
-	    if (typeof newChild === 'object' && newChild !== null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
+	    var isUnkeyedTopLevelFragment = typeof newChild === 'object' && newChild !== null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null;
+	    if (isUnkeyedTopLevelFragment) {
 	      newChild = newChild.props.children;
 	    }
 
@@ -25419,7 +25304,7 @@
 	        warnOnFunctionType();
 	      }
 	    }
-	    if (typeof newChild === 'undefined') {
+	    if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
 	      // If the new child is undefined, and the return fiber is a composite
 	      // component, throw an error. If Fiber return types are disabled,
 	      // we already threw above.
@@ -25482,9 +25367,6 @@
 	var isHydrating = false;
 
 	function enterHydrationState(fiber) {
-	  if (!supportsHydration) {
-	    return false;
-	  }
 
 	  var parentInstance = fiber.stateNode.containerInfo;
 	  nextHydratableInstance = getFirstHydratableChild(parentInstance);
@@ -25631,9 +25513,6 @@
 	}
 
 	function prepareToHydrateHostInstance(fiber, rootContainerInstance, hostContext) {
-	  if (!supportsHydration) {
-	    invariant(false, 'Expected prepareToHydrateHostInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.');
-	  }
 
 	  var instance = fiber.stateNode;
 	  var updatePayload = hydrateInstance(instance, fiber.type, fiber.memoizedProps, rootContainerInstance, hostContext, fiber);
@@ -25648,9 +25527,6 @@
 	}
 
 	function prepareToHydrateHostTextInstance(fiber) {
-	  if (!supportsHydration) {
-	    invariant(false, 'Expected prepareToHydrateHostTextInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.');
-	  }
 
 	  var textInstance = fiber.stateNode;
 	  var textContent = fiber.memoizedProps;
@@ -25692,9 +25568,6 @@
 	}
 
 	function popHydrationState(fiber) {
-	  if (!supportsHydration) {
-	    return false;
-	  }
 	  if (fiber !== hydrationParentFiber) {
 	    // We're deeper than the current hydration context, inside an inserted
 	    // tree.
@@ -25730,9 +25603,6 @@
 	}
 
 	function resetHydrationState() {
-	  if (!supportsHydration) {
-	    return;
-	  }
 
 	  hydrationParentFiber = null;
 	  nextHydratableInstance = null;
@@ -25821,12 +25691,7 @@
 
 	function updateProfiler(current, workInProgress) {
 	  var nextProps = workInProgress.pendingProps;
-	  if (enableProfilerTimer) {
-	    // Start render timer here and push start time onto queue
-	    markActualRenderTimeStarted(workInProgress);
-
-	    // Let the "complete" phase know to stop the timer,
-	    // And the scheduler to record the measured time.
+	  {
 	    workInProgress.effectTag |= Update;
 	  }
 	  if (workInProgress.memoizedProps === nextProps) {
@@ -25920,7 +25785,7 @@
 	  // Rerender
 	  ReactCurrentOwner.current = workInProgress;
 	  var nextChildren = void 0;
-	  if (didCaptureError && (!enableGetDerivedStateFromCatch || typeof ctor.getDerivedStateFromCatch !== 'function')) {
+	  if (didCaptureError && (!enableGetDerivedStateFromCatch)) {
 	    // If we captured an error, but getDerivedStateFrom catch is not defined,
 	    // unmount all the children. componentDidCatch will schedule an update to
 	    // re-render a fallback. This is temporary until we migrate everyone to
@@ -25928,14 +25793,14 @@
 	    // TODO: Warn in a future release.
 	    nextChildren = null;
 
-	    if (enableProfilerTimer) {
+	    {
 	      stopBaseRenderTimerIfRunning();
 	    }
 	  } else {
 	    {
 	      ReactDebugCurrentFiber.setCurrentPhase('render');
 	      nextChildren = instance.render();
-	      if (debugRenderPhaseSideEffects || debugRenderPhaseSideEffectsForStrictMode && workInProgress.mode & StrictMode) {
+	      if (workInProgress.mode & StrictMode) {
 	        instance.render();
 	      }
 	      ReactDebugCurrentFiber.setCurrentPhase(null);
@@ -26186,28 +26051,7 @@
 	}
 
 	function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
-	  if (enableSuspense) {
-	    var nextProps = workInProgress.pendingProps;
-	    var prevProps = workInProgress.memoizedProps;
-
-	    var prevDidTimeout = workInProgress.memoizedState;
-
-	    // Check if we already attempted to render the normal state. If we did,
-	    // and we timed out, render the placeholder state.
-	    var alreadyCaptured = (workInProgress.effectTag & DidCapture) === NoEffect;
-	    var nextDidTimeout = !alreadyCaptured;
-
-	    if (hasContextChanged()) ; else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
-	      return bailoutOnAlreadyFinishedWork(current, workInProgress);
-	    }
-
-	    var render = nextProps.children;
-	    var nextChildren = render(nextDidTimeout);
-	    workInProgress.memoizedProps = nextProps;
-	    workInProgress.memoizedState = nextDidTimeout;
-	    reconcileChildren(current, workInProgress, nextChildren);
-	    return workInProgress.child;
-	  } else {
+	  {
 	    return null;
 	  }
 	}
@@ -26473,7 +26317,7 @@
 	function bailoutOnAlreadyFinishedWork(current, workInProgress) {
 	  cancelWorkTimer(workInProgress);
 
-	  if (enableProfilerTimer) {
+	  {
 	    // Don't update "base" render times for bailouts.
 	    stopBaseRenderTimerIfRunning();
 	  }
@@ -26499,7 +26343,7 @@
 	function bailoutOnLowPriority(current, workInProgress) {
 	  cancelWorkTimer(workInProgress);
 
-	  if (enableProfilerTimer) {
+	  {
 	    // Don't update "base" render times for bailouts.
 	    stopBaseRenderTimerIfRunning();
 	  }
@@ -26519,11 +26363,6 @@
 	    case ContextProvider:
 	      pushProvider(workInProgress);
 	      break;
-	    case Profiler:
-	      if (enableProfilerTimer) {
-	        markActualRenderTimeStarted(workInProgress);
-	      }
-	      break;
 	  }
 	  // TODO: What if this is currently in progress?
 	  // How can that happen? How is this not being cloned?
@@ -26542,6 +26381,12 @@
 	}
 
 	function beginWork(current, workInProgress, renderExpirationTime) {
+	  {
+	    if (workInProgress.mode & ProfileMode) {
+	      markActualRenderTimeStarted(workInProgress);
+	    }
+	  }
+
 	  if (workInProgress.expirationTime === NoWork || workInProgress.expirationTime > renderExpirationTime) {
 	    return bailoutOnLowPriority(current, workInProgress);
 	  }
@@ -26619,7 +26464,7 @@
 	var updateHostContainer = void 0;
 	var updateHostComponent$1 = void 0;
 	var updateHostText$1 = void 0;
-	if (supportsMutation) {
+	{
 	  // Mutation mode
 
 	  updateHostContainer = function (workInProgress) {
@@ -26640,102 +26485,17 @@
 	      markUpdate(workInProgress);
 	    }
 	  };
-	} else if (supportsPersistence) {
-	  // Persistent host tree mode
-
-	  // An unfortunate fork of appendAllChildren because we have two different parent types.
-	  var appendAllChildrenToContainer = function (containerChildSet, workInProgress) {
-	    // We only have the top Fiber that was created but we need recurse down its
-	    // children to find all the terminal nodes.
-	    var node = workInProgress.child;
-	    while (node !== null) {
-	      if (node.tag === HostComponent || node.tag === HostText) {
-	        appendChildToContainerChildSet(containerChildSet, node.stateNode);
-	      } else if (node.tag === HostPortal) ; else if (node.child !== null) {
-	        node.child.return = node;
-	        node = node.child;
-	        continue;
-	      }
-	      if (node === workInProgress) {
-	        return;
-	      }
-	      while (node.sibling === null) {
-	        if (node.return === null || node.return === workInProgress) {
-	          return;
-	        }
-	        node = node.return;
-	      }
-	      node.sibling.return = node.return;
-	      node = node.sibling;
-	    }
-	  };
-	  updateHostContainer = function (workInProgress) {
-	    var portalOrRoot = workInProgress.stateNode;
-	    var childrenUnchanged = workInProgress.firstEffect === null;
-	    if (childrenUnchanged) ; else {
-	      var container = portalOrRoot.containerInfo;
-	      var newChildSet = createContainerChildSet(container);
-	      // If children might have changed, we have to add them all to the set.
-	      appendAllChildrenToContainer(newChildSet, workInProgress);
-	      portalOrRoot.pendingChildren = newChildSet;
-	      // Schedule an update on the container to swap out the container.
-	      markUpdate(workInProgress);
-	      finalizeContainerChildren(container, newChildSet);
-	    }
-	  };
-	  updateHostComponent$1 = function (current, workInProgress, updatePayload, type, oldProps, newProps, rootContainerInstance, currentHostContext) {
-	    // If there are no effects associated with this node, then none of our children had any updates.
-	    // This guarantees that we can reuse all of them.
-	    var childrenUnchanged = workInProgress.firstEffect === null;
-	    var currentInstance = current.stateNode;
-	    if (childrenUnchanged && updatePayload === null) {
-	      // No changes, just reuse the existing instance.
-	      // Note that this might release a previous clone.
-	      workInProgress.stateNode = currentInstance;
-	    } else {
-	      var recyclableInstance = workInProgress.stateNode;
-	      var newInstance = cloneInstance(currentInstance, updatePayload, type, oldProps, newProps, workInProgress, childrenUnchanged, recyclableInstance);
-	      if (finalizeInitialChildren(newInstance, type, newProps, rootContainerInstance, currentHostContext)) {
-	        markUpdate(workInProgress);
-	      }
-	      workInProgress.stateNode = newInstance;
-	      if (childrenUnchanged) {
-	        // If there are no other effects in this tree, we need to flag this node as having one.
-	        // Even though we're not going to use it for anything.
-	        // Otherwise parents won't know that there are new children to propagate upwards.
-	        markUpdate(workInProgress);
-	      } else {
-	        // If children might have changed, we have to add them all to the set.
-	        appendAllChildren(newInstance, workInProgress);
-	      }
-	    }
-	  };
-	  updateHostText$1 = function (current, workInProgress, oldText, newText) {
-	    if (oldText !== newText) {
-	      // If the text content differs, we'll create a new text instance for it.
-	      var rootContainerInstance = getRootHostContainer();
-	      var currentHostContext = getHostContext();
-	      workInProgress.stateNode = createTextInstance(newText, rootContainerInstance, currentHostContext, workInProgress);
-	      // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-	      // This lets the parents know that at least one of their children has changed.
-	      markUpdate(workInProgress);
-	    }
-	  };
-	} else {
-	  // No host operations
-	  updateHostContainer = function (workInProgress) {
-	    // Noop
-	  };
-	  updateHostComponent$1 = function (current, workInProgress, updatePayload, type, oldProps, newProps, rootContainerInstance, currentHostContext) {
-	    // Noop
-	  };
-	  updateHostText$1 = function (current, workInProgress, oldText, newText) {
-	    // Noop
-	  };
 	}
 
 	function completeWork(current, workInProgress, renderExpirationTime) {
 	  var newProps = workInProgress.pendingProps;
+
+	  {
+	    if (workInProgress.mode & ProfileMode) {
+	      recordElapsedActualRenderTime(workInProgress);
+	    }
+	  }
+
 	  switch (workInProgress.tag) {
 	    case FunctionalComponent:
 	      return null;
@@ -26868,9 +26628,6 @@
 	    case Mode:
 	      return null;
 	    case Profiler:
-	      if (enableProfilerTimer) {
-	        recordElapsedActualRenderTime(workInProgress);
-	      }
 	      return null;
 	    case HostPortal:
 	      popHostContainer(workInProgress);
@@ -27222,10 +26979,8 @@
 	        // TODO: this is recursive.
 	        // We are also not using this parent because
 	        // the portal will get pushed immediately.
-	        if (supportsMutation) {
+	        {
 	          unmountHostComponents(current);
-	        } else if (supportsPersistence) {
-	          emptyPortalContainer(current);
 	        }
 	        return;
 	      }
@@ -27245,7 +27000,7 @@
 	    if (node.child !== null && (
 	    // If we use mutation we drill down into portals using commitUnmount above.
 	    // If we don't use mutation we drill down into portals here instead.
-	    !supportsMutation || node.tag !== HostPortal)) {
+	    node.tag !== HostPortal)) {
 	      node.child.return = node;
 	      node = node.child;
 	      continue;
@@ -27275,53 +27030,6 @@
 	  if (current.alternate) {
 	    current.alternate.child = null;
 	    current.alternate.return = null;
-	  }
-	}
-
-	function emptyPortalContainer(current) {
-	  if (!supportsPersistence) {
-	    return;
-	  }
-
-	  var portal = current.stateNode;
-	  var containerInfo = portal.containerInfo;
-
-	  var emptyChildSet = createContainerChildSet(containerInfo);
-	  replaceContainerChildren(containerInfo, emptyChildSet);
-	}
-
-	function commitContainer(finishedWork) {
-	  if (!supportsPersistence) {
-	    return;
-	  }
-
-	  switch (finishedWork.tag) {
-	    case ClassComponent:
-	      {
-	        return;
-	      }
-	    case HostComponent:
-	      {
-	        return;
-	      }
-	    case HostText:
-	      {
-	        return;
-	      }
-	    case HostRoot:
-	    case HostPortal:
-	      {
-	        var portalOrRoot = finishedWork.stateNode;
-	        var containerInfo = portalOrRoot.containerInfo,
-	            _pendingChildren = portalOrRoot.pendingChildren;
-
-	        replaceContainerChildren(containerInfo, _pendingChildren);
-	        return;
-	      }
-	    default:
-	      {
-	        invariant(false, 'This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue.');
-	      }
 	  }
 	}
 
@@ -27382,9 +27090,6 @@
 	}
 
 	function commitPlacement(finishedWork) {
-	  if (!supportsMutation) {
-	    return;
-	  }
 
 	  // Recursively insert all host nodes into the parent.
 	  var parentFiber = getHostParentFiber(finishedWork);
@@ -27534,22 +27239,15 @@
 	}
 
 	function commitDeletion(current) {
-	  if (supportsMutation) {
+	  {
 	    // Recursively delete all host nodes from the parent.
 	    // Detach refs and call componentWillUnmount() on the whole subtree.
 	    unmountHostComponents(current);
-	  } else {
-	    // Detach refs and call componentWillUnmount() on the whole subtree.
-	    commitNestedUnmounts(current);
 	  }
 	  detachFiber(current);
 	}
 
 	function commitWork(current, finishedWork) {
-	  if (!supportsMutation) {
-	    commitContainer(finishedWork);
-	    return;
-	  }
 
 	  switch (finishedWork.tag) {
 	    case ClassComponent:
@@ -27594,13 +27292,9 @@
 	      }
 	    case Profiler:
 	      {
-	        if (enableProfilerTimer) {
+	        {
 	          var onRender = finishedWork.memoizedProps.onRender;
-	          onRender(finishedWork.memoizedProps.id, current === null ? 'mount' : 'update', finishedWork.stateNode.duration, finishedWork.treeBaseTime, finishedWork.stateNode.startTime, getCommitTime());
-
-	          // Reset actualTime after successful commit.
-	          // By default, we append to this time to account for errors and pauses.
-	          finishedWork.stateNode.duration = 0;
+	          onRender(finishedWork.memoizedProps.id, current === null ? 'mount' : 'update', finishedWork.actualDuration, finishedWork.treeBaseTime, finishedWork.actualStartTime, getCommitTime());
 	        }
 	        return;
 	      }
@@ -27616,9 +27310,6 @@
 	}
 
 	function commitResetTextContent(current) {
-	  if (!supportsMutation) {
-	    return;
-	  }
 	  resetTextContent(current.stateNode);
 	}
 
@@ -27641,17 +27332,11 @@
 	  var update = createUpdate(expirationTime);
 	  update.tag = CaptureUpdate;
 	  var getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
-	  if (enableGetDerivedStateFromCatch && typeof getDerivedStateFromCatch === 'function') {
-	    var error = errorInfo.value;
-	    update.payload = function () {
-	      return getDerivedStateFromCatch(error);
-	    };
-	  }
 
 	  var inst = fiber.stateNode;
 	  if (inst !== null && typeof inst.componentDidCatch === 'function') {
 	    update.callback = function callback() {
-	      if (!enableGetDerivedStateFromCatch || getDerivedStateFromCatch !== 'function') {
+	      {
 	        // To preserve the preexisting retry behavior of error boundaries,
 	        // we keep track of which ones already failed during this batch.
 	        // This gets reset before we yield back to the browser.
@@ -27670,106 +27355,11 @@
 	  return update;
 	}
 
-	function schedulePing(finishedWork) {
-	  // Once the promise resolves, we should try rendering the non-
-	  // placeholder state again.
-	  var currentTime = recalculateCurrentTime();
-	  var expirationTime = computeExpirationForFiber(currentTime, finishedWork);
-	  var recoveryUpdate = createUpdate(expirationTime);
-	  enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
-	  scheduleWork$1(finishedWork, expirationTime);
-	}
-
 	function throwException(root, returnFiber, sourceFiber, value, renderIsExpired, renderExpirationTime, currentTimeMs) {
 	  // The source fiber did not complete.
 	  sourceFiber.effectTag |= Incomplete;
 	  // Its effect list is no longer valid.
 	  sourceFiber.firstEffect = sourceFiber.lastEffect = null;
-
-	  if (enableSuspense && value !== null && typeof value === 'object' && typeof value.then === 'function') {
-	    // This is a thenable.
-	    var thenable = value;
-
-	    var expirationTimeMs = expirationTimeToMs(renderExpirationTime);
-	    var startTimeMs = expirationTimeMs - 5000;
-	    var elapsedMs = currentTimeMs - startTimeMs;
-	    if (elapsedMs < 0) {
-	      elapsedMs = 0;
-	    }
-	    var remainingTimeMs = expirationTimeMs - currentTimeMs;
-
-	    // Find the earliest timeout of all the timeouts in the ancestor path.
-	    // TODO: Alternatively, we could store the earliest timeout on the context
-	    // stack, rather than searching on every suspend.
-	    var _workInProgress = returnFiber;
-	    var earliestTimeoutMs = -1;
-	    searchForEarliestTimeout: do {
-	      if (_workInProgress.tag === TimeoutComponent) {
-	        var current = _workInProgress.alternate;
-	        if (current !== null && current.memoizedState === true) {
-	          // A parent Timeout already committed in a placeholder state. We
-	          // need to handle this promise immediately. In other words, we
-	          // should never suspend inside a tree that already expired.
-	          earliestTimeoutMs = 0;
-	          break searchForEarliestTimeout;
-	        }
-	        var timeoutPropMs = _workInProgress.pendingProps.ms;
-	        if (typeof timeoutPropMs === 'number') {
-	          if (timeoutPropMs <= 0) {
-	            earliestTimeoutMs = 0;
-	            break searchForEarliestTimeout;
-	          } else if (earliestTimeoutMs === -1 || timeoutPropMs < earliestTimeoutMs) {
-	            earliestTimeoutMs = timeoutPropMs;
-	          }
-	        } else if (earliestTimeoutMs === -1) {
-	          earliestTimeoutMs = remainingTimeMs;
-	        }
-	      }
-	      _workInProgress = _workInProgress.return;
-	    } while (_workInProgress !== null);
-
-	    // Compute the remaining time until the timeout.
-	    var msUntilTimeout = earliestTimeoutMs - elapsedMs;
-
-	    if (renderExpirationTime === Never || msUntilTimeout > 0) {
-	      // There's still time remaining.
-	      suspendRoot(root, thenable, msUntilTimeout, renderExpirationTime);
-	      var onResolveOrReject = function () {
-	        retrySuspendedRoot(root, renderExpirationTime);
-	      };
-	      thenable.then(onResolveOrReject, onResolveOrReject);
-	      return;
-	    } else {
-	      // No time remaining. Need to fallback to placeholder.
-	      // Find the nearest timeout that can be retried.
-	      _workInProgress = returnFiber;
-	      do {
-	        switch (_workInProgress.tag) {
-	          case HostRoot:
-	            {
-	              // The root expired, but no fallback was provided. Throw a
-	              // helpful error.
-	              var message = renderExpirationTime === Sync ? 'A synchronous update was suspended, but no fallback UI ' + 'was provided.' : 'An update was suspended for longer than the timeout, ' + 'but no fallback UI was provided.';
-	              value = new Error(message);
-	              break;
-	            }
-	          case TimeoutComponent:
-	            {
-	              if ((_workInProgress.effectTag & DidCapture) === NoEffect) {
-	                _workInProgress.effectTag |= ShouldCapture;
-	                var _onResolveOrReject = schedulePing.bind(null, _workInProgress);
-	                thenable.then(_onResolveOrReject, _onResolveOrReject);
-	                return;
-	              }
-	              // Already captured during this render. Continue to the next
-	              // Timeout ancestor.
-	              break;
-	            }
-	        }
-	        _workInProgress = _workInProgress.return;
-	      } while (_workInProgress !== null);
-	    }
-	  }
 
 	  // We didn't find a boundary that could handle this type of exception. Start
 	  // over and traverse parent path again, this time treating the exception
@@ -27807,6 +27397,12 @@
 	}
 
 	function unwindWork(workInProgress, renderIsExpired, renderExpirationTime) {
+	  {
+	    if (workInProgress.mode & ProfileMode) {
+	      recordElapsedActualRenderTime(workInProgress);
+	    }
+	  }
+
 	  switch (workInProgress.tag) {
 	    case ClassComponent:
 	      {
@@ -27855,6 +27451,14 @@
 	}
 
 	function unwindInterruptedWork(interruptedWork) {
+	  {
+	    if (interruptedWork.mode & ProfileMode) {
+	      // Resume in case we're picking up on work that was paused.
+	      resumeActualRenderTimerIfPaused();
+	      recordElapsedActualRenderTime(interruptedWork);
+	    }
+	  }
+
 	  switch (interruptedWork.tag) {
 	    case ClassComponent:
 	      {
@@ -27877,13 +27481,6 @@
 	      break;
 	    case ContextProvider:
 	      popProvider(interruptedWork);
-	      break;
-	    case Profiler:
-	      if (enableProfilerTimer) {
-	        // Resume in case we're picking up on work that was paused.
-	        resumeActualRenderTimerIfPaused();
-	        recordElapsedActualRenderTime(interruptedWork);
-	      }
 	      break;
 	    default:
 	      break;
@@ -27976,7 +27573,7 @@
 	var isReplayingFailedUnitOfWork = void 0;
 	var originalReplayError = void 0;
 	var rethrowOriginalError = void 0;
-	if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+	{
 	  stashedWorkInProgressProperties = null;
 	  isReplayingFailedUnitOfWork = false;
 	  originalReplayError = null;
@@ -28023,7 +27620,11 @@
 	    if (hasCaughtError()) {
 	      clearCaughtError();
 
-	      if (enableProfilerTimer) {
+	      {
+	        if (failedUnitOfWork.mode & ProfileMode) {
+	          recordElapsedActualRenderTime(failedUnitOfWork);
+	        }
+
 	        // Stop "base" render timer again (after the re-thrown error).
 	        stopBaseRenderTimerIfRunning();
 	      }
@@ -28150,14 +27751,6 @@
 	function commitAllLifeCycles(finishedRoot, currentTime, committedExpirationTime) {
 	  {
 	    ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
-
-	    if (warnAboutDeprecatedLifecycles) {
-	      ReactStrictModeWarnings.flushPendingDeprecationWarnings();
-	    }
-
-	    if (warnAboutLegacyContextAPI) {
-	      ReactStrictModeWarnings.flushLegacyContextWarning();
-	    }
 	  }
 	  while (nextEffect !== null) {
 	    var effectTag = nextEffect.effectTag;
@@ -28256,7 +27849,9 @@
 	  }
 	  stopCommitSnapshotEffectsTimer();
 
-	  if (enableProfilerTimer) {
+	  {
+	    // Mark the current commit time to be shared by all Profilers in this batch.
+	    // This enables them to be grouped later.
 	    recordCommitTime();
 	  }
 
@@ -28319,7 +27914,7 @@
 	    }
 	  }
 
-	  if (enableProfilerTimer) {
+	  {
 	    {
 	      checkActualRenderTimeStackEmpty();
 	    }
@@ -28332,9 +27927,6 @@
 	  stopCommitTimer();
 	  if (typeof onCommitRoot === 'function') {
 	    onCommitRoot(finishedWork.stateNode);
-	  }
-	  if (ReactFiberInstrumentation_1.debugTool) {
-	    ReactFiberInstrumentation_1.debugTool.onCommitWork(finishedWork);
 	  }
 
 	  markCommittedPriorityLevels(root, currentTime, root.current.expirationTime);
@@ -28371,7 +27963,7 @@
 
 	  // Bubble up the earliest expiration time.
 	  // (And "base" render timers if that feature flag is enabled)
-	  if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+	  if (workInProgress.mode & ProfileMode) {
 	    var treeBaseTime = workInProgress.selfBaseTime;
 	    var child = workInProgress.child;
 	    while (child !== null) {
@@ -28423,9 +28015,6 @@
 
 	      if (next !== null) {
 	        stopWorkTimer(workInProgress);
-	        if (ReactFiberInstrumentation_1.debugTool) {
-	          ReactFiberInstrumentation_1.debugTool.onCompleteWork(workInProgress);
-	        }
 	        // If completing this work spawned new work, do that next. We'll come
 	        // back here again.
 	        return next;
@@ -28466,10 +28055,6 @@
 	        }
 	      }
 
-	      if (ReactFiberInstrumentation_1.debugTool) {
-	        ReactFiberInstrumentation_1.debugTool.onCompleteWork(workInProgress);
-	      }
-
 	      if (siblingFiber !== null) {
 	        // If there is more work to do in this returnFiber, do that next.
 	        return siblingFiber;
@@ -28501,9 +28086,6 @@
 
 	      if (_next !== null) {
 	        stopWorkTimer(workInProgress);
-	        if (ReactFiberInstrumentation_1.debugTool) {
-	          ReactFiberInstrumentation_1.debugTool.onCompleteWork(workInProgress);
-	        }
 	        // If completing this work spawned new work, do that next. We'll come
 	        // back here again.
 	        // Since we're restarting, remove anything that is not a host effect
@@ -28516,10 +28098,6 @@
 	        // Mark the parent fiber as incomplete and clear its effect list.
 	        returnFiber.firstEffect = returnFiber.lastEffect = null;
 	        returnFiber.effectTag |= Incomplete;
-	      }
-
-	      if (ReactFiberInstrumentation_1.debugTool) {
-	        ReactFiberInstrumentation_1.debugTool.onCompleteWork(workInProgress);
 	      }
 
 	      if (siblingFiber !== null) {
@@ -28554,12 +28132,12 @@
 	    ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
 	  }
 
-	  if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+	  {
 	    stashedWorkInProgressProperties = assignFiberPropertiesInDEV(stashedWorkInProgressProperties, workInProgress);
 	  }
 
 	  var next = void 0;
-	  if (enableProfilerTimer) {
+	  {
 	    if (workInProgress.mode & ProfileMode) {
 	      startBaseRenderTimer();
 	    }
@@ -28571,8 +28149,6 @@
 	      recordElapsedBaseRenderTimeIfRunning(workInProgress);
 	      stopBaseRenderTimerIfRunning();
 	    }
-	  } else {
-	    next = beginWork(current, workInProgress, nextRenderExpirationTime);
 	  }
 
 	  {
@@ -28584,9 +28160,6 @@
 	      // React's internal stack is not misaligned.
 	      rethrowOriginalError();
 	    }
-	  }
-	  if (ReactFiberInstrumentation_1.debugTool) {
-	    ReactFiberInstrumentation_1.debugTool.onBeginWork(workInProgress);
 	  }
 
 	  if (next === null) {
@@ -28611,7 +28184,7 @@
 	      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
 	    }
 
-	    if (enableProfilerTimer) {
+	    {
 	      // If we didn't finish, pause the "actual" render timer.
 	      // We'll restart it when we resume work.
 	      pauseActualRenderTimerIfRunning();
@@ -28645,7 +28218,7 @@
 	    try {
 	      workLoop(isAsync);
 	    } catch (thrownValue) {
-	      if (enableProfilerTimer) {
+	      {
 	        // Stop "base" render timer in the event of an error.
 	        stopBaseRenderTimerIfRunning();
 	      }
@@ -28662,7 +28235,7 @@
 	        }
 
 	        var failedUnitOfWork = nextUnitOfWork;
-	        if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+	        {
 	          replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
 	        }
 
@@ -28719,7 +28292,6 @@
 	      stopWorkLoopTimer(interruptedBy, didCompleteRoot);
 	      interruptedBy = null;
 	      !!nextRenderIsExpired ? invariant(false, 'Expired work should have completed. This error is likely caused by a bug in React. Please file an issue.') : void 0;
-	      markSuspendedPriorityLevel(root, expirationTime);
 	      if (nextLatestTimeoutMs >= 0) {
 	        setTimeout(function () {
 	          retrySuspendedRoot(root, expirationTime);
@@ -28785,7 +28357,7 @@
 	function computeAsyncExpiration(currentTime) {
 	  // Given the current clock time, returns an expiration time. We use rounding
 	  // to batch like updates together.
-	  // Should complete within ~1000ms. 1200ms max.
+	  // Should complete within ~5000ms. 5250ms max.
 	  var expirationMs = 5000;
 	  var bucketSizeMs = 250;
 	  return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
@@ -28865,16 +28437,7 @@
 	  return expirationTime;
 	}
 
-	// TODO: Rename this to scheduleTimeout or something
-	function suspendRoot(root, thenable, timeoutMs, suspendedTime) {
-	  // Schedule the timeout.
-	  if (timeoutMs >= 0 && nextLatestTimeoutMs < timeoutMs) {
-	    nextLatestTimeoutMs = timeoutMs;
-	  }
-	}
-
 	function retrySuspendedRoot(root, suspendedTime) {
-	  markPingedPriorityLevel(root, suspendedTime);
 	  var retryTime = findNextPendingPriorityLevel(root);
 	  if (retryTime !== NoWork) {
 	    requestRetry(root, retryTime);
@@ -28911,7 +28474,6 @@
 	          interruptedBy = fiber;
 	          resetStack();
 	        }
-	        markPendingPriorityLevel(root, expirationTime);
 	        var nextExpirationTimeToWorkOn = findNextPendingPriorityLevel(root);
 	        if (
 	        // If we're in the render phase, we don't need to schedule this root
@@ -28972,7 +28534,7 @@
 	var lastScheduledRoot = null;
 
 	var callbackExpirationTime = NoWork;
-	var callbackID = -1;
+	var callbackID = void 0;
 	var isRendering = false;
 	var nextFlushedRoot = null;
 	var nextFlushedExpirationTime = NoWork;
@@ -29001,9 +28563,11 @@
 	      // Existing callback has sufficient timeout. Exit.
 	      return;
 	    } else {
-	      // Existing callback has insufficient timeout. Cancel and schedule a
-	      // new one.
-	      cancelDeferredCallback(callbackID);
+	      if (callbackID !== null) {
+	        // Existing callback has insufficient timeout. Cancel and schedule a
+	        // new one.
+	        cancelDeferredCallback(callbackID);
+	      }
 	    }
 	    // The request callback timer is already running. Don't start a new one.
 	  } else {
@@ -29163,11 +28727,11 @@
 	  // the deadline.
 	  findHighestPriorityRoot();
 
-	  if (enableProfilerTimer) {
+	  {
 	    resumeActualRenderTimerIfPaused();
 	  }
 
-	  if (enableUserTimingAPI && deadline !== null) {
+	  if (deadline !== null) {
 	    var didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
 	    var timeout = expirationTimeToMs(nextFlushedExpirationTime);
 	    stopRequestCallbackTimer(didExpire, timeout);
@@ -29192,7 +28756,7 @@
 	  // If we're inside a callback, set this to false since we just completed it.
 	  if (deadline !== null) {
 	    callbackExpirationTime = NoWork;
-	    callbackID = -1;
+	    callbackID = null;
 	  }
 	  // If there's work left over, schedule a new callback.
 	  if (nextFlushedExpirationTime !== NoWork) {
@@ -29259,7 +28823,6 @@
 	      // This root is already complete. We can commit it.
 	      completeRoot(root, finishedWork, expirationTime);
 	    } else {
-	      root.finishedWork = null;
 	      finishedWork = renderRoot(root, expirationTime, false);
 	      if (finishedWork !== null) {
 	        // We've completed the root. Commit it.
@@ -29273,7 +28836,6 @@
 	      // This root is already complete. We can commit it.
 	      completeRoot(root, _finishedWork, expirationTime);
 	    } else {
-	      root.finishedWork = null;
 	      _finishedWork = renderRoot(root, expirationTime, true);
 	      if (_finishedWork !== null) {
 	        // We've completed the root. Check the deadline one more time
@@ -29286,7 +28848,7 @@
 	          // back and commit it later.
 	          root.finishedWork = _finishedWork;
 
-	          if (enableProfilerTimer) {
+	          {
 	            // If we didn't finish, pause the "actual" render timer.
 	            // We'll restart it when we resume work.
 	            pauseActualRenderTimerIfRunning();
@@ -29494,18 +29056,6 @@
 	  // TODO: If this is a nested container, this won't be the root.
 	  var current = container.current;
 
-	  {
-	    if (ReactFiberInstrumentation_1.debugTool) {
-	      if (current.alternate === null) {
-	        ReactFiberInstrumentation_1.debugTool.onMountContainer(container);
-	      } else if (element === null) {
-	        ReactFiberInstrumentation_1.debugTool.onUnmountContainer(container);
-	      } else {
-	        ReactFiberInstrumentation_1.debugTool.onUpdateContainer(container);
-	      }
-	    }
-	  }
-
 	  var context = getContextForSubtree(parentComponent);
 	  if (container.context === null) {
 	    container.context = context;
@@ -29628,7 +29178,7 @@
 
 	// TODO: this is special because it gets imported during build.
 
-	var ReactVersion = '16.4.0';
+	var ReactVersion = '16.4.1';
 
 	// TODO: This type is shared between the reconciler and ReactDOM, but will
 	// eventually be lifted out to the renderer.
@@ -30073,6 +29623,8 @@
 	  unstable_batchedUpdates: batchedUpdates$1,
 
 	  unstable_deferredUpdates: deferredUpdates,
+
+	  unstable_interactiveUpdates: interactiveUpdates$1,
 
 	  flushSync: flushSync,
 
@@ -32108,13 +31660,19 @@
 	  disabled: {},
 	  focusVisible: {}
 	};
+	/* istanbul ignore if */
+
+	exports.styles = styles;
+
+	if (!_react.default.createContext) {
+	  throw new Error('Material-UI: react@16.3.0 or greater is required.');
+	}
 	/**
 	 * `ButtonBase` contains as few styles as possible.
 	 * It aims to be a simple building block for creating a button.
 	 * It contains a load of style reset and some focus/ripple logic.
 	 */
 
-	exports.styles = styles;
 
 	var ButtonBase =
 	/*#__PURE__*/
@@ -32498,7 +32056,9 @@
 	  TouchRippleProps: _propTypes.default.object,
 
 	  /**
-	   * @ignore
+	   * Used to control the button's purpose.
+	   * This property passes the value to the `type` attribute of the native button component.
+	   * Valid property values include `button`, `submit`, and `reset`.
 	   */
 	  type: _propTypes.default.string
 	};
@@ -33419,8 +32979,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33445,8 +33003,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33455,7 +33011,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33606,7 +33162,7 @@
 
 	var defineProperty$2 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$2($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -36574,9 +36130,9 @@
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
 
-	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
-
 	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -36640,30 +36196,19 @@
 	    }
 	  };
 	};
+	/* istanbul ignore if */
+
 
 	exports.styles = styles;
+
+	if (!_react.default.createContext) {
+	  throw new Error('Material-UI: react@16.3.0 or greater is required.');
+	}
 
 	var Modal =
 	/*#__PURE__*/
 	function (_React$Component) {
 	  (0, _inherits2.default)(Modal, _React$Component);
-	  (0, _createClass2.default)(Modal, null, [{
-	    key: "getDerivedStateFromProps",
-	    value: function getDerivedStateFromProps(nextProps) {
-	      if (nextProps.open) {
-	        return {
-	          exited: false
-	        };
-	      } else if (!getHasTransition(nextProps)) {
-	        // Otherwise let handleExited take care of marking exited.
-	        return {
-	          exited: true
-	        };
-	      }
-
-	      return null;
-	    }
-	  }]);
 
 	  function Modal(props) {
 	    var _this;
@@ -36900,6 +36445,22 @@
 	          _this2.dialogElement = node;
 	        }
 	      }, _react.default.cloneElement(children, childProps))));
+	    }
+	  }], [{
+	    key: "getDerivedStateFromProps",
+	    value: function getDerivedStateFromProps(nextProps) {
+	      if (nextProps.open) {
+	        return {
+	          exited: false
+	        };
+	      } else if (!getHasTransition(nextProps)) {
+	        // Otherwise let handleExited take care of marking exited.
+	        return {
+	          exited: true
+	        };
+	      }
+
+	      return null;
 	    }
 	  }]);
 	  return Modal;
@@ -37294,6 +36855,7 @@
 	Grow.defaultProps = {
 	  timeout: 'auto'
 	};
+	Grow.muiSupportAuto = true;
 
 	var _default = (0, _withTheme.default)()(Grow);
 
@@ -37647,11 +37209,17 @@
 	          role = _props3.role,
 	          transformOrigin = _props3.transformOrigin,
 	          TransitionComponent = _props3.TransitionComponent,
-	          transitionDuration = _props3.transitionDuration,
+	          transitionDurationProp = _props3.transitionDuration,
 	          TransitionProps = _props3.TransitionProps,
-	          other = (0, _objectWithoutProperties2.default)(_props3, ["action", "anchorEl", "anchorOrigin", "anchorPosition", "anchorReference", "children", "classes", "container", "elevation", "getContentAnchorEl", "marginThreshold", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "open", "PaperProps", "role", "transformOrigin", "TransitionComponent", "transitionDuration", "TransitionProps"]); // If the container prop is provided, use that
+	          other = (0, _objectWithoutProperties2.default)(_props3, ["action", "anchorEl", "anchorOrigin", "anchorPosition", "anchorReference", "children", "classes", "container", "elevation", "getContentAnchorEl", "marginThreshold", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "open", "PaperProps", "role", "transformOrigin", "TransitionComponent", "transitionDuration", "TransitionProps"]);
+	      var transitionDuration = transitionDurationProp;
+
+	      if (transitionDurationProp === 'auto' && !TransitionComponent.muiSupportAuto) {
+	        transitionDuration = undefined;
+	      } // If the container prop is provided, use that
 	      // If the anchorEl prop is provided, use its parent body element as the container
 	      // If neither are provided let the Modal take care of choosing the container
+
 
 	      var container = containerProp || (anchorEl ? (0, _ownerDocument.default)(getAnchorEl(anchorEl)).body : undefined);
 	      return _react.default.createElement(_Modal.default, (0, _extends2.default)({
@@ -38248,19 +37816,25 @@
 
 	class InfoButton extends react_1 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "state", {
+	    _defineProperty$1(this, "state", {
 	      open: false
-	    }), _defineProperty$1(this, "handleClickButton", () => {
+	    });
+
+	    _defineProperty$1(this, "handleClickButton", () => {
 	      this.setState({
 	        open: true
 	      });
-	    }), _defineProperty$1(this, "handleClose", () => {
+	    });
+
+	    _defineProperty$1(this, "handleClose", () => {
 	      this.setState({
 	        open: false
 	      });
-	    }), _defineProperty$1(this, "anchorEl", null), _temp;
+	    });
+
+	    _defineProperty$1(this, "anchorEl", null);
 	  }
 
 	  render() {
@@ -40656,11 +40230,10 @@
 
 	  try {
 	    value[symToStringTag$2] = undefined;
-	    var unmasked = true;
 	  } catch (e) {}
 
 	  var result = nativeObjectToString$2.call(value);
-	  if (unmasked) {
+	  {
 	    if (isOwn) {
 	      value[symToStringTag$2] = tag;
 	    } else {
@@ -41443,9 +41016,14 @@
 
 	    _this.handleRefInput = function (node) {
 	      _this.input = node;
+	      var textareaRef = _this.props.textareaRef;
 
-	      if (_this.props.textareaRef) {
-	        _this.props.textareaRef(node);
+	      if (textareaRef) {
+	        if (typeof textareaRef === 'function') {
+	          textareaRef(node);
+	        } else {
+	          textareaRef.current = node;
+	        }
 	      }
 	    };
 
@@ -41621,7 +41199,7 @@
 	  /**
 	   * Use that property to pass a ref callback to the native textarea element.
 	   */
-	  textareaRef: _propTypes.default.func,
+	  textareaRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * @ignore
@@ -41921,7 +41499,7 @@
 	    _this.input = null;
 
 	    _this.handleFocus = function (event) {
-	      // Fix an bug with IE11 where the focus/blur events are triggered
+	      // Fix a bug with IE11 where the focus/blur events are triggered
 	      // while the input is disabled.
 	      if (formControlState(_this.props, _this.context).disabled) {
 	        event.stopPropagation();
@@ -41935,6 +41513,12 @@
 	      if (_this.props.onFocus) {
 	        _this.props.onFocus(event);
 	      }
+
+	      var muiFormControl = _this.context.muiFormControl;
+
+	      if (muiFormControl && muiFormControl.onFocus) {
+	        muiFormControl.onFocus(event);
+	      }
 	    };
 
 	    _this.handleBlur = function (event) {
@@ -41944,6 +41528,12 @@
 
 	      if (_this.props.onBlur) {
 	        _this.props.onBlur(event);
+	      }
+
+	      var muiFormControl = _this.context.muiFormControl;
+
+	      if (muiFormControl && muiFormControl.onBlur) {
+	        muiFormControl.onBlur(event);
 	      }
 	    };
 
@@ -41960,11 +41550,20 @@
 
 	    _this.handleRefInput = function (node) {
 	      _this.input = node;
+	      var ref;
 
 	      if (_this.props.inputRef) {
-	        _this.props.inputRef(node);
+	        ref = _this.props.inputRef;
 	      } else if (_this.props.inputProps && _this.props.inputProps.ref) {
-	        _this.props.inputProps.ref(node);
+	        ref = _this.props.inputProps.ref;
+	      }
+
+	      if (ref) {
+	        if (typeof ref === 'function') {
+	          ref(node);
+	        } else {
+	          ref.current = node;
+	        }
 	      }
 	    };
 
@@ -42232,14 +41831,14 @@
 	  inputComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
 
 	  /**
-	   * Properties applied to the `input` element.
+	   * Attributes applied to the `input` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
 	  /**
 	   * Use that property to pass a ref callback to the native input component.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `dense`, will adjust vertical spacing. This is normally obtained via context from
@@ -42451,11 +42050,7 @@
 	      focused: false
 	    };
 
-	    _this.handleFocus = function (event) {
-	      if (_this.props.onFocus) {
-	        _this.props.onFocus(event);
-	      }
-
+	    _this.handleFocus = function () {
 	      _this.setState(function (state) {
 	        return !state.focused ? {
 	          focused: true
@@ -42463,14 +42058,7 @@
 	      });
 	    };
 
-	    _this.handleBlur = function (event) {
-	      // The event might be undefined.
-	      // For instance, a child component might call this hook
-	      // when an input is disabled but still having the focus.
-	      if (_this.props.onBlur && event) {
-	        _this.props.onBlur(event);
-	      }
-
+	    _this.handleBlur = function () {
 	      _this.setState(function (state) {
 	        return state.focused ? {
 	          focused: false
@@ -42562,10 +42150,7 @@
 	          other = (0, _objectWithoutProperties2.default)(_props2, ["classes", "className", "component", "disabled", "error", "fullWidth", "margin", "required"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["margin".concat((0, helpers.capitalize)(margin))], margin !== 'none'), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), _classNames), className)
-	      }, other, {
-	        onFocus: this.handleFocus,
-	        onBlur: this.handleBlur
-	      }));
+	      }, other));
 	    }
 	  }]);
 	  return FormControl;
@@ -42613,16 +42198,6 @@
 	   * If `dense` or `normal`, will adjust vertical spacing of this and contained components.
 	   */
 	  margin: _propTypes.default.oneOf(['none', 'dense', 'normal']),
-
-	  /**
-	   * @ignore
-	   */
-	  onBlur: _propTypes.default.func,
-
-	  /**
-	   * @ignore
-	   */
-	  onFocus: _propTypes.default.func,
 
 	  /**
 	   * If `true`, the label will indicate that the input is required.
@@ -42965,7 +42540,7 @@
 	  /**
 	   * Use that property to pass a ref callback to the native input component.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * The text to be used in an enclosing label element.
@@ -43384,25 +42959,14 @@
 	  xl: false,
 	  xs: false,
 	  zeroMinWidth: false
-	}; // Add a wrapper component to generate some helper messages in the development
-	// environment.
-
-	/* eslint-disable react/no-multi-comp */
-	// eslint-disable-next-line import/no-mutable-exports
-
-	var GridWrapper = (0, _withStyles.default)(styles, {
+	};
+	var StyledGrid = (0, _withStyles.default)(styles, {
 	  name: 'MuiGrid'
 	})(Grid);
 
 	{
-	  var GridStyled = GridWrapper;
-
-	  GridWrapper = function GridWrapper(props) {
-	    return _react.default.createElement(GridStyled, props);
-	  };
-
 	  var requireProp = (0, _requirePropFactory.default)('Grid');
-	  GridWrapper.propTypes = {
+	  StyledGrid.propTypes = (0, _objectSpread2.default)({}, StyledGrid.propTypes, {
 	    alignContent: requireProp('container'),
 	    alignItems: requireProp('container'),
 	    direction: requireProp('container'),
@@ -43414,12 +42978,10 @@
 	    wrap: requireProp('container'),
 	    xs: requireProp('item'),
 	    zeroMinWidth: requireProp('zeroMinWidth')
-	  };
-	  GridWrapper.Naked = GridStyled;
-	  GridWrapper.options = GridStyled.options;
+	  });
 	}
 
-	var _default = GridWrapper;
+	var _default = StyledGrid;
 	exports.default = _default;
 	});
 
@@ -43983,9 +43545,9 @@
 
 	class Link extends react_1 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "handleClick", event => {
+	    _defineProperty$1(this, "handleClick", event => {
 	      const {
 	        to,
 	        onClick
@@ -43996,7 +43558,7 @@
 	        event.preventDefault();
 	        overwolf.utils.openUrlInDefaultBrowser(to);
 	      }
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -44339,7 +43901,9 @@
 	var styles = function styles(theme) {
 	  return {
 	    root: {
-	      display: 'inline-block'
+	      display: 'inline-block',
+	      lineHeight: 1 // Keep the progress centered
+
 	    },
 	    static: {
 	      transition: theme.transitions.create('transform')
@@ -44968,16 +44532,24 @@
 	      _this.displayNode = node;
 
 	      _this.updateDisplayWidth();
-	    }, _this.handleSelectRef = function (node) {
-	      if (!_this.props.inputRef) {
+	    }, _this.handleInputRef = function (node) {
+	      var inputRef = _this.props.inputRef;
+
+	      if (!inputRef) {
 	        return;
 	      }
 
-	      _this.props.inputRef({
+	      var nodeProxy = {
 	        node: node,
 	        // By pass the native input as we expose a rich object (array).
 	        value: _this.props.value
-	      });
+	      };
+
+	      if (typeof inputRef === 'function') {
+	        inputRef(nodeProxy);
+	      } else {
+	        inputRef.current = nodeProxy;
+	      }
 	    }, _temp));
 	  }
 
@@ -45113,13 +44685,13 @@
 	        onFocus: onFocus
 	      }, SelectDisplayProps), display || _react.default.createElement("span", {
 	        dangerouslySetInnerHTML: {
-	          __html: '&#8203'
+	          __html: '&#8203;'
 	        }
 	      })), _react.default.createElement("input", (0, _extends2.default)({
 	        value: Array.isArray(value) ? value.join(',') : value,
 	        name: name,
 	        readOnly: readOnly,
-	        ref: this.handleSelectRef,
+	        ref: this.handleInputRef,
 	        type: type
 	      }, other)), _react.default.createElement(IconComponent, {
 	        className: classes.icon
@@ -45190,7 +44762,7 @@
 	  /**
 	   * Use that property to pass a ref callback to the native select element.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Properties applied to the `Menu` element.
@@ -45400,7 +44972,7 @@
 	  /**
 	   * Use that property to pass a ref callback to the native select element.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Name attribute of the `select` or hidden `input` element.
@@ -45564,8 +45136,7 @@
 	  input: _propTypes.default.element,
 
 	  /**
-	   * Properties applied to the `input` element.
-	   * The properties are applied on the `select` element.
+	   * Attributes applied to the `select` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
@@ -45712,8 +45283,8 @@
 	  input: _propTypes.default.element,
 
 	  /**
-	   * Properties applied to the `input` element.
-	   * When `native` is `true`, the properties are applied on the `select` element.
+	   * Attributes applied to the `input` element.
+	   * When `native` is `true`, the attributes are applied on the `select` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
@@ -45897,6 +45468,30 @@
 	    _this.input = null;
 	    _this.isControlled = null;
 
+	    _this.handleFocus = function (event) {
+	      if (_this.props.onFocus) {
+	        _this.props.onFocus(event);
+	      }
+
+	      var muiFormControl = _this.context.muiFormControl;
+
+	      if (muiFormControl && muiFormControl.onFocus) {
+	        muiFormControl.onFocus(event);
+	      }
+	    };
+
+	    _this.handleBlur = function (event) {
+	      if (_this.props.onBlur) {
+	        _this.props.onBlur(event);
+	      }
+
+	      var muiFormControl = _this.context.muiFormControl;
+
+	      if (muiFormControl && muiFormControl.onBlur) {
+	        muiFormControl.onBlur(event);
+	      }
+	    };
+
 	    _this.handleInputChange = function (event) {
 	      var checked = event.target.checked;
 
@@ -45937,11 +45532,13 @@
 	          inputProps = _props.inputProps,
 	          inputRef = _props.inputRef,
 	          name = _props.name,
+	          onBlur = _props.onBlur,
 	          onChange = _props.onChange,
+	          onFocus = _props.onFocus,
 	          tabIndex = _props.tabIndex,
 	          type = _props.type,
 	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["checked", "checkedIcon", "classes", "className", "disabled", "icon", "id", "inputProps", "inputRef", "name", "onChange", "tabIndex", "type", "value"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["checked", "checkedIcon", "classes", "className", "disabled", "icon", "id", "inputProps", "inputRef", "name", "onBlur", "onChange", "onFocus", "tabIndex", "type", "value"]);
 	      var muiFormControl = this.context.muiFormControl;
 	      var disabled = disabledProp;
 
@@ -45958,7 +45555,9 @@
 	        className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.checked, checked), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), _classNames), classNameProp),
 	        disabled: disabled,
 	        tabIndex: null,
-	        role: undefined
+	        role: undefined,
+	        onFocus: this.handleFocus,
+	        onBlur: this.handleBlur
 	      }, other), checked ? checkedIcon : icon, _react.default.createElement("input", (0, _extends2.default)({
 	        id: hasLabelFor && id,
 	        type: type,
@@ -46036,19 +45635,24 @@
 	  indeterminateIcon: _propTypes.default.node,
 
 	  /**
-	   * Properties applied to the `input` element.
+	   * Attributes applied to the `input` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
 	  /**
 	   * Use that property to pass a ref callback to the native input component.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /*
 	   * @ignore
 	   */
 	  name: _propTypes.default.string,
+
+	  /**
+	   * @ignore
+	   */
+	  onBlur: _propTypes.default.func,
 
 	  /**
 	   * Callback fired when the state is changed.
@@ -46058,6 +45662,11 @@
 	   * @param {boolean} checked The `checked` value of the switch
 	   */
 	  onChange: _propTypes.default.func,
+
+	  /**
+	   * @ignore
+	   */
+	  onFocus: _propTypes.default.func,
 
 	  /**
 	   * @ignore
@@ -46277,14 +45886,14 @@
 	  id: _propTypes.default.string,
 
 	  /**
-	   * Properties applied to the `input` element.
+	   * Attributes applied to the `input` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
 	  /**
 	   * Use that property to pass a ref callback to the native input component.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Callback fired when the state is changed.
@@ -46679,14 +46288,14 @@
 	  InputProps: _propTypes.default.object,
 
 	  /**
-	   * Properties applied to the native `input` element.
+	   * Attributes applied to the native `input` element.
 	   */
 	  inputProps: _propTypes.default.object,
 
 	  /**
 	   * Use that property to pass a ref callback to the native input component.
 	   */
-	  inputRef: _propTypes.default.func,
+	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * The label content.
@@ -46804,21 +46413,23 @@
 
 	class SettingsDialog extends react_2 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "handleTabClick", tab => () => {
+	    _defineProperty$1(this, "handleTabClick", tab => () => {
 	      const {
 	        setSettingsDialogTab: setSettingsDialogTab$$1
 	      } = this.props;
 	      setSettingsDialogTab$$1(tab);
-	    }), _defineProperty$1(this, "handleSwitchChange", key => event => {
+	    });
+
+	    _defineProperty$1(this, "handleSwitchChange", key => event => {
 	      const {
 	        setSettings: setSettings$$1
 	      } = this.props;
 	      setSettings$$1({
 	        [key]: event.target.checked
 	      });
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -46917,16 +46528,20 @@
 
 	class Feedback extends react_2 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "state", {
+	    _defineProperty$1(this, "state", {
 	      title: '',
 	      comment: ''
-	    }), _defineProperty$1(this, "handleChange", field => event => {
+	    });
+
+	    _defineProperty$1(this, "handleChange", field => event => {
 	      this.setState({
 	        [field]: event.target.value
 	      });
-	    }), _defineProperty$1(this, "handleSubmit", () => {
+	    });
+
+	    _defineProperty$1(this, "handleSubmit", () => {
 	      const {
 	        title,
 	        comment
@@ -46936,7 +46551,7 @@
 	        title: '',
 	        comment: ''
 	      });
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -47004,14 +46619,14 @@
 
 	class SupportDialog extends react_2 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "handleTabClick", tab => () => {
+	    _defineProperty$1(this, "handleTabClick", tab => () => {
 	      const {
 	        setSupportDialogTab: setSupportDialogTab$$1
 	      } = this.props;
 	      setSupportDialogTab$$1(tab);
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -47110,10 +46725,9 @@
 	    }, "Open Pool Stats"), "."), react.createElement("code", {
 	      className: classes.logs
 	    }, logs.length === 0 && 'No logs available', logs.map(({
-	      timestamp,
 	      line
-	    }) => react.createElement("div", {
-	      key: timestamp
+	    }, index) => react.createElement("div", {
+	      key: index
 	    }, line))));
 	  }
 
@@ -47157,29 +46771,33 @@
 
 	class CryptoDialog extends react_2 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "handleAddressChange", event => {
+	    _defineProperty$1(this, "handleAddressChange", event => {
 	      const {
 	        setMiningAddress: setMiningAddress$$1,
 	        minerIdentifier
 	      } = this.props;
 	      const address = event.target.value;
 	      setMiningAddress$$1(minerIdentifier, address);
-	    }), _defineProperty$1(this, "handleMiningPoolChange", event => {
+	    });
+
+	    _defineProperty$1(this, "handleMiningPoolChange", event => {
 	      const {
 	        setMiningPool: setMiningPool$$1,
 	        minerIdentifier
 	      } = this.props;
 	      const miningPoolIdentifier = event.target.value;
 	      setMiningPool$$1(minerIdentifier, miningPoolIdentifier);
-	    }), _defineProperty$1(this, "handleCurrencyChange", event => {
+	    });
+
+	    _defineProperty$1(this, "handleCurrencyChange", event => {
 	      const {
 	        selectMiner: selectMiner$$1
 	      } = this.props;
 	      const minerIdentifier = event.target.value;
 	      selectMiner$$1(minerIdentifier);
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -47597,7 +47215,7 @@
 	var objectProto$9 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$10 = objectProto$9.hasOwnProperty;
+	var hasOwnProperty$a = objectProto$9.hasOwnProperty;
 
 	/** Built-in value references. */
 	var propertyIsEnumerable = objectProto$9.propertyIsEnumerable;
@@ -47621,7 +47239,7 @@
 	 * // => false
 	 */
 	var isArguments = _baseIsArguments(function() { return arguments; }()) ? _baseIsArguments : function(value) {
-	  return isObjectLike_1(value) && hasOwnProperty$10.call(value, 'callee') &&
+	  return isObjectLike_1(value) && hasOwnProperty$a.call(value, 'callee') &&
 	    !propertyIsEnumerable.call(value, 'callee');
 	};
 
@@ -47848,10 +47466,10 @@
 	var isTypedArray_1 = isTypedArray;
 
 	/** Used for built-in method references. */
-	var objectProto$10 = Object.prototype;
+	var objectProto$a = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$11 = objectProto$10.hasOwnProperty;
+	var hasOwnProperty$b = objectProto$a.hasOwnProperty;
 
 	/**
 	 * Creates an array of the enumerable property names of the array-like `value`.
@@ -47871,7 +47489,7 @@
 	      length = result.length;
 
 	  for (var key in value) {
-	    if ((inherited || hasOwnProperty$11.call(value, key)) &&
+	    if ((inherited || hasOwnProperty$b.call(value, key)) &&
 	        !(skipIndexes && (
 	           // Safari 9 has enumerable `arguments.length` in strict mode.
 	           key == 'length' ||
@@ -47891,7 +47509,7 @@
 	var _arrayLikeKeys = arrayLikeKeys;
 
 	/** Used for built-in method references. */
-	var objectProto$11 = Object.prototype;
+	var objectProto$b = Object.prototype;
 
 	/**
 	 * Checks if `value` is likely a prototype object.
@@ -47902,7 +47520,7 @@
 	 */
 	function isPrototype(value) {
 	  var Ctor = value && value.constructor,
-	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto$11;
+	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto$b;
 
 	  return value === proto;
 	}
@@ -47931,10 +47549,10 @@
 	var _nativeKeys = nativeKeys;
 
 	/** Used for built-in method references. */
-	var objectProto$12 = Object.prototype;
+	var objectProto$c = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$12 = objectProto$12.hasOwnProperty;
+	var hasOwnProperty$c = objectProto$c.hasOwnProperty;
 
 	/**
 	 * The base implementation of `_.keys` which doesn't treat sparse arrays as dense.
@@ -47949,7 +47567,7 @@
 	  }
 	  var result = [];
 	  for (var key in Object(object)) {
-	    if (hasOwnProperty$12.call(object, key) && key != 'constructor') {
+	    if (hasOwnProperty$c.call(object, key) && key != 'constructor') {
 	      result.push(key);
 	    }
 	  }
@@ -48060,10 +47678,10 @@
 	var _nativeKeysIn = nativeKeysIn;
 
 	/** Used for built-in method references. */
-	var objectProto$13 = Object.prototype;
+	var objectProto$d = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$13 = objectProto$13.hasOwnProperty;
+	var hasOwnProperty$d = objectProto$d.hasOwnProperty;
 
 	/**
 	 * The base implementation of `_.keysIn` which doesn't treat sparse arrays as dense.
@@ -48080,7 +47698,7 @@
 	      result = [];
 
 	  for (var key in object) {
-	    if (!(key == 'constructor' && (isProto || !hasOwnProperty$13.call(object, key)))) {
+	    if (!(key == 'constructor' && (isProto || !hasOwnProperty$d.call(object, key)))) {
 	      result.push(key);
 	    }
 	  }
@@ -48241,10 +47859,10 @@
 	var stubArray_1 = stubArray;
 
 	/** Used for built-in method references. */
-	var objectProto$14 = Object.prototype;
+	var objectProto$e = Object.prototype;
 
 	/** Built-in value references. */
-	var propertyIsEnumerable$1 = objectProto$14.propertyIsEnumerable;
+	var propertyIsEnumerable$1 = objectProto$e.propertyIsEnumerable;
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeGetSymbols = Object.getOwnPropertySymbols;
@@ -48460,10 +48078,10 @@
 	var _getTag = getTag;
 
 	/** Used for built-in method references. */
-	var objectProto$15 = Object.prototype;
+	var objectProto$f = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$14 = objectProto$15.hasOwnProperty;
+	var hasOwnProperty$e = objectProto$f.hasOwnProperty;
 
 	/**
 	 * Initializes an array clone.
@@ -48477,7 +48095,7 @@
 	      result = new array.constructor(length);
 
 	  // Add properties assigned by `RegExp#exec`.
-	  if (length && typeof array[0] == 'string' && hasOwnProperty$14.call(array, 'index')) {
+	  if (length && typeof array[0] == 'string' && hasOwnProperty$e.call(array, 'index')) {
 	    result.index = array.index;
 	    result.input = array.input;
 	  }
@@ -49005,13 +48623,13 @@
 
 	/** Used for built-in method references. */
 	var funcProto$3 = Function.prototype,
-	    objectProto$16 = Object.prototype;
+	    objectProto$g = Object.prototype;
 
 	/** Used to resolve the decompiled source of functions. */
 	var funcToString$3 = funcProto$3.toString;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$15 = objectProto$16.hasOwnProperty;
+	var hasOwnProperty$f = objectProto$g.hasOwnProperty;
 
 	/** Used to infer the `Object` constructor. */
 	var objectCtorString$1 = funcToString$3.call(Object);
@@ -49052,7 +48670,7 @@
 	  if (proto === null) {
 	    return true;
 	  }
-	  var Ctor = hasOwnProperty$15.call(proto, 'constructor') && proto.constructor;
+	  var Ctor = hasOwnProperty$f.call(proto, 'constructor') && proto.constructor;
 	  return typeof Ctor == 'function' && Ctor instanceof Ctor &&
 	    funcToString$3.call(Ctor) == objectCtorString$1;
 	}
@@ -49649,15 +49267,16 @@
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
-	  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications']
+	  version: 1,
+	  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications'],
+	  migrate: createMigrate(migrations, {
+	    debug: true
+	  })
 	};
 	const persistedReducer = persistReducer(persistConfig, reducers);
 	let createStoreWithMiddleware;
 
-	if (RAVEN_URL) {
-	  Raven.config(RAVEN_URL).install();
-	  createStoreWithMiddleware = applyMiddleware(thunk, built(Raven))(createStore);
-	} else {
+	{
 	  createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
 	}
 
@@ -49915,50 +49534,64 @@
 	  load: {
 	    fontSize: '1.5rem'
 	  },
-	  decrease: {
+	  remove: {
 	    position: 'absolute',
 	    bottom: 0,
-	    left: 0
+	    left: 0,
+	    height: 24,
+	    width: 24
 	  },
-	  increase: {
+	  add: {
 	    position: 'absolute',
 	    bottom: 0,
-	    right: 0
-	  },
-	  iconButton: {
+	    right: 0,
 	    height: 24,
 	    width: 24
 	  }
 	};
 
-	class CpusCard extends react_1 {
+	class CpusCard extends react_2 {
+	  constructor(...args) {
+	    super(...args);
+
+	    _defineProperty$1(this, "handleAdd", () => {
+	      const {
+	        addCore: addCore$$1
+	      } = this.props;
+	      addCore$$1();
+	    });
+
+	    _defineProperty$1(this, "handleRemove", () => {
+	      const {
+	        removeCore: removeCore$$1
+	      } = this.props;
+	      removeCore$$1();
+	    });
+	  }
+
 	  render() {
 	    const {
 	      classes,
-	      cpus,
-	      maxCPUs
+	      cores,
+	      maxCores
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "The number of CPUs you use for mining"
+	      helperText: "The number of cores you use for mining. This setting has no effect on ethereum mining."
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, cpus, "/", maxCPUs), react.createElement(Typography$2, {
+	    }, cores, "/", maxCores), react.createElement(Typography$2, {
 	      variant: "caption"
-	    }, "CPU"), react.createElement(InfoButton, {
-	      className: classes.decrease,
-	      iconProps: {
-	        className: classes.iconButton
-	      },
-	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, "CPU"), react.createElement(IconButton$2, {
+	      className: classes.remove,
+	      disabled: cores === 0,
+	      onClick: this.handleRemove
 	    }, react.createElement(RemoveIcon, {
 	      className: classes.helpIcon
-	    })), react.createElement(InfoButton, {
-	      className: classes.increase,
-	      iconProps: {
-	        className: classes.iconButton
-	      },
-	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    })), react.createElement(IconButton$2, {
+	      className: classes.add,
+	      disabled: cores + 1 > maxCores,
+	      onClick: this.handleAdd
 	    }, react.createElement(AddIcon, {
 	      className: classes.helpIcon
 	    })));
@@ -49968,24 +49601,39 @@
 
 	CpusCard.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  cpus: propTypes.number.isRequired,
-	  maxCPUs: propTypes.number.isRequired
+	  cores: propTypes.number.isRequired,
+	  maxCores: propTypes.number.isRequired,
+	  addCore: propTypes.func.isRequired,
+	  removeCore: propTypes.func.isRequired
 	};
 
 	const mapStateToProps$6 = ({
 	  hardwareInfo: {
 	    Cpus
+	  },
+	  mining: {
+	    selectedMinerIdentifier,
+	    miners
 	  }
 	}) => {
+	  const maxCores = getMaxCores(Cpus);
+	  const cores = miners[selectedMinerIdentifier].cores;
 	  return {
-	    cpus: Cpus.length,
-	    maxCPUs: Cpus.length
+	    cores,
+	    maxCores: maxCores
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6))(CpusCard);
+	const mapDispatchToProps$4 = dispatch => {
+	  return {
+	    addCore: bindActionCreators(addCore, dispatch),
+	    removeCore: bindActionCreators(removeCore, dispatch)
+	  };
+	};
 
-	const styles$10 = {
+	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6, mapDispatchToProps$4))(CpusCard);
+
+	const styles$a = {
 	  load: {
 	    fontSize: '1.5rem'
 	  },
@@ -50059,9 +49707,9 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$10), connect(mapStateToProps$7))(GpusCard);
+	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7))(GpusCard);
 
-	const styles$11 = {
+	const styles$b = {
 	  load: {
 	    fontSize: '1.5rem'
 	  }
@@ -50106,9 +49754,9 @@
 	  };
 	};
 
-	const enhance$10 = compose$1(styles_3(styles$11), connect(mapStateToProps$8))(HashRateCard);
+	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8))(HashRateCard);
 
-	const styles$12 = {
+	const styles$c = {
 	  container: {
 	    margin: 4,
 	    display: 'inline-block'
@@ -50147,9 +49795,9 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$11 = styles_3(styles$12)(ActionButton);
+	const enhance$b = styles_3(styles$c)(ActionButton);
 
-	const styles$13 = {
+	const styles$d = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -50162,7 +49810,7 @@
 	      classes,
 	      openAdvancedDialog: openAdvancedDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$11, {
+	    return react.createElement(enhance$b, {
 	      onClick: openAdvancedDialog$$1,
 	      title: "Advanced"
 	    }, react.createElement(AssessmentIcon, {
@@ -50177,15 +49825,15 @@
 	  openAdvancedDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$4 = dispatch => {
+	const mapDispatchToProps$5 = dispatch => {
 	  return {
 	    openAdvancedDialog: bindActionCreators(openAdvancedDialog, dispatch)
 	  };
 	};
 
-	const enhance$12 = compose$1(styles_3(styles$13), connect(null, mapDispatchToProps$4))(AdvancedButton);
+	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$5))(AdvancedButton);
 
-	const styles$14 = {
+	const styles$e = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -50199,7 +49847,7 @@
 	      openCryptoDialog: openCryptoDialog$$1,
 	      miner
 	    } = this.props;
-	    return react.createElement(enhance$11, {
+	    return react.createElement(enhance$b, {
 	      onClick: openCryptoDialog$$1,
 	      title: "Wallet"
 	    }, react.createElement(Avatar$2, {
@@ -50226,15 +49874,15 @@
 	  };
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
 	  };
 	};
 
-	const enhance$13 = compose$1(styles_3(styles$14), connect(mapStateToProps$9, mapDispatchToProps$5))(CryptoButton);
+	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$6))(CryptoButton);
 
-	const styles$15 = {
+	const styles$f = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -50254,9 +49902,9 @@
 
 	class MiningButton extends react_2 {
 	  constructor(...args) {
-	    var _temp;
+	    super(...args);
 
-	    return _temp = super(...args), _defineProperty$1(this, "handleMiningClick", () => {
+	    _defineProperty$1(this, "handleMiningClick", () => {
 	      const {
 	        isMining,
 	        startMining: startMining$$1,
@@ -50264,7 +49912,7 @@
 	        minerIdentifier
 	      } = this.props;
 	      if (isMining) stopMining$$1(minerIdentifier);else startMining$$1(minerIdentifier);
-	    }), _temp;
+	    });
 	  }
 
 	  render() {
@@ -50274,7 +49922,7 @@
 	      isMining
 	    } = this.props;
 	    const animateLogo = isMining && !hashRate;
-	    return react.createElement(enhance$11, {
+	    return react.createElement(enhance$b, {
 	      buttonClassName: animateLogo ? classes.flip : '',
 	      onClick: this.handleMiningClick,
 	      title: isMining ? 'Stop' : 'Start'
@@ -50297,7 +49945,7 @@
 	  minerIdentifier: propTypes.string.isRequired
 	};
 
-	const mapStateToProps$10 = ({
+	const mapStateToProps$a = ({
 	  mining: {
 	    selectedMinerIdentifier
 	  },
@@ -50310,16 +49958,16 @@
 	  };
 	};
 
-	const mapDispatchToProps$6 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$14 = compose$1(styles_3(styles$15), connect(mapStateToProps$10, mapDispatchToProps$6))(MiningButton);
+	const enhance$e = compose$1(styles_3(styles$f), connect(mapStateToProps$a, mapDispatchToProps$7))(MiningButton);
 
-	const styles$16 = {
+	const styles$g = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -50332,7 +49980,7 @@
 	      classes,
 	      openSettingsDialog: openSettingsDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$11, {
+	    return react.createElement(enhance$b, {
 	      onClick: openSettingsDialog$$1,
 	      title: "Settings"
 	    }, react.createElement(SettingsIcon, {
@@ -50347,15 +49995,15 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$7 = dispatch => {
+	const mapDispatchToProps$8 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$15 = compose$1(styles_3(styles$16), connect(null, mapDispatchToProps$7))(SettingsButton);
+	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$8))(SettingsButton);
 
-	const styles$17 = {
+	const styles$h = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -50368,7 +50016,7 @@
 	      classes,
 	      openSupportDialog: openSupportDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$11, {
+	    return react.createElement(enhance$b, {
 	      onClick: openSupportDialog$$1,
 	      title: "Support"
 	    }, react.createElement(HelpIcon, {
@@ -50383,15 +50031,15 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$8 = dispatch => {
+	const mapDispatchToProps$9 = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$16 = compose$1(styles_3(styles$17), connect(null, mapDispatchToProps$8))(SupportButton);
+	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$9))(SupportButton);
 
-	const styles$18 = {
+	const styles$i = {
 	  center: {
 	    textAlign: 'center'
 	  }
@@ -50404,7 +50052,7 @@
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: classes.center
-	    }, react.createElement(enhance$13, null), react.createElement(enhance$12, null), react.createElement(enhance$14, null), react.createElement(enhance$15, null), react.createElement(enhance$16, null));
+	    }, react.createElement(enhance$d, null), react.createElement(enhance$c, null), react.createElement(enhance$e, null), react.createElement(enhance$f, null), react.createElement(enhance$g, null));
 	  }
 
 	}
@@ -50412,9 +50060,9 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$17 = styles_3(styles$18)(Actions);
+	const enhance$h = styles_3(styles$i)(Actions);
 
-	const styles$19 = {
+	const styles$j = {
 	  container: {
 	    margin: 16
 	  }
@@ -50446,14 +50094,14 @@
 	  pastNotifications: propTypes.array
 	};
 
-	const mapStateToProps$11 = ({
+	const mapStateToProps$b = ({
 	  notifications
 	}) => {
 	  return { ...notifications
 	  };
 	};
 
-	const enhance$18 = compose$1(styles_3(styles$19), connect(mapStateToProps$11))(Notifications);
+	const enhance$i = compose$1(styles_3(styles$j), connect(mapStateToProps$b))(Notifications);
 
 	class MiningPage extends react_2 {
 	  render() {
@@ -50463,7 +50111,7 @@
 	    }, react.createElement(Grid$2, {
 	      item: true,
 	      xs: 12
-	    }, react.createElement(enhance$17, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$h, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
 	    }, react.createElement(enhance$8, null)), react.createElement(Grid$2, {
@@ -50472,10 +50120,10 @@
 	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 3
-	    }, react.createElement(enhance$10, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$a, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 5
-	    }, react.createElement(enhance$7, null))), react.createElement(enhance$18, null), react.createElement(Dialogs, null));
+	    }, react.createElement(enhance$7, null))), react.createElement(enhance$i, null), react.createElement(Dialogs, null));
 	  }
 
 	}
@@ -51596,7 +51244,7 @@
 	var ReactGA = unwrapExports(reactGa);
 
 	const initialize = () => {
-	  if (!TRACKING_ID) return;
+	  return;
 	  ReactGA.initialize(TRACKING_ID, {
 	    debug: true
 	  }); // Remove failing protocol check. @see: http://stackoverflow.com/a/22152353/1958200

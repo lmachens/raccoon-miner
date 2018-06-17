@@ -20,3 +20,9 @@ export const addHardwareInfoListener = listener => {
 export const removeHardwareInfoListener = listener => {
   overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
 };
+
+export const getMaxCores = cpus => {
+  return cpus.reduce((pre, cur) => {
+    return pre + cur.NumCores;
+  }, 0);
+};

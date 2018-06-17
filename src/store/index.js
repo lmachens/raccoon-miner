@@ -1,4 +1,5 @@
 import { applyMiddleware, createStore } from 'redux';
+import { createMigrate, persistReducer, persistStore } from 'redux-persist';
 import {
   fetchOverwolfUser,
   fetchVersion,
@@ -6,10 +7,10 @@ import {
   trackHardwareInfo,
   trackWorkerStats
 } from './actions';
-import { persistReducer, persistStore } from 'redux-persist';
 
 import { RAVEN_URL } from '../api/environment';
 import createRavenMiddleware from 'raven-for-redux';
+import { migrations } from './migrations';
 import reducers from './reducers';
 import storage from 'redux-persist/lib/storage';
 import thunk from 'redux-thunk';
@@ -17,7 +18,9 @@ import thunk from 'redux-thunk';
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications']
+  version: 1,
+  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications'],
+  migrate: createMigrate(migrations, { debug: true })
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);

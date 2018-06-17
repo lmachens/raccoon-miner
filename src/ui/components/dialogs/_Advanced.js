@@ -27,7 +27,7 @@ class AdvancedDialog extends PureComponent {
         </DialogContentText>
         <code className={classes.logs}>
           {logs.length === 0 && 'No logs available'}
-          {logs.map(({ timestamp, line }) => <div key={timestamp}>{line}</div>)}
+          {logs.map(({ line }, index) => <div key={index}>{line}</div>)}
         </code>
       </FullScreenDialog>
     );

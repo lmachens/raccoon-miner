@@ -5,6 +5,7 @@ import {
   RECEIVE_WORKER_STATS,
   REQUEST_MINING_METRICS,
   SELECT_MINER,
+  SET_CORES,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
   SET_MINING_POOL,
@@ -29,7 +30,8 @@ const defaultMinerProps = {
   workerStats: {
     unpaidBalance: 0,
     payoutThreshold: 1
-  }
+  },
+  cores: 0
 };
 
 export const mining = (
@@ -76,6 +78,9 @@ export const mining = (
       break;
     case RECEIVE_WORKER_STATS:
       set(newState, `miners.${data.minerIdentifier}.workerStats`, data.workerStats);
+      break;
+    case SET_CORES:
+      set(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
       break;
     default:
       return state;

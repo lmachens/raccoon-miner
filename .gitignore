@@ -6,3 +6,4 @@ tools/*.zip
 **/monero/cpu.txt
 **/monero/nvidia.txt
 simple-io-plugin64.dll
+process_manager64.dll

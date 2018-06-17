@@ -1,1 +1,14 @@
-<h3>Raccoon Miner</h3>
+<h3>Raccoon Miner (Beta)</h3>
+
+With Raccoon Miner you can easily mine crypto with your PC when you are not playing games.<br>
+It combines different miners and make it easy to use mining pools.
+
+<br>
+<br>
+
+Features:<br>
+• Ethereum and Monero (more currencies coming soon)<br>
+• Configurable mining pools<br>
+• Configurable CPUs and GPUs<br>
+• Automatic suspend mode when in game<br>
+• Overview of Hash Rate and pool balance<br>

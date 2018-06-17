@@ -1120,6 +1120,7 @@
 	const SUSPEND_MINING = 'SUSPEND_MINING';
 	const CONTINUE_MINING = 'CONTINUE_MINING';
 	const SET_CORES = 'SET_CORES';
+	const SET_GPUS = 'SET_GPUS';
 
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
@@ -1262,8 +1263,9 @@
 	  args: ({
 	    address,
 	    servers,
-	    cores
-	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon --amd amd.txt --cpu cpus/cpu${cores}.txt --nvidia nvidia.txt --config config.txt`,
+	    cores,
+	    gpus
+	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  }),
@@ -2512,17 +2514,6 @@
 	  [SUPPORT_XMR]: supportXMR
 	};
 
-	const TEST_MODE = {
-	  _id: 'testMode',
-	  message: 'TEST MODE! Please configure your wallet.',
-	  alert: true
-	};
-	const GAME_IS_RUNNING = title => ({
-	  _id: 'gameIsRunning',
-	  message: `${title} is running. Mining is suspended!`,
-	  alert: false
-	});
-
 	const interval = 200;
 
 	const requestHardwareInfo = () => {
@@ -2551,6 +2542,20 @@
 	    return pre + cur.NumCores;
 	  }, 0);
 	};
+	const getMaxGPUs = gpus => {
+	  return gpus.length;
+	};
+
+	const TEST_MODE = {
+	  _id: 'testMode',
+	  message: 'TEST MODE! Please configure your wallet.',
+	  alert: true
+	};
+	const GAME_IS_RUNNING = title => ({
+	  _id: 'gameIsRunning',
+	  message: `${title} is running. Mining is suspended!`,
+	  alert: false
+	});
 
 	const callOverwolfWithPromise = (method, ...params) => {
 	  return new Promise((resolve, reject) => {
@@ -2790,7 +2795,8 @@
 	    const {
 	      address = 'default',
 	      miningPoolIdentifier,
-	      cores
+	      cores,
+	      gpus
 	    } = miners$$1[selectedMinerIdentifier];
 	    if (handleDataByIdenfier[minerIdentifier]) return;
 	    const processManager = await getProcessManagerPlugin();
@@ -2853,7 +2859,8 @@
 	    const minerArgs = args({
 	      address,
 	      servers,
-	      cores
+	      cores,
+	      gpus
 	    });
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data
@@ -3008,6 +3015,70 @@
 	    }
 	  };
 	};
+	const addGPU = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      },
+	      hardwareInfo: {
+	        Gpus: {
+	          Gpus
+	        }
+	      }
+	    } = getState();
+	    const {
+	      gpus
+	    } = miners$$1[selectedMinerIdentifier];
+	    const maxGPUs = getMaxGPUs(Gpus);
+	    if (gpus + 1 > maxGPUs) return;
+	    dispatch({
+	      type: SET_GPUS,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        gpus: gpus + 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+	const removeGPU = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      gpus
+	    } = miners$$1[selectedMinerIdentifier];
+	    if (gpus - 1 < 0) return;
+	    dispatch({
+	      type: SET_GPUS,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        gpus: gpus - 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
 
 	const setNotification = notification => {
 	  return dispatch => {
@@ -3140,8 +3211,10 @@
 	    } = state;
 	    const newMining = { ...mining
 	    };
-	    newMining.miners[ETHEREUM_MINER].cores = 0;
+	    newMining.miners[ETHEREUM_MINER].cores = 1;
 	    newMining.miners[MONERO_MINER].cores = 1;
+	    newMining.miners[ETHEREUM_MINER].gpus = 1;
+	    newMining.miners[MONERO_MINER].gpus = 1;
 	    return { ...state,
 	      mining: newMining
 	    };
@@ -3321,7 +3394,8 @@
 	    unpaidBalance: 0,
 	    payoutThreshold: 1
 	  },
-	  cores: 0
+	  cores: 1,
+	  gpus: 1
 	};
 	const mining = (state = {
 	  selectedMinerIdentifier: MONERO_MINER,
@@ -3372,6 +3446,10 @@
 
 	    case SET_CORES:
 	      set_1(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
+	      break;
+
+	    case SET_GPUS:
+	      set_1(newState, `miners.${data.minerIdentifier}.gpus`, data.gpus);
 	      break;
 
 	    default:
@@ -49620,7 +49698,7 @@
 	  const cores = miners[selectedMinerIdentifier].cores;
 	  return {
 	    cores,
-	    maxCores: maxCores
+	    maxCores
 	  };
 	};
 
@@ -49637,23 +49715,41 @@
 	  load: {
 	    fontSize: '1.5rem'
 	  },
-	  decrease: {
+	  remove: {
 	    position: 'absolute',
 	    bottom: 0,
-	    left: 0
+	    left: 0,
+	    height: 24,
+	    width: 24
 	  },
-	  increase: {
+	  add: {
 	    position: 'absolute',
 	    bottom: 0,
-	    right: 0
-	  },
-	  iconButton: {
+	    right: 0,
 	    height: 24,
 	    width: 24
 	  }
 	};
 
-	class GpusCard extends react_1 {
+	class GpusCard extends react_2 {
+	  constructor(...args) {
+	    super(...args);
+
+	    _defineProperty$1(this, "handleAdd", () => {
+	      const {
+	        addGPU: addGPU$$1
+	      } = this.props;
+	      addGPU$$1();
+	    });
+
+	    _defineProperty$1(this, "handleRemove", () => {
+	      const {
+	        removeGPU: removeGPU$$1
+	      } = this.props;
+	      removeGPU$$1();
+	    });
+	  }
+
 	  render() {
 	    const {
 	      classes,
@@ -49661,26 +49757,22 @@
 	      maxGPUs
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "The number of GPUs you use for mining."
+	      helperText: "The number of GPUs you use for mining. This setting has no effect on ethereum mining."
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
 	    }, gpus, "/", maxGPUs), react.createElement(Typography$2, {
 	      variant: "caption"
-	    }, "GPU"), react.createElement(InfoButton, {
-	      className: classes.decrease,
-	      iconProps: {
-	        className: classes.iconButton
-	      },
-	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    }, "GPU"), react.createElement(IconButton$2, {
+	      className: classes.remove,
+	      disabled: gpus === 0,
+	      onClick: this.handleRemove
 	    }, react.createElement(RemoveIcon, {
 	      className: classes.helpIcon
-	    })), react.createElement(InfoButton, {
-	      className: classes.increase,
-	      iconProps: {
-	        className: classes.iconButton
-	      },
-	      popover: react.createElement(Typography$2, null, "Not implemented yet")
+	    })), react.createElement(IconButton$2, {
+	      className: classes.add,
+	      disabled: gpus + 1 > maxGPUs,
+	      onClick: this.handleAdd
 	    }, react.createElement(AddIcon, {
 	      className: classes.helpIcon
 	    })));
@@ -49691,7 +49783,9 @@
 	GpusCard.propTypes = {
 	  classes: propTypes.object.isRequired,
 	  gpus: propTypes.number.isRequired,
-	  maxGPUs: propTypes.number.isRequired
+	  maxGPUs: propTypes.number.isRequired,
+	  addGPU: propTypes.func.isRequired,
+	  removeGPU: propTypes.func.isRequired
 	};
 
 	const mapStateToProps$7 = ({
@@ -49699,15 +49793,28 @@
 	    Gpus: {
 	      Gpus
 	    }
+	  },
+	  mining: {
+	    selectedMinerIdentifier,
+	    miners
 	  }
 	}) => {
+	  const maxGPUs = getMaxGPUs(Gpus);
+	  const gpus = miners[selectedMinerIdentifier].gpus;
 	  return {
-	    gpus: Gpus.length,
-	    maxGPUs: Gpus.length
+	    gpus,
+	    maxGPUs
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7))(GpusCard);
+	const mapDispatchToProps$5 = dispatch => {
+	  return {
+	    addGPU: bindActionCreators(addGPU, dispatch),
+	    removeGPU: bindActionCreators(removeGPU, dispatch)
+	  };
+	};
+
+	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7, mapDispatchToProps$5))(GpusCard);
 
 	const styles$b = {
 	  load: {
@@ -49825,13 +49932,13 @@
 	  openAdvancedDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    openAdvancedDialog: bindActionCreators(openAdvancedDialog, dispatch)
 	  };
 	};
 
-	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$5))(AdvancedButton);
+	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$6))(AdvancedButton);
 
 	const styles$e = {
 	  avatar: {
@@ -49874,13 +49981,13 @@
 	  };
 	};
 
-	const mapDispatchToProps$6 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
 	  };
 	};
 
-	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$6))(CryptoButton);
+	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$7))(CryptoButton);
 
 	const styles$f = {
 	  avatar: {
@@ -49958,14 +50065,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$7 = dispatch => {
+	const mapDispatchToProps$8 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$e = compose$1(styles_3(styles$f), connect(mapStateToProps$a, mapDispatchToProps$7))(MiningButton);
+	const enhance$e = compose$1(styles_3(styles$f), connect(mapStateToProps$a, mapDispatchToProps$8))(MiningButton);
 
 	const styles$g = {
 	  icon: {
@@ -49995,13 +50102,13 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$8 = dispatch => {
+	const mapDispatchToProps$9 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$8))(SettingsButton);
+	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SettingsButton);
 
 	const styles$h = {
 	  icon: {
@@ -50031,13 +50138,13 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$9 = dispatch => {
+	const mapDispatchToProps$a = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$9))(SupportButton);
+	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(SupportButton);
 
 	const styles$i = {
 	  center: {

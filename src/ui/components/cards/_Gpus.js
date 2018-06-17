@@ -1,56 +1,61 @@
 import { AddIcon, RemoveIcon } from '../icons';
-import { InfoButton, StatusCard, Typography } from '../generic';
-import React, { Component } from 'react';
+import { IconButton, StatusCard, Typography } from '../generic';
+import React, { PureComponent } from 'react';
+import { addGPU, removeGPU } from '../../../store/actions';
 
 import PropTypes from 'prop-types';
+import { bindActionCreators } from 'redux';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
+import { getMaxGPUs } from '../../../api/benchmarking';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
   load: {
     fontSize: '1.5rem'
   },
-  decrease: {
+  remove: {
     position: 'absolute',
     bottom: 0,
-    left: 0
+    left: 0,
+    height: 24,
+    width: 24
   },
-  increase: {
+  add: {
     position: 'absolute',
     bottom: 0,
-    right: 0
-  },
-  iconButton: {
+    right: 0,
     height: 24,
     width: 24
   }
 };
 
-class GpusCard extends Component {
+class GpusCard extends PureComponent {
+  handleAdd = () => {
+    const { addGPU } = this.props;
+    addGPU();
+  };
+
+  handleRemove = () => {
+    const { removeGPU } = this.props;
+    removeGPU();
+  };
+
   render() {
     const { classes, gpus, maxGPUs } = this.props;
 
     return (
-      <StatusCard helperText="The number of GPUs you use for mining.">
+      <StatusCard helperText="The number of GPUs you use for mining. This setting has no effect on ethereum mining.">
         <Typography className={classes.load} variant="display1">
           {gpus}/{maxGPUs}
         </Typography>
         <Typography variant="caption">GPU</Typography>
-        <InfoButton
-          className={classes.decrease}
-          iconProps={{ className: classes.iconButton }}
-          popover={<Typography>Not implemented yet</Typography>}
-        >
+        <IconButton className={classes.remove} disabled={gpus === 0} onClick={this.handleRemove}>
           <RemoveIcon className={classes.helpIcon} />
-        </InfoButton>
-        <InfoButton
-          className={classes.increase}
-          iconProps={{ className: classes.iconButton }}
-          popover={<Typography>Not implemented yet</Typography>}
-        >
+        </IconButton>
+        <IconButton className={classes.add} disabled={gpus + 1 > maxGPUs} onClick={this.handleAdd}>
           <AddIcon className={classes.helpIcon} />
-        </InfoButton>
+        </IconButton>
       </StatusCard>
     );
   }
@@ -59,22 +64,38 @@ class GpusCard extends Component {
 GpusCard.propTypes = {
   classes: PropTypes.object.isRequired,
   gpus: PropTypes.number.isRequired,
-  maxGPUs: PropTypes.number.isRequired
+  maxGPUs: PropTypes.number.isRequired,
+  addGPU: PropTypes.func.isRequired,
+  removeGPU: PropTypes.func.isRequired
 };
 
 const mapStateToProps = ({
   hardwareInfo: {
     Gpus: { Gpus }
-  }
+  },
+  mining: { selectedMinerIdentifier, miners }
 }) => {
+  const maxGPUs = getMaxGPUs(Gpus);
+  const gpus = miners[selectedMinerIdentifier].gpus;
+
   return {
-    gpus: Gpus.length,
-    maxGPUs: Gpus.length
+    gpus,
+    maxGPUs
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    addGPU: bindActionCreators(addGPU, dispatch),
+    removeGPU: bindActionCreators(removeGPU, dispatch)
   };
 };
 
 const enhance = compose(
   withStyles(styles),
-  connect(mapStateToProps)
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )
 )(GpusCard);
 export { enhance as GpusCard };

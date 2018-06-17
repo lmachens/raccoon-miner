@@ -26,3 +26,7 @@ export const getMaxCores = cpus => {
     return pre + cur.NumCores;
   }, 0);
 };
+
+export const getMaxGPUs = gpus => {
+  return gpus.length;
+};

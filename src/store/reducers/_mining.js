@@ -6,6 +6,7 @@ import {
   REQUEST_MINING_METRICS,
   SELECT_MINER,
   SET_CORES,
+  SET_GPUS,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
   SET_MINING_POOL,
@@ -31,7 +32,8 @@ const defaultMinerProps = {
     unpaidBalance: 0,
     payoutThreshold: 1
   },
-  cores: 0
+  cores: 1,
+  gpus: 1
 };
 
 export const mining = (
@@ -81,6 +83,9 @@ export const mining = (
       break;
     case SET_CORES:
       set(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
+      break;
+    case SET_GPUS:
+      set(newState, `miners.${data.minerIdentifier}.gpus`, data.gpus);
       break;
     default:
       return state;

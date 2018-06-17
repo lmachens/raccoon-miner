@@ -18,10 +18,10 @@ export const monero = {
     [CONNECTING]: /not-connected/
   }),
   path: 'monero/xmr-stak.exe',
-  args: ({ address, servers, cores }) =>
+  args: ({ address, servers, cores, gpus }) =>
     `--noUAC -i 0 -o ${
       servers[0]
-    } -u ${address} --currency monero7 -p raccoon --amd amd.txt --cpu cpus/cpu${cores}.txt --nvidia nvidia.txt --config config.txt`,
+    } -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true }),
   links: {
     wallet: 'https://getmonero.org/'

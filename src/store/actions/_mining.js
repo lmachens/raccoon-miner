@@ -5,6 +5,7 @@ import {
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
   SET_CORES,
+  SET_GPUS,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
   SET_MINING_POOL,
@@ -24,9 +25,9 @@ import {
   monero
 } from '../../api/mining';
 import { ETHERMINE, SUPPORT_XMR, miningPoolsByIdentifier } from '../../api/pools';
+import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
 
 import { TEST_MODE } from '../../api/notifications';
-import { getMaxCores } from '../../api/benchmarking';
 import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
 
@@ -163,7 +164,9 @@ export const startMining = minerIdentifier => {
     const {
       mining: { miners, selectedMinerIdentifier }
     } = getState();
-    const { address = 'default', miningPoolIdentifier, cores } = miners[selectedMinerIdentifier];
+    const { address = 'default', miningPoolIdentifier, cores, gpus } = miners[
+      selectedMinerIdentifier
+    ];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
@@ -205,7 +208,7 @@ export const startMining = minerIdentifier => {
       dispatch(appendMiningLog(line));
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, servers, cores });
+    const minerArgs = args({ address, servers, cores, gpus });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({
@@ -314,6 +317,53 @@ export const removeCore = () => {
     dispatch({
       type: SET_CORES,
       data: { minerIdentifier: selectedMinerIdentifier, cores: cores - 1 }
+    });
+
+    const { isMining } = activeMiners[selectedMinerIdentifier];
+    if (isMining) {
+      dispatch(stopMining(selectedMinerIdentifier));
+    }
+  };
+};
+
+export const addGPU = () => {
+  return (dispatch, getState) => {
+    const {
+      activeMiners,
+      mining: { miners, selectedMinerIdentifier },
+      hardwareInfo: {
+        Gpus: { Gpus }
+      }
+    } = getState();
+    const { gpus } = miners[selectedMinerIdentifier];
+
+    const maxGPUs = getMaxGPUs(Gpus);
+
+    if (gpus + 1 > maxGPUs) return;
+    dispatch({
+      type: SET_GPUS,
+      data: { minerIdentifier: selectedMinerIdentifier, gpus: gpus + 1 }
+    });
+
+    const { isMining } = activeMiners[selectedMinerIdentifier];
+    if (isMining) {
+      dispatch(stopMining(selectedMinerIdentifier));
+    }
+  };
+};
+
+export const removeGPU = () => {
+  return (dispatch, getState) => {
+    const {
+      activeMiners,
+      mining: { miners, selectedMinerIdentifier }
+    } = getState();
+    const { gpus } = miners[selectedMinerIdentifier];
+
+    if (gpus - 1 < 0) return;
+    dispatch({
+      type: SET_GPUS,
+      data: { minerIdentifier: selectedMinerIdentifier, gpus: gpus - 1 }
     });
 
     const { isMining } = activeMiners[selectedMinerIdentifier];

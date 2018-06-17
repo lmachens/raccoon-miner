@@ -81,7 +81,7 @@ const mapStateToProps = ({
   const cores = miners[selectedMinerIdentifier].cores;
   return {
     cores,
-    maxCores: maxCores
+    maxCores
   };
 };
 

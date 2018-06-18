@@ -1264,8 +1264,9 @@
 	    address,
 	    servers,
 	    cores,
-	    gpus
-	  }) => `--noUAC -i 0 -o ${servers[0]} -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt`,
+	    gpus,
+	    poolConfig
+	  }) => `--noUAC -i 0 -o "${servers[0]}" -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf pools/${poolConfig}`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  }),
@@ -2496,7 +2497,8 @@
 	const supportXMR = {
 	  name: 'SupportXMR',
 	  identifier: SUPPORT_XMR,
-	  servers: ['pool.supportxmr.com'],
+	  servers: ['pool.supportxmr.com:5555'],
+	  poolConfig: 'supportxmr.txt',
 	  statsUrl: () => 'https://supportxmr.com/#/dashboard',
 	  apiUrl: address => `https://supportxmr.com/api/miner/${address}/stats`,
 	  apiParser: result => ({
@@ -2807,7 +2809,8 @@
 	      environmentVariables
 	    } = minersByIdentifier[minerIdentifier];
 	    const {
-	      servers
+	      servers,
+	      poolConfig
 	    } = miningPoolsByIdentifier[miningPoolIdentifier];
 	    dispatch({
 	      type: START_MINING,
@@ -2860,7 +2863,8 @@
 	      address,
 	      servers,
 	      cores,
-	      gpus
+	      gpus,
+	      poolConfig
 	    });
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data

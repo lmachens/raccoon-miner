@@ -4,7 +4,8 @@ export const SUPPORT_XMR = 'SUPPORT_XMR';
 export const supportXMR = {
   name: 'SupportXMR',
   identifier: SUPPORT_XMR,
-  servers: ['pool.supportxmr.com'],
+  servers: ['pool.supportxmr.com:5555'],
+  poolConfig: 'supportxmr.txt',
   statsUrl: () => 'https://supportxmr.com/#/dashboard',
   apiUrl: address => `https://supportxmr.com/api/miner/${address}/stats`,
   apiParser: result => ({

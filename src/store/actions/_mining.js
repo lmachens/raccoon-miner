@@ -170,7 +170,7 @@ export const startMining = minerIdentifier => {
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
-    const { servers } = miningPoolsByIdentifier[miningPoolIdentifier];
+    const { servers, poolConfig } = miningPoolsByIdentifier[miningPoolIdentifier];
 
     dispatch({
       type: START_MINING,
@@ -208,7 +208,7 @@ export const startMining = minerIdentifier => {
       dispatch(appendMiningLog(line));
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, servers, cores, gpus });
+    const minerArgs = args({ address, servers, cores, gpus, poolConfig });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({

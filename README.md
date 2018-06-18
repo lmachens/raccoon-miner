@@ -3,6 +3,8 @@
 Raccoon Miner is a crypto mining app for [Overwolf](https://www.overwolf.com/), an appstore for PC games.
 The app connects miner for different currencies to mining pools with a smart UI.
 
+You can download a pre release from https://www.overwolf.com/app/leon_machens-raccoon_miner.
+
 ![](.github/screenshot_0_9_1.png)
 
 ## Install app from releases

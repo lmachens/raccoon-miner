@@ -93,7 +93,7 @@
     "ethereum"
   ],
   "author": "Leon Machens",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/lmachens/raccoon-miner/issues"
   },

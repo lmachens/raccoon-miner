@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.1](https://github.com/lmachens/raccoon-miner/compare/v0.11.0...v0.11.1) (2018-06-18)
+
+
+### Bug Fixes
+
+* **monero:** add missing port to supportxmr pool ([b50b8d9](https://github.com/lmachens/raccoon-miner/commit/b50b8d9))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.11.0](https://github.com/lmachens/raccoon-miner/compare/v0.10.1...v0.11.0) (2018-06-17)
 
 

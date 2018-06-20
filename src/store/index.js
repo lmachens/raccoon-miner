@@ -19,7 +19,7 @@ const persistConfig = {
   key: 'root',
   storage,
   version: 1,
-  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications'],
+  blacklist: ['activeMiners', 'games', 'notifications'],
   migrate: createMigrate(migrations, { debug: true })
 };
 

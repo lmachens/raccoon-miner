@@ -12,3 +12,6 @@ Features:<br>
 • Configurable CPUs and GPUs<br>
 • Automatic suspend mode when in game<br>
 • Overview of Hash Rate and pool balance<br>
+
+<br>
+Raccoon Miner is in development. Please use the feedback form to send us feature requests and bug reports.

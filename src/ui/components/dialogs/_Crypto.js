@@ -58,8 +58,8 @@ class CryptoDialog extends PureComponent {
       <FullScreenDialog open={open} title="Wallet">
         <DialogContentText>
           Before you can start mining, you have to tell the raccoon what to mine and who gets the
-          profit. You can <Link onClick={loadDefault}>load the default settings</Link> if you want
-          to try out this app.
+          profit. You can <Link onClick={loadDefault}>load the test settings</Link> if you want to
+          try out this app.
         </DialogContentText>
         {isMining && (
           <Typography color="error">
@@ -108,7 +108,12 @@ class CryptoDialog extends PureComponent {
         <TextField
           disabled={isMining}
           fullWidth
-          helperText={<Link to={miner.links.wallet}>Don&apos;t have a wallet address?</Link>}
+          helperText={
+            <Typography>
+              <Link to={miner.links.wallet}>Don&apos;t have a wallet address?</Link>
+              {miner.developerAddress === address && ' Test address selected!'}
+            </Typography>
+          }
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -178,5 +183,8 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhance = connect(mapStateToProps, mapDispatchToProps)(CryptoDialog);
+const enhance = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(CryptoDialog);
 export { enhance as CryptoDialog };

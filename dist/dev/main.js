@@ -1240,7 +1240,7 @@
 	    GPU_SINGLE_ALLOC_PERCENT: '100'
 	  }),
 	  links: {
-	    wallet: 'https://www.myetherwallet.com/'
+	    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-myetherwallet/'
 	  },
 	  isValidAddress: address => /^0x[0-9a-fA-F]{40}$/i.test(address),
 	  addressHint: 'It should start with 0x and have 42 characters.',
@@ -1271,7 +1271,7 @@
 	    XMRSTAK_NOWAIT: true
 	  }),
 	  links: {
-	    wallet: 'https://getmonero.org/'
+	    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-mymonero/'
 	  },
 	  isValidAddress: address => /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),
 	  addressHint: 'It should have 95 characters.',
@@ -33326,7 +33326,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 

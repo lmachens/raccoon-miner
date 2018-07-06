@@ -31,7 +31,7 @@ export const ethereum = {
       GPU_SINGLE_ALLOC_PERCENT: '100'
     }),
   links: {
-    wallet: 'https://www.myetherwallet.com/'
+    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-myetherwallet/'
   },
   isValidAddress: address => /^0x[0-9a-fA-F]{40}$/i.test(address),
   addressHint: 'It should start with 0x and have 42 characters.',

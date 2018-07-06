@@ -24,7 +24,7 @@ export const monero = {
     }" -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf pools/${poolConfig}`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true }),
   links: {
-    wallet: 'https://getmonero.org/'
+    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-mymonero/'
   },
   isValidAddress: address =>
     /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),

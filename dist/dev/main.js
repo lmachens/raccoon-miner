@@ -3894,11 +3894,24 @@
 
 	var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
+	var printWarning$1 = function() {};
+
 	{
-	  var invariant$1 = invariant_1;
-	  var warning$2 = warning_1;
 	  var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
 	  var loggedTypeFailures = {};
+
+	  printWarning$1 = function(text) {
+	    var message = 'Warning: ' + text;
+	    if (typeof console !== 'undefined') {
+	      console.error(message);
+	    }
+	    try {
+	      // --- Welcome to debugging React ---
+	      // This error was thrown as a convenience so that you can use this stack
+	      // to find the callsite that caused this warning to fire.
+	      throw new Error(message);
+	    } catch (x) {}
+	  };
 	}
 
 	/**
@@ -3923,12 +3936,29 @@
 	        try {
 	          // This is intentionally an invariant that gets caught. It's the same
 	          // behavior as without this statement except with a better message.
-	          invariant$1(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+	          if (typeof typeSpecs[typeSpecName] !== 'function') {
+	            var err = Error(
+	              (componentName || 'React class') + ': ' + location + ' type `' + typeSpecName + '` is invalid; ' +
+	              'it must be a function, usually from the `prop-types` package, but received `' + typeof typeSpecs[typeSpecName] + '`.'
+	            );
+	            err.name = 'Invariant Violation';
+	            throw err;
+	          }
 	          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret$1);
 	        } catch (ex) {
 	          error = ex;
 	        }
-	        warning$2(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+	        if (error && !(error instanceof Error)) {
+	          printWarning$1(
+	            (componentName || 'React class') + ': type specification of ' +
+	            location + ' `' + typeSpecName + '` is invalid; the type checker ' +
+	            'function must return `null` or an `Error` but returned a ' + typeof error + '. ' +
+	            'You may have forgotten to pass an argument to the type checker ' +
+	            'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
+	            'shape all require an argument).'
+	          );
+
+	        }
 	        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
 	          // Only monitor this failure once because there tends to be a lot of the
 	          // same error.
@@ -3936,7 +3966,9 @@
 
 	          var stack = getStack ? getStack() : '';
 
-	          warning$2(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+	          printWarning$1(
+	            'Failed ' + location + ' type: ' + error.message + (stack != null ? stack : '')
+	          );
 	        }
 	      }
 	    }
@@ -5421,6 +5453,27 @@
 	var react_6 = react.cloneElement;
 	var react_7 = react.isValidElement;
 
+	var printWarning$2 = function() {};
+
+	{
+	  printWarning$2 = function(text) {
+	    var message = 'Warning: ' + text;
+	    if (typeof console !== 'undefined') {
+	      console.error(message);
+	    }
+	    try {
+	      // --- Welcome to debugging React ---
+	      // This error was thrown as a convenience so that you can use this stack
+	      // to find the callsite that caused this warning to fire.
+	      throw new Error(message);
+	    } catch (x) {}
+	  };
+	}
+
+	function emptyFunctionThatReturnsNull() {
+	  return null;
+	}
+
 	var factoryWithTypeCheckers = function(isValidElement, throwOnDirectAccess) {
 	  /* global Symbol */
 	  var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -5563,12 +5616,13 @@
 	      if (secret !== ReactPropTypesSecret_1) {
 	        if (throwOnDirectAccess) {
 	          // New behavior only for users of `prop-types` package
-	          invariant_1(
-	            false,
+	          var err = new Error(
 	            'Calling PropTypes validators directly is not supported by the `prop-types` package. ' +
 	            'Use `PropTypes.checkPropTypes()` to call them. ' +
 	            'Read more at http://fb.me/use-check-prop-types'
 	          );
+	          err.name = 'Invariant Violation';
+	          throw err;
 	        } else if (typeof console !== 'undefined') {
 	          // Old behavior for people using React.PropTypes
 	          var cacheKey = componentName + ':' + propName;
@@ -5577,15 +5631,12 @@
 	            // Avoid spamming the console because they are often not actionable except for lib authors
 	            manualPropTypeWarningCount < 3
 	          ) {
-	            warning_1(
-	              false,
+	            printWarning$2(
 	              'You are manually calling a React.PropTypes validation ' +
-	              'function for the `%s` prop on `%s`. This is deprecated ' +
+	              'function for the `' + propFullName + '` prop on `' + componentName  + '`. This is deprecated ' +
 	              'and will throw in the standalone `prop-types` package. ' +
 	              'You may be seeing this warning due to a third-party PropTypes ' +
-	              'library. See https://fb.me/react-warning-dont-call-proptypes ' + 'for details.',
-	              propFullName,
-	              componentName
+	              'library. See https://fb.me/react-warning-dont-call-proptypes ' + 'for details.'
 	            );
 	            manualPropTypeCallCache[cacheKey] = true;
 	            manualPropTypeWarningCount++;
@@ -5629,7 +5680,7 @@
 	  }
 
 	  function createAnyTypeChecker() {
-	    return createChainableTypeChecker(emptyFunction_1.thatReturnsNull);
+	    return createChainableTypeChecker(emptyFunctionThatReturnsNull);
 	  }
 
 	  function createArrayOfTypeChecker(typeChecker) {
@@ -5679,8 +5730,8 @@
 
 	  function createEnumTypeChecker(expectedValues) {
 	    if (!Array.isArray(expectedValues)) {
-	      warning_1(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
-	      return emptyFunction_1.thatReturnsNull;
+	      printWarning$2('Invalid argument supplied to oneOf, expected an instance of array.');
+	      return emptyFunctionThatReturnsNull;
 	    }
 
 	    function validate(props, propName, componentName, location, propFullName) {
@@ -5722,21 +5773,18 @@
 
 	  function createUnionTypeChecker(arrayOfTypeCheckers) {
 	    if (!Array.isArray(arrayOfTypeCheckers)) {
-	      warning_1(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
-	      return emptyFunction_1.thatReturnsNull;
+	      printWarning$2('Invalid argument supplied to oneOfType, expected an instance of array.');
+	      return emptyFunctionThatReturnsNull;
 	    }
 
 	    for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
 	      var checker = arrayOfTypeCheckers[i];
 	      if (typeof checker !== 'function') {
-	        warning_1(
-	          false,
+	        printWarning$2(
 	          'Invalid argument supplied to oneOfType. Expected an array of check functions, but ' +
-	          'received %s at index %s.',
-	          getPostfixForTypeWarning(checker),
-	          i
+	          'received ' + getPostfixForTypeWarning(checker) + ' at index ' + i + '.'
 	        );
-	        return emptyFunction_1.thatReturnsNull;
+	        return emptyFunctionThatReturnsNull;
 	      }
 	    }
 
@@ -6017,11 +6065,6 @@
 		if (module.exports) {
 			classNames.default = classNames;
 			module.exports = classNames;
-		} else if (typeof undefined === 'function' && typeof undefined.amd === 'object' && undefined.amd) {
-			// register as 'classnames', consistent with npm package name
-			undefined('classnames', [], function () {
-				return classNames;
-			});
 		} else {
 			window.classNames = classNames;
 		}
@@ -6185,10 +6228,10 @@
 	 * @providesModule warning
 	 */
 
-	var warning$3 = function() {};
+	var warning$2 = function() {};
 
 	{
-	  var printWarning$1 = function printWarning(format, args) {
+	  var printWarning$3 = function printWarning(format, args) {
 	    var len = arguments.length;
 	    args = new Array(len > 2 ? len - 2 : 0);
 	    for (var key = 2; key < len; key++) {
@@ -6210,7 +6253,7 @@
 	    } catch (x) {}
 	  };
 
-	  warning$3 = function(condition, format, args) {
+	  warning$2 = function(condition, format, args) {
 	    var len = arguments.length;
 	    args = new Array(len > 2 ? len - 2 : 0);
 	    for (var key = 2; key < len; key++) {
@@ -6223,84 +6266,79 @@
 	      );
 	    }
 	    if (!condition) {
-	      printWarning$1.apply(null, [format].concat(args));
+	      printWarning$3.apply(null, [format].concat(args));
 	    }
 	  };
 	}
 
-	var warning_1$1 = warning$3;
+	var warning_1$1 = warning$2;
 
-	var hoistNonReactStatics = createCommonjsModule(function (module, exports) {
 	/**
 	 * Copyright 2015, Yahoo! Inc.
 	 * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
 	 */
-	(function (global, factory) {
-	    module.exports = factory();
-	}(commonjsGlobal, (function () {
-	    
-	    var REACT_STATICS = {
-	        childContextTypes: true,
-	        contextTypes: true,
-	        defaultProps: true,
-	        displayName: true,
-	        getDefaultProps: true,
-	        getDerivedStateFromProps: true,
-	        mixins: true,
-	        propTypes: true,
-	        type: true
-	    };
-	    
-	    var KNOWN_STATICS = {
-	        name: true,
-	        length: true,
-	        prototype: true,
-	        caller: true,
-	        callee: true,
-	        arguments: true,
-	        arity: true
-	    };
-	    
-	    var defineProperty = Object.defineProperty;
-	    var getOwnPropertyNames = Object.getOwnPropertyNames;
-	    var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-	    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-	    var getPrototypeOf = Object.getPrototypeOf;
-	    var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
-	    
-	    return function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
-	        if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
-	            
-	            if (objectPrototype) {
-	                var inheritedComponent = getPrototypeOf(sourceComponent);
-	                if (inheritedComponent && inheritedComponent !== objectPrototype) {
-	                    hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
-	                }
+	var REACT_STATICS = {
+	    childContextTypes: true,
+	    contextTypes: true,
+	    defaultProps: true,
+	    displayName: true,
+	    getDefaultProps: true,
+	    getDerivedStateFromProps: true,
+	    mixins: true,
+	    propTypes: true,
+	    type: true
+	};
+
+	var KNOWN_STATICS = {
+	    name: true,
+	    length: true,
+	    prototype: true,
+	    caller: true,
+	    callee: true,
+	    arguments: true,
+	    arity: true
+	};
+
+	var defineProperty$2 = Object.defineProperty;
+	var getOwnPropertyNames = Object.getOwnPropertyNames;
+	var getOwnPropertySymbols$1 = Object.getOwnPropertySymbols;
+	var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+	var getPrototypeOf = Object.getPrototypeOf;
+	var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
+
+	function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
+	    if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
+
+	        if (objectPrototype) {
+	            var inheritedComponent = getPrototypeOf(sourceComponent);
+	            if (inheritedComponent && inheritedComponent !== objectPrototype) {
+	                hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
 	            }
-	            
-	            var keys = getOwnPropertyNames(sourceComponent);
-	            
-	            if (getOwnPropertySymbols) {
-	                keys = keys.concat(getOwnPropertySymbols(sourceComponent));
-	            }
-	            
-	            for (var i = 0; i < keys.length; ++i) {
-	                var key = keys[i];
-	                if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
-	                    var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
-	                    try { // Avoid failures from read-only properties
-	                        defineProperty(targetComponent, key, descriptor);
-	                    } catch (e) {}
-	                }
-	            }
-	            
-	            return targetComponent;
 	        }
-	        
+
+	        var keys = getOwnPropertyNames(sourceComponent);
+
+	        if (getOwnPropertySymbols$1) {
+	            keys = keys.concat(getOwnPropertySymbols$1(sourceComponent));
+	        }
+
+	        for (var i = 0; i < keys.length; ++i) {
+	            var key = keys[i];
+	            if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
+	                var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
+	                try { // Avoid failures from read-only properties
+	                    defineProperty$2(targetComponent, key, descriptor);
+	                } catch (e) {}
+	            }
+	        }
+
 	        return targetComponent;
-	    };
-	})));
-	});
+	    }
+
+	    return targetComponent;
+	}
+
+	var hoistNonReactStatics_cjs = hoistNonReactStatics;
 
 	var getDisplayName_1 = createCommonjsModule(function (module, exports) {
 
@@ -6626,10 +6664,10 @@
 	 * same logic and follow the same code paths.
 	 */
 
-	var warning$4 = function() {};
+	var warning$3 = function() {};
 
 	{
-	  warning$4 = function(condition, format, args) {
+	  warning$3 = function(condition, format, args) {
 	    var len = arguments.length;
 	    args = new Array(len > 2 ? len - 2 : 0);
 	    for (var key = 2; key < len; key++) {
@@ -6667,7 +6705,7 @@
 	  };
 	}
 
-	var browser = warning$4;
+	var browser = warning$3;
 
 	var SheetsManager_1 = createCommonjsModule(function (module, exports) {
 
@@ -8790,7 +8828,6 @@
 	        element = _ref.element;
 
 	    this.element = element || document.createElement('style');
-	    this.element.type = 'text/css';
 	    this.element.setAttribute('data-jss', '');
 	    if (media) this.element.setAttribute('media', media);
 	    if (meta) this.element.setAttribute('data-meta', meta);
@@ -9093,7 +9130,7 @@
 	    _classCallCheck(this, Jss);
 
 	    this.id = instanceCounter++;
-	    this.version = "9.8.2";
+	    this.version = "9.8.7";
 	    this.plugins = new _PluginsRegistry2['default']();
 	    this.options = {
 	      createGenerateClassName: _createGenerateClassName2['default'],
@@ -10356,6 +10393,51 @@
 
 	unwrapExports(jssPreset_1);
 
+	var mergeClasses_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _objectSpread2 = interopRequireDefault(objectSpread);
+
+	var _warning = interopRequireDefault(warning_1$1);
+
+	var _getDisplayName = interopRequireDefault(getDisplayName_1);
+
+	function mergeClasses() {
+	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	  var baseClasses = options.baseClasses,
+	      newClasses = options.newClasses,
+	      Component = options.Component,
+	      _options$noBase = options.noBase,
+	      noBase = _options$noBase === void 0 ? false : _options$noBase;
+
+	  if (!newClasses) {
+	    return baseClasses;
+	  }
+
+	  return (0, _objectSpread2.default)({}, baseClasses, Object.keys(newClasses).reduce(function (accumulator, key) {
+	    (0, _warning.default)(baseClasses[key] || noBase, ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not implemented in ".concat((0, _getDisplayName.default)(Component), "."), "You can only override one of the following: ".concat(Object.keys(baseClasses).join(','))].join('\n'));
+	    (0, _warning.default)(!newClasses[key] || typeof newClasses[key] === 'string', ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not valid for ".concat((0, _getDisplayName.default)(Component), "."), "You need to provide a non empty string instead of: ".concat(newClasses[key], ".")].join('\n'));
+
+	    if (newClasses[key]) {
+	      accumulator[key] = "".concat(baseClasses[key], " ").concat(newClasses[key]);
+	    }
+
+	    return accumulator;
+	  }, {}));
+	}
+
+	var _default = mergeClasses;
+	exports.default = _default;
+	});
+
+	unwrapExports(mergeClasses_1);
+
 	var isMergeableObject = function isMergeableObject(value) {
 		return isNonNullObject(value)
 			&& !isSpecial(value)
@@ -10448,147 +10530,6 @@
 		default: deepmerge_1
 	});
 
-	var require$$2 = ( es$1 && deepmerge_1 ) || es$1;
-
-	var createTypography_1 = createCommonjsModule(function (module, exports) {
-
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = createTypography;
-
-	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
-	var _deepmerge = interopRequireDefault(require$$2);
-
-	// < 1kb payload overhead when lodash/merge is > 3kb.
-	function round(value) {
-	  return Math.round(value * 1e5) / 1e5;
-	}
-
-	function createTypography(palette, typography) {
-	  var _ref = typeof typography === 'function' ? typography(palette) : typography,
-	      _ref$fontFamily = _ref.fontFamily,
-	      fontFamily = _ref$fontFamily === void 0 ? '"Roboto", "Helvetica", "Arial", sans-serif' : _ref$fontFamily,
-	      _ref$fontSize = _ref.fontSize,
-	      fontSize = _ref$fontSize === void 0 ? 14 : _ref$fontSize,
-	      _ref$fontWeightLight = _ref.fontWeightLight,
-	      fontWeightLight = _ref$fontWeightLight === void 0 ? 300 : _ref$fontWeightLight,
-	      _ref$fontWeightRegula = _ref.fontWeightRegular,
-	      fontWeightRegular = _ref$fontWeightRegula === void 0 ? 400 : _ref$fontWeightRegula,
-	      _ref$fontWeightMedium = _ref.fontWeightMedium,
-	      fontWeightMedium = _ref$fontWeightMedium === void 0 ? 500 : _ref$fontWeightMedium,
-	      _ref$htmlFontSize = _ref.htmlFontSize,
-	      htmlFontSize = _ref$htmlFontSize === void 0 ? 16 : _ref$htmlFontSize,
-	      other = (0, _objectWithoutProperties2.default)(_ref, ["fontFamily", "fontSize", "fontWeightLight", "fontWeightRegular", "fontWeightMedium", "htmlFontSize"]);
-
-	  var coef = fontSize / 14;
-
-	  function pxToRem(value) {
-	    return "".concat(value / htmlFontSize * coef, "rem");
-	  }
-
-	  return (0, _deepmerge.default)({
-	    pxToRem: pxToRem,
-	    round: round,
-	    fontFamily: fontFamily,
-	    fontSize: fontSize,
-	    fontWeightLight: fontWeightLight,
-	    fontWeightRegular: fontWeightRegular,
-	    fontWeightMedium: fontWeightMedium,
-	    display4: {
-	      fontSize: pxToRem(112),
-	      fontWeight: fontWeightLight,
-	      fontFamily: fontFamily,
-	      letterSpacing: '-.04em',
-	      lineHeight: "".concat(round(128 / 112), "em"),
-	      marginLeft: '-.04em',
-	      color: palette.text.secondary
-	    },
-	    display3: {
-	      fontSize: pxToRem(56),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      letterSpacing: '-.02em',
-	      lineHeight: "".concat(round(73 / 56), "em"),
-	      marginLeft: '-.02em',
-	      color: palette.text.secondary
-	    },
-	    display2: {
-	      fontSize: pxToRem(45),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(48 / 45), "em"),
-	      marginLeft: '-.02em',
-	      color: palette.text.secondary
-	    },
-	    display1: {
-	      fontSize: pxToRem(34),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(41 / 34), "em"),
-	      color: palette.text.secondary
-	    },
-	    headline: {
-	      fontSize: pxToRem(24),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(32.5 / 24), "em"),
-	      color: palette.text.primary
-	    },
-	    title: {
-	      fontSize: pxToRem(21),
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(24.5 / 21), "em"),
-	      color: palette.text.primary
-	    },
-	    subheading: {
-	      fontSize: pxToRem(16),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(24 / 16), "em"),
-	      color: palette.text.primary
-	    },
-	    body2: {
-	      fontSize: pxToRem(14),
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(24 / 14), "em"),
-	      color: palette.text.primary
-	    },
-	    body1: {
-	      fontSize: pxToRem(14),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(20.5 / 14), "em"),
-	      color: palette.text.primary
-	    },
-	    caption: {
-	      fontSize: pxToRem(12),
-	      fontWeight: fontWeightRegular,
-	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(16.5 / 12), "em"),
-	      color: palette.text.secondary
-	    },
-	    button: {
-	      fontSize: pxToRem(14),
-	      textTransform: 'uppercase',
-	      fontWeight: fontWeightMedium,
-	      fontFamily: fontFamily,
-	      color: palette.text.primary
-	    }
-	  }, other, {
-	    clone: false // No need to clone deep
-
-	  });
-	}
-	});
-
-	unwrapExports(createTypography_1);
-
 	var createBreakpoints_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -10674,6 +10615,46 @@
 
 	unwrapExports(createBreakpoints_1);
 	var createBreakpoints_2 = createBreakpoints_1.keys;
+
+	var createMixins_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = createMixins;
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$1);
+
+	var _objectSpread3 = interopRequireDefault(objectSpread);
+
+	function createMixins(breakpoints, spacing, mixins) {
+	  var _toolbar;
+
+	  return (0, _objectSpread3.default)({
+	    gutters: function gutters() {
+	      var styles = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	      return (0, _objectSpread3.default)({
+	        paddingLeft: spacing.unit * 2,
+	        paddingRight: spacing.unit * 2
+	      }, styles, (0, _defineProperty2.default)({}, breakpoints.up('sm'), (0, _objectSpread3.default)({
+	        paddingLeft: spacing.unit * 3,
+	        paddingRight: spacing.unit * 3
+	      }, styles[breakpoints.up('sm')])));
+	    },
+	    toolbar: (_toolbar = {
+	      minHeight: 56
+	    }, (0, _defineProperty2.default)(_toolbar, "".concat(breakpoints.up('xs'), " and (orientation: landscape)"), {
+	      minHeight: 48
+	    }), (0, _defineProperty2.default)(_toolbar, breakpoints.up('sm'), {
+	      minHeight: 64
+	    }), _toolbar)
+	  }, mixins);
+	}
+	});
+
+	unwrapExports(createMixins_1);
 
 	var indigo_1 = createCommonjsModule(function (module, exports) {
 
@@ -11076,6 +11057,8 @@
 	var colorManipulator_8 = colorManipulator.darken;
 	var colorManipulator_9 = colorManipulator.lighten;
 
+	var require$$3 = ( es$1 && deepmerge_1 ) || es$1;
+
 	var createPalette_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -11092,7 +11075,7 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _deepmerge = interopRequireDefault(require$$2);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	var _indigo = interopRequireDefault(indigo_1);
 
@@ -11277,45 +11260,147 @@
 	var createPalette_2 = createPalette_1.dark;
 	var createPalette_3 = createPalette_1.light;
 
-	var createMixins_1 = createCommonjsModule(function (module, exports) {
+	var createTypography_1 = createCommonjsModule(function (module, exports) {
 
 
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = createMixins;
+	exports.default = createTypography;
 
-	var _defineProperty2 = interopRequireDefault(defineProperty$1);
+	var _objectSpread2 = interopRequireDefault(objectSpread);
 
-	var _objectSpread3 = interopRequireDefault(objectSpread);
+	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	function createMixins(breakpoints, spacing, mixins) {
-	  var _toolbar;
+	var _deepmerge = interopRequireDefault(require$$3);
 
-	  return (0, _objectSpread3.default)({
-	    gutters: function gutters() {
-	      var styles = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	      return (0, _objectSpread3.default)({
-	        paddingLeft: spacing.unit * 2,
-	        paddingRight: spacing.unit * 2
-	      }, styles, (0, _defineProperty2.default)({}, breakpoints.up('sm'), (0, _objectSpread3.default)({
-	        paddingLeft: spacing.unit * 3,
-	        paddingRight: spacing.unit * 3
-	      }, styles[breakpoints.up('sm')])));
-	    },
-	    toolbar: (_toolbar = {
-	      minHeight: 56
-	    }, (0, _defineProperty2.default)(_toolbar, "".concat(breakpoints.up('xs'), " and (orientation: landscape)"), {
-	      minHeight: 48
-	    }), (0, _defineProperty2.default)(_toolbar, breakpoints.up('sm'), {
-	      minHeight: 64
-	    }), _toolbar)
-	  }, mixins);
+	// < 1kb payload overhead when lodash/merge is > 3kb.
+	function round(value) {
+	  return Math.round(value * 1e5) / 1e5;
+	}
+
+	function createTypography(palette, typography) {
+	  var _ref = typeof typography === 'function' ? typography(palette) : typography,
+	      _ref$fontFamily = _ref.fontFamily,
+	      fontFamily = _ref$fontFamily === void 0 ? '"Roboto", "Helvetica", "Arial", sans-serif' : _ref$fontFamily,
+	      _ref$fontSize = _ref.fontSize,
+	      fontSize = _ref$fontSize === void 0 ? 14 : _ref$fontSize,
+	      _ref$fontWeightLight = _ref.fontWeightLight,
+	      fontWeightLight = _ref$fontWeightLight === void 0 ? 300 : _ref$fontWeightLight,
+	      _ref$fontWeightRegula = _ref.fontWeightRegular,
+	      fontWeightRegular = _ref$fontWeightRegula === void 0 ? 400 : _ref$fontWeightRegula,
+	      _ref$fontWeightMedium = _ref.fontWeightMedium,
+	      fontWeightMedium = _ref$fontWeightMedium === void 0 ? 500 : _ref$fontWeightMedium,
+	      _ref$htmlFontSize = _ref.htmlFontSize,
+	      htmlFontSize = _ref$htmlFontSize === void 0 ? 16 : _ref$htmlFontSize,
+	      allVariants = _ref.allVariants,
+	      other = (0, _objectWithoutProperties2.default)(_ref, ["fontFamily", "fontSize", "fontWeightLight", "fontWeightRegular", "fontWeightMedium", "htmlFontSize", "allVariants"]);
+
+	  var coef = fontSize / 14;
+
+	  function pxToRem(value) {
+	    return "".concat(value / htmlFontSize * coef, "rem");
+	  }
+
+	  return (0, _deepmerge.default)({
+	    pxToRem: pxToRem,
+	    round: round,
+	    fontFamily: fontFamily,
+	    fontSize: fontSize,
+	    fontWeightLight: fontWeightLight,
+	    fontWeightRegular: fontWeightRegular,
+	    fontWeightMedium: fontWeightMedium,
+	    display4: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(112),
+	      fontWeight: fontWeightLight,
+	      fontFamily: fontFamily,
+	      letterSpacing: '-.04em',
+	      lineHeight: "".concat(round(128 / 112), "em"),
+	      marginLeft: '-.04em',
+	      color: palette.text.secondary
+	    }, allVariants),
+	    display3: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(56),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      letterSpacing: '-.02em',
+	      lineHeight: "".concat(round(73 / 56), "em"),
+	      marginLeft: '-.02em',
+	      color: palette.text.secondary
+	    }, allVariants),
+	    display2: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(45),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(48 / 45), "em"),
+	      marginLeft: '-.02em',
+	      color: palette.text.secondary
+	    }, allVariants),
+	    display1: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(34),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(41 / 34), "em"),
+	      color: palette.text.secondary
+	    }, allVariants),
+	    headline: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(24),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(32.5 / 24), "em"),
+	      color: palette.text.primary
+	    }, allVariants),
+	    title: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(21),
+	      fontWeight: fontWeightMedium,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(24.5 / 21), "em"),
+	      color: palette.text.primary
+	    }, allVariants),
+	    subheading: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(16),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(24 / 16), "em"),
+	      color: palette.text.primary
+	    }, allVariants),
+	    body2: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(14),
+	      fontWeight: fontWeightMedium,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(24 / 14), "em"),
+	      color: palette.text.primary
+	    }, allVariants),
+	    body1: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(14),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(20.5 / 14), "em"),
+	      color: palette.text.primary
+	    }, allVariants),
+	    caption: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(12),
+	      fontWeight: fontWeightRegular,
+	      fontFamily: fontFamily,
+	      lineHeight: "".concat(round(16.5 / 12), "em"),
+	      color: palette.text.secondary
+	    }, allVariants),
+	    button: (0, _objectSpread2.default)({
+	      fontSize: pxToRem(14),
+	      textTransform: 'uppercase',
+	      fontWeight: fontWeightMedium,
+	      fontFamily: fontFamily,
+	      color: palette.text.primary
+	    }, allVariants)
+	  }, other, {
+	    clone: false // No need to clone deep
+
+	  });
 	}
 	});
 
-	unwrapExports(createMixins_1);
+	unwrapExports(createTypography_1);
 
 	var shadows_1 = createCommonjsModule(function (module, exports) {
 
@@ -11337,6 +11422,38 @@
 	});
 
 	unwrapExports(shadows_1);
+
+	var shape_1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+	var shape = {
+	  borderRadius: 4
+	};
+	var _default = shape;
+	exports.default = _default;
+	});
+
+	unwrapExports(shape_1);
+
+	var spacing_1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+	var spacing = {
+	  // All components align to an 8dp square baseline grid for mobile, tablet, and desktop.
+	  // https://material.io/design/layout/understanding-layout.html#pixel-density
+	  unit: 8
+	};
+	var _default = spacing;
+	exports.default = _default;
+	});
+
+	unwrapExports(spacing_1);
 
 	var transitions = createCommonjsModule(function (module, exports) {
 
@@ -11477,22 +11594,6 @@
 
 	unwrapExports(zIndex_1);
 
-	var spacing = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = void 0;
-	var _default = {
-	  // All components align to an 8dp square baseline grid for mobile, tablet, and desktop.
-	  // https://material.io/guidelines/layout/metrics-keylines.html#metrics-keylines-baseline-grids
-	  unit: 8
-	};
-	exports.default = _default;
-	});
-
-	unwrapExports(spacing);
-
 	var createMuiTheme_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -11506,39 +11607,41 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _deepmerge = interopRequireDefault(require$$2);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _createTypography = interopRequireDefault(createTypography_1);
-
 	var _createBreakpoints = interopRequireDefault(createBreakpoints_1);
-
-	var _createPalette = interopRequireDefault(createPalette_1);
 
 	var _createMixins = interopRequireDefault(createMixins_1);
 
+	var _createPalette = interopRequireDefault(createPalette_1);
+
+	var _createTypography = interopRequireDefault(createTypography_1);
+
 	var _shadows = interopRequireDefault(shadows_1);
+
+	var _shape = interopRequireDefault(shape_1);
+
+	var _spacing = interopRequireDefault(spacing_1);
 
 	var _transitions = interopRequireDefault(transitions);
 
 	var _zIndex = interopRequireDefault(zIndex_1);
 
-	var _spacing = interopRequireDefault(spacing);
-
 	// < 1kb payload overhead when lodash/merge is > 3kb.
 	function createMuiTheme() {
 	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	  var _options$palette = options.palette,
-	      paletteInput = _options$palette === void 0 ? {} : _options$palette,
-	      _options$breakpoints = options.breakpoints,
+	  var _options$breakpoints = options.breakpoints,
 	      breakpointsInput = _options$breakpoints === void 0 ? {} : _options$breakpoints,
 	      _options$mixins = options.mixins,
 	      mixinsInput = _options$mixins === void 0 ? {} : _options$mixins,
+	      _options$palette = options.palette,
+	      paletteInput = _options$palette === void 0 ? {} : _options$palette,
+	      shadowsInput = options.shadows,
 	      _options$typography = options.typography,
 	      typographyInput = _options$typography === void 0 ? {} : _options$typography,
-	      shadowsInput = options.shadows,
-	      other = (0, _objectWithoutProperties2.default)(options, ["palette", "breakpoints", "mixins", "typography", "shadows"]);
+	      other = (0, _objectWithoutProperties2.default)(options, ["breakpoints", "mixins", "palette", "shadows", "typography"]);
 	  var palette = (0, _createPalette.default)(paletteInput);
 	  var breakpoints = (0, _createBreakpoints.default)(breakpointsInput);
 	  var muiTheme = (0, _objectSpread2.default)({
@@ -11553,8 +11656,9 @@
 	    shadows: shadowsInput || _shadows.default,
 	    typography: (0, _createTypography.default)(palette, typographyInput)
 	  }, (0, _deepmerge.default)({
-	    transitions: _transitions.default,
+	    shape: _shape.default,
 	    spacing: _spacing.default,
+	    transitions: _transitions.default,
 	    zIndex: _zIndex.default
 	  }, other));
 	  (0, _warning.default)(muiTheme.shadows.length === 25, 'Material-UI: the shadows array provided to createMuiTheme should support 25 elevations.');
@@ -11626,19 +11730,27 @@
 	/* eslint-disable no-underscore-dangle */
 	// People might bundle this classname generator twice.
 	// We need to use a global.
-	commonjsGlobal.__MUI_GENERATOR_COUNTER__ = 0; // Returns a function which generates unique class names based on counters.
+	commonjsGlobal.__MUI_GENERATOR_COUNTER__ = 0;
+	var escapeRegex = /([[\].#*$><+~=|^:(),"'`\s])/g;
+
+	function safePrefix(classNamePrefix) {
+	  var prefix = String(classNamePrefix);
+	  (0, _warning.default)(prefix.length < 100, "Material-UI: the class name prefix is too long: ".concat(prefix, ".")); // Sanitize the string as will be used to prefix the generated class name.
+
+	  return prefix.replace(escapeRegex, '-');
+	} // Returns a function which generates unique class names based on counters.
 	// When new generator function is created, rule counter is reset.
 	// We need to reset the rule counter for SSR for each request.
 	//
 	// It's inspired by
 	// https://github.com/cssinjs/jss/blob/4e6a05dd3f7b6572fdd3ab216861d9e446c20331/src/utils/createGenerateClassName.js
 
+
 	function createGenerateClassName() {
 	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 	  var _options$dangerouslyU = options.dangerouslyUseGlobalCSS,
 	      dangerouslyUseGlobalCSS = _options$dangerouslyU === void 0 ? false : _options$dangerouslyU,
 	      _options$productionPr = options.productionPrefix;
-	  var escapeRegex = /([[\].#*$><+~=|^:(),"'`\s])/g;
 	  var ruleCounter = 0; // - HMR can lead to many class name generators being instantiated,
 
 	  return function (rule, styleSheet) {
@@ -11647,9 +11759,7 @@
 
 	    if (dangerouslyUseGlobalCSS) {
 	      if (styleSheet && styleSheet.options.classNamePrefix) {
-	        var prefix = styleSheet.options.classNamePrefix; // Sanitize the string as will be used to prefix the generated class name.
-
-	        prefix = prefix.replace(escapeRegex, '-');
+	        var prefix = safePrefix(styleSheet.options.classNamePrefix);
 
 	        if (prefix.match(/^Mui/)) {
 	          return "".concat(prefix, "-").concat(rule.key);
@@ -11664,9 +11774,8 @@
 	    }
 
 	    if (styleSheet && styleSheet.options.classNamePrefix) {
-	      var _prefix = styleSheet.options.classNamePrefix; // Sanitize the string as will be used to prefix the generated class name.
+	      var _prefix = safePrefix(styleSheet.options.classNamePrefix);
 
-	      _prefix = _prefix.replace(escapeRegex, '-');
 	      return "".concat(_prefix, "-").concat(rule.key, "-").concat(ruleCounter);
 	    }
 
@@ -11688,9 +11797,11 @@
 
 	var _objectSpread2 = interopRequireDefault(objectSpread);
 
+	var _typeof2 = interopRequireDefault(_typeof_1);
+
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _deepmerge = interopRequireDefault(require$$2);
+	var _deepmerge = interopRequireDefault(require$$3);
 
 	// < 1kb payload overhead when lodash/merge is > 3kb.
 	// Support for the jss-expand plugin.
@@ -11700,6 +11811,7 @@
 
 	function getStylesCreator(stylesOrCreator) {
 	  var themingEnabled = typeof stylesOrCreator === 'function';
+	  (0, _warning.default)((0, _typeof2.default)(stylesOrCreator) === 'object' || themingEnabled, ['Material-UI: the first argument provided to withStyles() is invalid.', 'You need to provide a function generating the styles or a styles object.'].join('\n'));
 
 	  function create(theme, name) {
 	    var styles = themingEnabled ? stylesOrCreator(theme) : stylesOrCreator;
@@ -11787,7 +11899,7 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _hoistNonReactStatics = interopRequireDefault(hoistNonReactStatics);
+	var _hoistNonReactStatics = interopRequireDefault(hoistNonReactStatics_cjs);
 
 	var _getDisplayName = interopRequireDefault(getDisplayName_1);
 
@@ -11800,6 +11912,8 @@
 	var ns$$1 = interopRequireWildcard(ns);
 
 	var _jssPreset = interopRequireDefault(jssPreset_1);
+
+	var _mergeClasses = interopRequireDefault(mergeClasses_1);
 
 	var _createMuiTheme = interopRequireDefault(createMuiTheme_1);
 
@@ -11869,7 +11983,6 @@
 
 	        (0, _classCallCheck2.default)(this, WithStyles);
 	        _this = (0, _possibleConstructorReturn2.default)(this, (WithStyles.__proto__ || Object.getPrototypeOf(WithStyles)).call(this, props, context));
-	        _this.state = {};
 	        _this.disableStylesGeneration = false;
 	        _this.jss = null;
 	        _this.sheetOptions = null;
@@ -11877,6 +11990,7 @@
 	        _this.stylesCreatorSaved = null;
 	        _this.theme = null;
 	        _this.unsubscribeId = null;
+	        _this.state = {};
 	        _this.jss = _this.context[ns$$1.jss] || jss;
 	        var muiThemeProviderOptions = _this.context.muiThemeProviderOptions;
 
@@ -11958,8 +12072,6 @@
 	      }, {
 	        key: "getClasses",
 	        value: function getClasses() {
-	          var _this3 = this;
-
 	          // Tracks if either the rendered classes or classes prop has changed,
 	          // requiring the generation of a new finalized classes object.
 	          var generate = false;
@@ -11980,20 +12092,12 @@
 	          }
 
 	          if (generate) {
-	            if (this.props.classes) {
-	              this.cacheClasses.value = (0, _objectSpread2.default)({}, this.cacheClasses.lastJSS, Object.keys(this.props.classes).reduce(function (accumulator, key) {
-	                (0, _warning.default)(_this3.cacheClasses.lastJSS[key] || _this3.disableStylesGeneration, ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not implemented in ".concat((0, _getDisplayName.default)(Component), "."), "You can only override one of the following: ".concat(Object.keys(_this3.cacheClasses.lastJSS).join(','))].join('\n'));
-	                (0, _warning.default)(!_this3.props.classes[key] || typeof _this3.props.classes[key] === 'string', ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not valid for ".concat((0, _getDisplayName.default)(Component), "."), "You need to provide a non empty string instead of: ".concat(_this3.props.classes[key], ".")].join('\n'));
-
-	                if (_this3.props.classes[key]) {
-	                  accumulator[key] = "".concat(_this3.cacheClasses.lastJSS[key], " ").concat(_this3.props.classes[key]);
-	                }
-
-	                return accumulator;
-	              }, {}));
-	            } else {
-	              this.cacheClasses.value = this.cacheClasses.lastJSS;
-	            }
+	            this.cacheClasses.value = (0, _mergeClasses.default)({
+	              baseClasses: this.cacheClasses.lastJSS,
+	              newClasses: this.props.classes,
+	              Component: Component,
+	              noBase: this.disableStylesGeneration
+	            });
 	          }
 
 	          return this.cacheClasses.value;
@@ -12029,6 +12133,7 @@
 
 	            if (!meta) {
 	              meta = (0, _getDisplayName.default)(Component);
+	              (0, _warning.default)(typeof meta === 'string', ['Material-UI: the component displayName is invalid. It needs to be a string.', "Please fix the following component: ".concat(Component, ".")].join('\n'));
 	            }
 
 	            var sheet = this.jss.createStyleSheet(styles, (0, _objectSpread2.default)({
@@ -12272,7 +12377,7 @@
 	      backgroundColor: theme.palette.background.paper
 	    },
 	    rounded: {
-	      borderRadius: 2
+	      borderRadius: theme.shape.borderRadius
 	    }
 	  }, elevations);
 	};
@@ -12314,7 +12419,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Shadow depth, corresponds to `dp` in the spec.
@@ -12552,8 +12657,8 @@
 	      alignItems: 'center',
 	      justifyContent: 'center',
 	      flexShrink: 0,
-	      width: theme.spacing.unit * 5,
-	      height: theme.spacing.unit * 5,
+	      width: 40,
+	      height: 40,
 	      fontFamily: theme.typography.fontFamily,
 	      fontSize: theme.typography.pxToRem(20),
 	      borderRadius: '50%',
@@ -12653,7 +12758,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Attributes applied to the `img` element when the component
@@ -13410,7 +13515,6 @@
 	    }
 	    var pluginModule = injectedNamesToPlugins[pluginName];
 	    if (!namesToPlugins.hasOwnProperty(pluginName) || namesToPlugins[pluginName] !== pluginModule) {
-	      !!namesToPlugins[pluginName] ? invariant(false, 'EventPluginRegistry: Cannot inject two different event plugins using the same name, `%s`.', pluginName) : void 0;
 	      namesToPlugins[pluginName] = pluginModule;
 	      isOrderingDirty = true;
 	    }
@@ -29961,11 +30065,14 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = ownerDocument;
+	exports.default = void 0;
+
 	function ownerDocument(node) {
 	  return node && node.ownerDocument || document;
 	}
-	module.exports = exports["default"];
+
+	var _default = ownerDocument;
+	exports.default = _default;
 	});
 
 	unwrapExports(ownerDocument_1);
@@ -29981,66 +30088,17 @@
 
 	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
-	var ownerWindow = function ownerWindow(node) {
+	function ownerWindow(node) {
 	  var fallback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window;
 	  var doc = (0, _ownerDocument.default)(node);
 	  return doc.defaultView || doc.parentView || fallback;
-	};
+	}
 
 	var _default = ownerWindow;
 	exports.default = _default;
 	});
 
 	unwrapExports(ownerWindow_1);
-
-	var inDOM = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-	module.exports = exports['default'];
-	});
-
-	unwrapExports(inDOM);
-
-	var contains = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-
-
-	var _inDOM2 = _interopRequireDefault(inDOM);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = function () {
-	  // HTML DOM and SVG DOM may have different support levels,
-	  // so we need to check on context instead of a document root element.
-	  return _inDOM2.default ? function (context, node) {
-	    if (context.contains) {
-	      return context.contains(node);
-	    } else if (context.compareDocumentPosition) {
-	      return context === node || !!(context.compareDocumentPosition(node) & 16);
-	    } else {
-	      return fallback(context, node);
-	    }
-	  } : fallback;
-	}();
-
-	function fallback(context, node) {
-	  if (node) do {
-	    if (node === context) return true;
-	  } while (node = node.parentNode);
-
-	  return false;
-	}
-	module.exports = exports['default'];
-	});
-
-	unwrapExports(contains);
 
 	var focusVisible = createCommonjsModule(function (module, exports) {
 
@@ -30055,8 +30113,6 @@
 	var _keycode = interopRequireDefault(keycode);
 
 	var _warning = interopRequireDefault(warning_1$1);
-
-	var _contains = interopRequireDefault(contains);
 
 	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
@@ -30073,7 +30129,7 @@
 	  instance.focusVisibleTimeout = setTimeout(function () {
 	    var doc = (0, _ownerDocument.default)(element);
 
-	    if (internal.focusKeyPressed && (doc.activeElement === element || (0, _contains.default)(element, doc.activeElement))) {
+	    if (internal.focusKeyPressed && (doc.activeElement === element || element.contains(doc.activeElement))) {
 	      callback();
 	    } else if (attempt < instance.focusVisibleMaxCheckTimes) {
 	      detectFocusVisible(instance, element, callback, attempt + 1);
@@ -31421,10 +31477,11 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = TouchRipple.__proto__ || Object.getPrototypeOf(TouchRipple)).call.apply(_ref, [this].concat(args))), _this.state = {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = TouchRipple.__proto__ || Object.getPrototypeOf(TouchRipple)).call.apply(_ref, [this].concat(args))), _this.ignoringMouseDown = false, _this.startTimer = null, _this.startTimerCommit = null, _this.state = {
+	      // eslint-disable-next-line react/no-unused-state
 	      nextKey: 0,
 	      ripples: []
-	    }, _this.ignoringMouseDown = false, _this.startTimer = null, _this.startTimerCommit = null, _this.pulsate = function () {
+	    }, _this.pulsate = function () {
 	      _this.start({}, {
 	        pulsate: true
 	      });
@@ -31497,9 +31554,11 @@
 
 
 	        _this.startTimer = setTimeout(function () {
-	          _this.startTimerCommit();
+	          if (_this.startTimerCommit) {
+	            _this.startTimerCommit();
 
-	          _this.startTimerCommit = null;
+	            _this.startTimerCommit = null;
+	          }
 	        }, DELAY_RIPPLE); // We have to make a tradeoff with this value.
 	      } else {
 	        _this.startCommit({
@@ -31516,24 +31575,23 @@
 	          rippleY = params.rippleY,
 	          rippleSize = params.rippleSize,
 	          cb = params.cb;
-	      var ripples = _this.state.ripples; // Add a ripple to the ripples array.
 
-	      ripples = (0, _toConsumableArray2.default)(ripples).concat([_react.default.createElement(_Ripple.default, {
-	        key: _this.state.nextKey,
-	        classes: _this.props.classes,
-	        timeout: {
-	          exit: DURATION,
-	          enter: DURATION
-	        },
-	        pulsate: pulsate,
-	        rippleX: rippleX,
-	        rippleY: rippleY,
-	        rippleSize: rippleSize
-	      })]);
-
-	      _this.setState({
-	        nextKey: _this.state.nextKey + 1,
-	        ripples: ripples
+	      _this.setState(function (state) {
+	        return {
+	          nextKey: state.nextKey + 1,
+	          ripples: (0, _toConsumableArray2.default)(state.ripples).concat([_react.default.createElement(_Ripple.default, {
+	            key: state.nextKey,
+	            classes: _this.props.classes,
+	            timeout: {
+	              exit: DURATION,
+	              enter: DURATION
+	            },
+	            pulsate: pulsate,
+	            rippleX: rippleX,
+	            rippleY: rippleY,
+	            rippleSize: rippleSize
+	          })])
+	        };
 	      }, cb);
 	    }, _this.stop = function (event, cb) {
 	      clearTimeout(_this.startTimer);
@@ -31566,8 +31624,7 @@
 	    key: "componentWillUnmount",
 	    value: function componentWillUnmount() {
 	      clearTimeout(this.startTimer);
-	    } // Used to filter out mouse emulated events on mobile.
-
+	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
@@ -31634,15 +31691,21 @@
 	      cb.call(instance, event);
 	    }
 
+	    var ignore = false;
+
 	    if (event.defaultPrevented) {
-	      return false;
+	      ignore = true;
 	    }
 
-	    if (instance.ripple) {
+	    if (instance.props.disableTouchRipple && eventName !== 'Blur') {
+	      ignore = true;
+	    }
+
+	    if (!ignore && instance.ripple) {
 	      instance.ripple[action](event);
 	    }
 
-	    if (instance.props && typeof instance.props["on".concat(eventName)] === 'function') {
+	    if (typeof instance.props["on".concat(eventName)] === 'function') {
 	      instance.props["on".concat(eventName)](event);
 	    }
 
@@ -31772,7 +31835,29 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ButtonBase.__proto__ || Object.getPrototypeOf(ButtonBase)).call.apply(_ref, [this].concat(args))), _this.state = {}, _this.onFocusVisibleHandler = function (event) {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ButtonBase.__proto__ || Object.getPrototypeOf(ButtonBase)).call.apply(_ref, [this].concat(args))), _this.ripple = null, _this.keyDown = false, _this.button = null, _this.focusVisibleTimeout = null, _this.focusVisibleCheckTime = 50, _this.focusVisibleMaxCheckTimes = 5, _this.handleMouseDown = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseDown', 'start', function () {
+	      clearTimeout(_this.focusVisibleTimeout);
+
+	      if (_this.state.focusVisible) {
+	        _this.setState({
+	          focusVisible: false
+	        });
+	      }
+	    }), _this.handleMouseUp = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseUp', 'stop'), _this.handleMouseLeave = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseLeave', 'stop', function (event) {
+	      if (_this.state.focusVisible) {
+	        event.preventDefault();
+	      }
+	    }), _this.handleTouchStart = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchStart', 'start'), _this.handleTouchEnd = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchEnd', 'stop'), _this.handleTouchMove = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchMove', 'stop'), _this.handleBlur = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'Blur', 'stop', function () {
+	      clearTimeout(_this.focusVisibleTimeout);
+
+	      if (_this.state.focusVisible) {
+	        _this.setState({
+	          focusVisible: false
+	        });
+	      }
+	    }), _this.state = {}, _this.onRippleRef = function (node) {
+	      _this.ripple = node;
+	    }, _this.onFocusVisibleHandler = function (event) {
 	      _this.keyDown = false;
 
 	      _this.setState({
@@ -31782,9 +31867,7 @@
 	      if (_this.props.onFocusVisible) {
 	        _this.props.onFocusVisible(event);
 	      }
-	    }, _this.onRippleRef = function (node) {
-	      _this.ripple = node;
-	    }, _this.ripple = null, _this.keyDown = false, _this.button = null, _this.focusVisibleTimeout = null, _this.focusVisibleCheckTime = 50, _this.focusVisibleMaxCheckTimes = 5, _this.handleKeyDown = function (event) {
+	    }, _this.handleKeyDown = function (event) {
 	      var _this$props = _this.props,
 	          component = _this$props.component,
 	          focusRipple = _this$props.focusRipple,
@@ -31826,27 +31909,7 @@
 	      if (_this.props.onKeyUp) {
 	        _this.props.onKeyUp(event);
 	      }
-	    }, _this.handleMouseDown = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseDown', 'start', function () {
-	      clearTimeout(_this.focusVisibleTimeout);
-
-	      if (_this.state.focusVisible) {
-	        _this.setState({
-	          focusVisible: false
-	        });
-	      }
-	    }), _this.handleMouseUp = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseUp', 'stop'), _this.handleMouseLeave = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseLeave', 'stop', function (event) {
-	      if (_this.state.focusVisible) {
-	        event.preventDefault();
-	      }
-	    }), _this.handleTouchStart = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchStart', 'start'), _this.handleTouchEnd = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchEnd', 'stop'), _this.handleTouchMove = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchMove', 'stop'), _this.handleBlur = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'Blur', 'stop', function () {
-	      clearTimeout(_this.focusVisibleTimeout);
-
-	      if (_this.state.focusVisible) {
-	        _this.setState({
-	          focusVisible: false
-	        });
-	      }
-	    }), _this.handleFocus = function (event) {
+	    }, _this.handleFocus = function (event) {
 	      if (_this.props.disabled) {
 	        return;
 	      } // Fix for https://github.com/facebook/react/issues/7769
@@ -31915,6 +31978,7 @@
 	          component = _props.component,
 	          disabled = _props.disabled,
 	          disableRipple = _props.disableRipple,
+	          disableTouchRipple = _props.disableTouchRipple,
 	          focusRipple = _props.focusRipple,
 	          focusVisibleClassName = _props.focusVisibleClassName,
 	          onBlur = _props.onBlur,
@@ -31931,7 +31995,7 @@
 	          tabIndex = _props.tabIndex,
 	          TouchRippleProps = _props.TouchRippleProps,
 	          type = _props.type,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["action", "buttonRef", "centerRipple", "children", "classes", "className", "component", "disabled", "disableRipple", "focusRipple", "focusVisibleClassName", "onBlur", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "type"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["action", "buttonRef", "centerRipple", "children", "classes", "className", "component", "disabled", "disableRipple", "disableTouchRipple", "focusRipple", "focusVisibleClassName", "onBlur", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "type"]);
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.focusVisible, this.state.focusVisible), (0, _defineProperty2.default)(_classNames, focusVisibleClassName, this.state.focusVisible), _classNames), classNameProp);
 	      var buttonProps = {};
 	      var ComponentProp = component;
@@ -32035,7 +32099,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the base button will be disabled.
@@ -32046,6 +32110,11 @@
 	   * If `true`, the ripple effect will be disabled.
 	   */
 	  disableRipple: _propTypes.default.bool,
+
+	  /**
+	   * If `true`, the touch ripple effect will be disabled.
+	   */
+	  disableTouchRipple: _propTypes.default.bool,
 
 	  /**
 	   * If `true`, the base button will have a keyboard focus ripple.
@@ -32148,6 +32217,7 @@
 	  centerRipple: false,
 	  component: 'button',
 	  disableRipple: false,
+	  disableTouchRipple: false,
 	  focusRipple: false,
 	  tabIndex: '0',
 	  type: 'button'
@@ -32220,10 +32290,10 @@
 	      lineHeight: '1.4em',
 	      // Improve readability for multiline button.
 	      boxSizing: 'border-box',
-	      minWidth: theme.spacing.unit * 11,
+	      minWidth: 88,
 	      minHeight: 36,
-	      padding: "".concat(theme.spacing.unit, "px ").concat(theme.spacing.unit * 2, "px"),
-	      borderRadius: 4,
+	      padding: '8px 16px',
+	      borderRadius: theme.shape.borderRadius,
 	      color: theme.palette.text.primary,
 	      transition: theme.transitions.create(['background-color', 'box-shadow'], {
 	        duration: theme.transitions.duration.short
@@ -32244,11 +32314,11 @@
 	      }
 	    }),
 	    label: {
-	      width: '100%',
 	      display: 'inherit',
 	      alignItems: 'inherit',
 	      justifyContent: 'inherit'
 	    },
+	    text: {},
 	    textPrimary: {
 	      color: theme.palette.primary.main,
 	      '&:hover': {
@@ -32270,13 +32340,13 @@
 	      }
 	    },
 	    flat: {},
+	    // legacy
 	    flatPrimary: {},
+	    // legacy
 	    flatSecondary: {},
+	    // legacy
 	    outlined: {
 	      border: "1px solid ".concat(theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)')
-	    },
-	    colorInherit: {
-	      color: 'inherit'
 	    },
 	    contained: {
 	      color: theme.palette.getContrastText(theme.palette.grey[300]),
@@ -32327,35 +32397,47 @@
 	      }
 	    },
 	    raised: {},
+	    // legacy
 	    raisedPrimary: {},
+	    // legacy
 	    raisedSecondary: {},
-	    focusVisible: {},
-	    disabled: {},
+	    // legacy
 	    fab: {
 	      borderRadius: '50%',
 	      padding: 0,
 	      minWidth: 0,
 	      width: 56,
-	      fontSize: 24,
 	      height: 56,
 	      boxShadow: theme.shadows[6],
 	      '&:active': {
 	        boxShadow: theme.shadows[12]
 	      }
 	    },
+	    extendedFab: {
+	      borderRadius: 48 / 2,
+	      padding: '0 16px',
+	      width: 'initial',
+	      minWidth: 48,
+	      height: 48
+	    },
+	    focusVisible: {},
+	    disabled: {},
+	    colorInherit: {
+	      color: 'inherit'
+	    },
 	    mini: {
 	      width: 40,
 	      height: 40
 	    },
 	    sizeSmall: {
-	      padding: "".concat(theme.spacing.unit - 1, "px ").concat(theme.spacing.unit, "px"),
-	      minWidth: theme.spacing.unit * 8,
+	      padding: '7px 8px',
+	      minWidth: 64,
 	      minHeight: 32,
 	      fontSize: theme.typography.pxToRem(13)
 	    },
 	    sizeLarge: {
-	      padding: "".concat(theme.spacing.unit, "px ").concat(theme.spacing.unit * 3, "px"),
-	      minWidth: theme.spacing.unit * 14,
+	      padding: '8px 24px',
+	      minWidth: 112,
 	      minHeight: 40,
 	      fontSize: theme.typography.pxToRem(15)
 	    },
@@ -32382,10 +32464,10 @@
 	      size = props.size,
 	      variant = props.variant,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "color", "disabled", "disableFocusRipple", "fullWidth", "focusVisibleClassName", "mini", "size", "variant"]);
-	  var fab = variant === 'fab';
+	  var fab = variant === 'fab' || variant === 'extendedFab';
 	  var contained = variant === 'contained' || variant === 'raised';
-	  var text = !contained && !fab;
-	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.contained, contained || fab), (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), (0, _defineProperty2.default)(_classNames, classes.textPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.textSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.flat, text), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.containedPrimary, !text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.containedSecondary, !text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raised, contained || fab), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.text, variant === 'text'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), _classNames), classNameProp);
+	  var text = variant === 'text' || variant === 'flat' || variant === 'outlined';
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.extendedFab, variant === 'extendedFab'), (0, _defineProperty2.default)(_classNames, classes.text, text), (0, _defineProperty2.default)(_classNames, classes.textPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.textSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.flat, variant === 'text' || variant === 'flat'), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, (variant === 'text' || variant === 'flat') && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, (variant === 'text' || variant === 'flat') && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.contained, contained || fab), (0, _defineProperty2.default)(_classNames, classes.containedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.containedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raised, contained || fab), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), _classNames), classNameProp);
 	  return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
 	    className: className,
 	    disabled: disabled,
@@ -32422,7 +32504,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the button will be disabled.
@@ -32475,7 +32557,7 @@
 	  /**
 	   * The type of button.
 	   */
-	  variant: _propTypes.default.oneOf(['text', 'flat', 'outlined', 'contained', 'raised', 'fab'])
+	  variant: _propTypes.default.oneOf(['text', 'flat', 'outlined', 'contained', 'raised', 'fab', 'extendedFab'])
 	};
 	Button.defaultProps = {
 	  color: 'default',
@@ -32556,7 +32638,7 @@
 	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "raised"]);
 	  return _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, className),
-	    elevation: raised ? 8 : 2
+	    elevation: raised ? 8 : 1
 	  }, other));
 	}
 
@@ -33242,10 +33324,10 @@
 	var _meta_4 = _meta.getWeak;
 	var _meta_5 = _meta.onFreeze;
 
-	var defineProperty$2 = _objectDp.f;
+	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
 	  var $Symbol = _core.Symbol || (_core.Symbol = {});
-	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$2($Symbol, name, { value: _wksExt.f(name) });
+	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
 	var f$2 = Object.getOwnPropertySymbols;
@@ -33906,12 +33988,12 @@
 	  return {
 	    root: {
 	      userSelect: 'none',
-	      fontSize: 24,
 	      width: '1em',
 	      height: '1em',
 	      display: 'inline-block',
 	      fill: 'currentColor',
 	      flexShrink: 0,
+	      fontSize: 24,
 	      transition: theme.transitions.create('fill', {
 	        duration: theme.transitions.duration.shorter
 	      })
@@ -33930,6 +34012,9 @@
 	    },
 	    colorDisabled: {
 	      color: theme.palette.action.disabled
+	    },
+	    fontSizeInherit: {
+	      fontSize: 'inherit'
 	    }
 	  };
 	};
@@ -33937,22 +34022,26 @@
 	exports.styles = styles;
 
 	function SvgIcon(props) {
+	  var _classNames;
+
 	  var children = props.children,
 	      classes = props.classes,
 	      classNameProp = props.className,
 	      color = props.color,
+	      Component = props.component,
+	      fontSize = props.fontSize,
 	      nativeColor = props.nativeColor,
 	      titleAccess = props.titleAccess,
 	      viewBox = props.viewBox,
-	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "color", "nativeColor", "titleAccess", "viewBox"]);
-	  var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes["color".concat((0, helpers.capitalize)(color))], color !== 'inherit'), classNameProp);
-	  return _react.default.createElement("svg", (0, _extends2.default)({
+	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "color", "component", "fontSize", "nativeColor", "titleAccess", "viewBox"]);
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["fontSize".concat((0, helpers.capitalize)(fontSize))], fontSize !== 'default'), (0, _defineProperty2.default)(_classNames, classes["color".concat((0, helpers.capitalize)(color))], color !== 'inherit'), _classNames), classNameProp);
+	  return _react.default.createElement(Component, (0, _extends2.default)({
 	    className: className,
 	    focusable: "false",
 	    viewBox: viewBox,
 	    color: nativeColor,
 	    "aria-hidden": titleAccess ? 'false' : 'true'
-	  }, other), titleAccess ? _react.default.createElement("title", null, titleAccess) : null, children);
+	  }, other), children, titleAccess ? _react.default.createElement("title", null, titleAccess) : null);
 	}
 
 	SvgIcon.propTypes = {
@@ -33979,6 +34068,17 @@
 	  color: _propTypes.default.oneOf(['inherit', 'primary', 'secondary', 'action', 'error', 'disabled']),
 
 	  /**
+	   * The component used for the root node.
+	   * Either a string to use a DOM element or a component.
+	   */
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
+
+	  /**
+	   * The fontSize applied to the icon. Defaults to 24px, but can be configure to inherit font size.
+	   */
+	  fontSize: _propTypes.default.oneOf(['inherit', 'default']),
+
+	  /**
 	   * Applies a color attribute to the SVG element.
 	   */
 	  nativeColor: _propTypes.default.string,
@@ -34000,6 +34100,8 @@
 	};
 	SvgIcon.defaultProps = {
 	  color: 'inherit',
+	  component: 'svg',
+	  fontSize: 'default',
 	  viewBox: '0 0 24 24'
 	};
 	SvgIcon.muiName = 'SvgIcon';
@@ -34489,6 +34591,60 @@
 	  return debounced;
 	};
 
+	/**
+	 * Copyright (c) 2014-present, Facebook, Inc.
+	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 *
+	 * @providesModule warning
+	 */
+
+	var warning$4 = function() {};
+
+	{
+	  var printWarning$4 = function printWarning(format, args) {
+	    var len = arguments.length;
+	    args = new Array(len > 2 ? len - 2 : 0);
+	    for (var key = 2; key < len; key++) {
+	      args[key - 2] = arguments[key];
+	    }
+	    var argIndex = 0;
+	    var message = 'Warning: ' +
+	      format.replace(/%s/g, function() {
+	        return args[argIndex++];
+	      });
+	    if (typeof console !== 'undefined') {
+	      console.error(message);
+	    }
+	    try {
+	      // --- Welcome to debugging React ---
+	      // This error was thrown as a convenience so that you can use this stack
+	      // to find the callsite that caused this warning to fire.
+	      throw new Error(message);
+	    } catch (x) {}
+	  };
+
+	  warning$4 = function(condition, format, args) {
+	    var len = arguments.length;
+	    args = new Array(len > 2 ? len - 2 : 0);
+	    for (var key = 2; key < len; key++) {
+	      args[key - 2] = arguments[key];
+	    }
+	    if (format === undefined) {
+	      throw new Error(
+	          '`warning(condition, format, ...args)` requires a warning ' +
+	          'message argument'
+	      );
+	    }
+	    if (!condition) {
+	      printWarning$4.apply(null, [format].concat(args));
+	    }
+	  };
+	}
+
+	var warning_1$2 = warning$4;
+
 	var reactEventListener_cjs = createCommonjsModule(function (module, exports) {
 
 	Object.defineProperty(exports, '__esModule', { value: true });
@@ -34504,7 +34660,7 @@
 	var _objectSpread = _interopDefault(objectSpread);
 	var React = _interopDefault(react);
 	var PropTypes = _interopDefault(propTypes);
-	var warning = _interopDefault(browser);
+	var warning = _interopDefault(warning_1$2);
 
 	function defineProperty(object, property, attr) {
 	  return Object.defineProperty(object, property, attr);
@@ -34675,31 +34831,6 @@
 	unwrapExports(reactEventListener_cjs);
 	var reactEventListener_cjs_1 = reactEventListener_cjs.withOptions;
 
-	var activeElement_1 = createCommonjsModule(function (module, exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = activeElement;
-
-
-
-	var _ownerDocument2 = _interopRequireDefault(ownerDocument_1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function activeElement() {
-	  var doc = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : (0, _ownerDocument2.default)();
-
-	  try {
-	    return doc.activeElement;
-	  } catch (e) {/* ie throws if no active element */}
-	}
-	module.exports = exports['default'];
-	});
-
-	unwrapExports(activeElement_1);
-
 	var exactProp_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -34707,8 +34838,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = exactProp;
-	exports.specialProperty = void 0;
+	exports.default = exports.specialProperty = void 0;
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
@@ -34717,22 +34847,29 @@
 	// This module is based on https://github.com/airbnb/prop-types-exact repository.
 	// However, in order to reduce the number of dependencies and to remove some extra safe checks
 	// the module was forked.
+	// Only exported for test purposes.
 	var specialProperty = "exact-prop: \u200B";
 	exports.specialProperty = specialProperty;
 
-	function exactProp(propTypes, componentNameInError) {
+	function exactProp(propTypes) {
+
 	  return (0, _objectSpread3.default)({}, propTypes, (0, _defineProperty2.default)({}, specialProperty, function (props) {
-	    var unknownProps = Object.keys(props).filter(function (prop) {
+	    var unsupportedProps = Object.keys(props).filter(function (prop) {
 	      return !propTypes.hasOwnProperty(prop);
 	    });
 
-	    if (unknownProps.length > 0) {
-	      return new TypeError("".concat(componentNameInError, ": unknown props found: ").concat(unknownProps.join(', '), ". Please remove the unknown properties."));
+	    if (unsupportedProps.length > 0) {
+	      return new Error("The following properties are not supported: ".concat(unsupportedProps.map(function (prop) {
+	        return "`".concat(prop, "`");
+	      }).join(', '), ". Please remove them."));
 	    }
 
 	    return null;
 	  }));
 	}
+
+	var _default = exactProp;
+	exports.default = _default;
 	});
 
 	unwrapExports(exactProp_1);
@@ -34848,7 +34985,7 @@
 	   */
 	  rootRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]).isRequired
 	};
-	RootRef.propTypes = (0, _exactProp.default)(RootRef.propTypes, 'RootRef');
+	RootRef.propTypes = (0, _exactProp.default)(RootRef.propTypes);
 	var _default = RootRef;
 	exports.default = _default;
 	});
@@ -34995,7 +35132,7 @@
 	   */
 	  onRendered: _propTypes.default.func
 	};
-	Portal.propTypes = (0, _exactProp.default)(Portal.propTypes, 'Portal');
+	Portal.propTypes = (0, _exactProp.default)(Portal.propTypes);
 	var _default = Portal;
 	exports.default = _default;
 	});
@@ -35181,6 +35318,17 @@
 	});
 
 	unwrapExports(removeStyle_1);
+
+	var inDOM = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+	module.exports = exports['default'];
+	});
+
+	unwrapExports(inDOM);
 
 	var properties = createCommonjsModule(function (module, exports) {
 
@@ -35552,9 +35700,9 @@
 
 	var _style = interopRequireDefault(style_1);
 
-	var _ownerDocument = interopRequireDefault(ownerDocument_1);
-
 	var _scrollbarSize = interopRequireDefault(scrollbarSize);
+
+	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
 	var _isOverflowing = interopRequireDefault(isOverflowing_1);
 
@@ -35755,7 +35903,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _hoistNonReactStatics = interopRequireDefault(hoistNonReactStatics);
+	var _hoistNonReactStatics = interopRequireDefault(hoistNonReactStatics_cjs);
 
 	var _wrapDisplayName = interopRequireDefault(wrapDisplayName_1);
 
@@ -35787,8 +35935,8 @@
 
 	        (0, _classCallCheck2.default)(this, WithTheme);
 	        _this = (0, _possibleConstructorReturn2.default)(this, (WithTheme.__proto__ || Object.getPrototypeOf(WithTheme)).call(this, props, context));
-	        _this.state = {};
 	        _this.unsubscribeId = null;
+	        _this.state = {};
 	        _this.state = {
 	          // We use || as the function call is lazy evaluated.
 	          theme: _themeListener.default.initial(context) || getDefaultTheme()
@@ -36232,12 +36380,6 @@
 
 	var _keycode = interopRequireDefault(keycode);
 
-	var _activeElement = interopRequireDefault(activeElement_1);
-
-	var _contains = interopRequireDefault(contains);
-
-	var _inDOM = interopRequireDefault(inDOM);
-
 	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
 	var _RootRef = interopRequireDefault(RootRef$1);
@@ -36265,11 +36407,10 @@
 	var styles = function styles(theme) {
 	  return {
 	    root: {
-	      display: 'flex',
-	      width: '100%',
-	      height: '100%',
 	      position: 'fixed',
 	      zIndex: theme.zIndex.modal,
+	      right: 0,
+	      bottom: 0,
 	      top: 0,
 	      left: 0
 	    },
@@ -36297,12 +36438,16 @@
 
 	    (0, _classCallCheck2.default)(this, Modal);
 	    _this = (0, _possibleConstructorReturn2.default)(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props));
-	    _this.dialogElement = null;
-	    _this.mounted = false;
 	    _this.mountNode = null;
+	    _this.modalNode = null;
+	    _this.dialogNode = null;
+	    _this.mounted = false;
 
 	    _this.handleRendered = function () {
-	      _this.autoFocus();
+	      _this.autoFocus(); // Fix a bug on Chrome where the scroll isn't initially 0.
+
+
+	      _this.modalNode.scrollTop = 0;
 
 	      if (_this.props.onRendered) {
 	        _this.props.onRendered();
@@ -36324,7 +36469,7 @@
 
 	      var doc = (0, _ownerDocument.default)(_this.mountNode);
 	      doc.removeEventListener('keydown', _this.handleDocumentKeyDown);
-	      doc.removeEventListener('focus', _this.enforceFocus);
+	      doc.removeEventListener('focus', _this.enforceFocus, true);
 
 	      _this.restoreLastFocus();
 	    };
@@ -36366,9 +36511,7 @@
 	    };
 
 	    _this.checkForFocus = function () {
-	      if (_inDOM.default) {
-	        _this.lastFocus = (0, _activeElement.default)();
-	      }
+	      _this.lastFocus = (0, _ownerDocument.default)(_this.mountNode).activeElement;
 	    };
 
 	    _this.enforceFocus = function () {
@@ -36376,10 +36519,10 @@
 	        return;
 	      }
 
-	      var currentActiveElement = (0, _activeElement.default)((0, _ownerDocument.default)(_this.mountNode));
+	      var currentActiveElement = (0, _ownerDocument.default)(_this.mountNode).activeElement;
 
-	      if (_this.dialogElement && !(0, _contains.default)(_this.dialogElement, currentActiveElement)) {
-	        _this.dialogElement.focus();
+	      if (_this.dialogNode && !_this.dialogNode.contains(currentActiveElement)) {
+	        _this.dialogNode.focus();
 	      }
 	    };
 
@@ -36428,17 +36571,17 @@
 	        return;
 	      }
 
-	      var currentActiveElement = (0, _activeElement.default)((0, _ownerDocument.default)(this.mountNode));
+	      var currentActiveElement = (0, _ownerDocument.default)(this.mountNode).activeElement;
 
-	      if (this.dialogElement && !(0, _contains.default)(this.dialogElement, currentActiveElement)) {
+	      if (this.dialogNode && !this.dialogNode.contains(currentActiveElement)) {
 	        this.lastFocus = currentActiveElement;
 
-	        if (!this.dialogElement.hasAttribute('tabIndex')) {
+	        if (!this.dialogNode.hasAttribute('tabIndex')) {
 	          (0, _warning.default)(false, ['Material-UI: the modal content node does not accept focus.', 'For the benefit of assistive technologies, ' + 'the tabIndex of the node is being set to "-1".'].join('\n'));
-	          this.dialogElement.setAttribute('tabIndex', -1);
+	          this.dialogNode.setAttribute('tabIndex', -1);
 	        }
 
-	        this.dialogElement.focus();
+	        this.dialogNode.focus();
 	      }
 	    }
 	  }, {
@@ -36518,13 +36661,16 @@
 	        container: container,
 	        onRendered: this.handleRendered
 	      }, _react.default.createElement("div", (0, _extends2.default)({
+	        ref: function ref(node) {
+	          _this2.modalNode = node;
+	        },
 	        className: (0, _classnames.default)(classes.root, className, (0, _defineProperty2.default)({}, classes.hidden, exited))
 	      }, other), hideBackdrop ? null : _react.default.createElement(BackdropComponent, (0, _extends2.default)({
 	        open: open,
 	        onClick: this.handleBackdropClick
 	      }, BackdropProps)), _react.default.createElement(_RootRef.default, {
 	        rootRef: function rootRef(node) {
-	          _this2.dialogElement = node;
+	          _this2.dialogNode = node;
 	        }
 	      }, _react.default.cloneElement(children, childProps))));
 	    }
@@ -36535,7 +36681,9 @@
 	        return {
 	          exited: false
 	        };
-	      } else if (!getHasTransition(nextProps)) {
+	      }
+
+	      if (!getHasTransition(nextProps)) {
 	        // Otherwise let handleExited take care of marking exited.
 	        return {
 	          exited: true
@@ -36552,7 +36700,7 @@
 	  /**
 	   * A backdrop component. This property enables custom backdrop rendering.
 	   */
-	  BackdropComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  BackdropComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Properties applied to the `Backdrop` element.
@@ -36785,7 +36933,7 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Grow.__proto__ || Object.getPrototypeOf(Grow)).call.apply(_ref, [this].concat(args))), _this.autoTimeout = undefined, _this.timer = null, _this.handleEnter = function (node) {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Grow.__proto__ || Object.getPrototypeOf(Grow)).call.apply(_ref, [this].concat(args))), _this.autoTimeout = null, _this.timer = null, _this.handleEnter = function (node) {
 	      var _this$props = _this.props,
 	          theme = _this$props.theme,
 	          timeout = _this$props.timeout;
@@ -36994,13 +37142,11 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _contains = interopRequireDefault(contains);
-
-	var _ownerDocument = interopRequireDefault(ownerDocument_1);
-
 	var _debounce = interopRequireDefault(debounce);
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
+
+	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
 	var _ownerWindow = interopRequireDefault(ownerWindow_1);
 
@@ -37013,6 +37159,7 @@
 	var _Paper = interopRequireDefault(Paper$1);
 
 	// @inheritedComponent Modal
+	// < 1kb payload overhead when lodash/debounce is > 3kb.
 	function getOffsetTop(rect, vertical) {
 	  var offset = 0;
 
@@ -37097,7 +37244,11 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Popover.__proto__ || Object.getPrototypeOf(Popover)).call.apply(_ref, [this].concat(args))), _this.componentWillUnmount = function () {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Popover.__proto__ || Object.getPrototypeOf(Popover)).call.apply(_ref, [this].concat(args))), _this.transitionEl = null, _this.handleGetOffsetTop = getOffsetTop, _this.handleGetOffsetLeft = getOffsetLeft, _this.handleResize = (0, _debounce.default)(function () {
+	      var element = _reactDom.default.findDOMNode(_this.transitionEl);
+
+	      _this.setPositioningStyles(element);
+	    }, 166), _this.componentWillUnmount = function () {
 	      _this.handleResize.clear();
 	    }, _this.setPositioningStyles = function (element) {
 	      if (element && element.style) {
@@ -37180,21 +37331,18 @@
 	        left: "".concat(left, "px"),
 	        transformOrigin: getTransformOriginValue(transformOrigin)
 	      };
-	    }, _this.transitionEl = undefined, _this.handleGetOffsetTop = getOffsetTop, _this.handleGetOffsetLeft = getOffsetLeft, _this.handleEnter = function (element) {
+	    }, _this.handleEnter = function (element) {
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(element);
 	      }
 
 	      _this.setPositioningStyles(element);
-	    }, _this.handleResize = (0, _debounce.default)(function () {
-	      var element = _reactDom.default.findDOMNode(_this.transitionEl);
-
-	      _this.setPositioningStyles(element);
-	    }, 166), _temp));
+	    }, _temp));
 	  }
 
 	  (0, _createClass2.default)(Popover, [{
 	    key: "componentDidMount",
+	    // Corresponds to 10 frames at 60 Hz.
 	    value: function componentDidMount() {
 	      if (this.props.action) {
 	        this.props.action({
@@ -37239,7 +37387,7 @@
 	      if (getContentAnchorEl && anchorReference === 'anchorEl') {
 	        var contentAnchorEl = getContentAnchorEl(element);
 
-	        if (contentAnchorEl && (0, _contains.default)(element, contentAnchorEl)) {
+	        if (contentAnchorEl && element.contains(contentAnchorEl)) {
 	          var scrollTop = getScrollParent(element, contentAnchorEl);
 	          contentAnchorOffset = contentAnchorEl.offsetTop + contentAnchorEl.clientHeight / 2 - scrollTop || 0;
 	        } // != the default value
@@ -37264,7 +37412,6 @@
 	    }
 	  }, {
 	    key: "render",
-	    // Corresponds to 10 frames at 60 Hz.
 	    value: function render() {
 	      var _this2 = this;
 
@@ -37374,8 +37521,8 @@
 	   * the application's client area.
 	   */
 	  anchorPosition: _propTypes.default.shape({
-	    top: _propTypes.default.number,
-	    left: _propTypes.default.number
+	    left: _propTypes.default.number,
+	    top: _propTypes.default.number
 	  }),
 
 	  /*
@@ -37491,7 +37638,7 @@
 	  /**
 	   * Transition component.
 	   */
-	  TransitionComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  TransitionComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Set to 'auto' to automatically calculate transition time based on height.
@@ -37641,6 +37788,7 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(MuiThemeProvider, _React$Component);
 
+	  // We are not using the React state in order to avoid unnecessary rerender.
 	  function MuiThemeProvider(props, context) {
 	    var _this;
 
@@ -37703,10 +37851,10 @@
 	      if (this.unsubscribeId !== null) {
 	        _themeListener.default.unsubscribe(this.context, this.unsubscribeId);
 	      }
-	    }
+	    } // Simple merge between the outer theme and the local theme
+
 	  }, {
 	    key: "mergeOuterLocalTheme",
-	    // Simple merge between the outer theme and the local theme
 	    value: function mergeOuterLocalTheme(localTheme) {
 	      // To support composition of theme.
 	      if (typeof localTheme === 'function') {
@@ -37766,7 +37914,7 @@
 	   */
 	  theme: _propTypes.default.oneOfType([_propTypes.default.object, _propTypes.default.func]).isRequired
 	};
-	MuiThemeProvider.propTypes = (0, _exactProp.default)(MuiThemeProvider.propTypes, 'MuiThemeProvider');
+	MuiThemeProvider.propTypes = (0, _exactProp.default)(MuiThemeProvider.propTypes);
 	MuiThemeProvider.childContextTypes = (0, _objectSpread2.default)({}, _themeListener.default.contextTypes, {
 	  muiThemeProviderOptions: _propTypes.default.object
 	});
@@ -38015,7 +38163,7 @@
 	      marginBottom: '0.35em'
 	    },
 	    paragraph: {
-	      marginBottom: theme.spacing.unit * 2
+	      marginBottom: 16
 	    },
 	    colorInherit: {
 	      color: 'inherit'
@@ -38090,7 +38238,7 @@
 	   * Either a string to use a DOM element or a component.
 	   * By default, it maps the variant to a good default headline component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the text will have a bottom margin.
@@ -38225,11 +38373,11 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _defineProperty2 = interopRequireDefault(defineProperty$1);
-
 	var _objectSpread2 = interopRequireDefault(objectSpread);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
+
+	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _react = interopRequireDefault(react);
 
@@ -38252,30 +38400,50 @@
 	// @inheritedComponent Modal
 	var styles = function styles(theme) {
 	  return {
-	    root: {
+	    root: {},
+	    scrollPaper: {
+	      display: 'flex',
 	      justifyContent: 'center',
 	      alignItems: 'center'
 	    },
+	    scrollBody: {
+	      overflowY: 'auto',
+	      overflowX: 'hidden'
+	    },
 	    paper: {
 	      display: 'flex',
-	      margin: theme.spacing.unit * 4,
 	      flexDirection: 'column',
-	      flex: '0 1 auto',
+	      margin: 48,
 	      position: 'relative',
-	      maxHeight: '90vh',
 	      overflowY: 'auto',
 	      // Fix IE11 issue, to remove at some point.
 	      // We disable the focus ring for mouse, touch and keyboard users.
 	      outline: 'none'
 	    },
+	    paperScrollPaper: {
+	      flex: '0 1 auto',
+	      maxHeight: 'calc(100% - 96px)'
+	    },
+	    paperScrollBody: {
+	      margin: '48px auto'
+	    },
 	    paperWidthXs: {
-	      maxWidth: Math.max(theme.breakpoints.values.xs, 360)
+	      maxWidth: Math.max(theme.breakpoints.values.xs, 360),
+	      '&$paperScrollBody': (0, _defineProperty2.default)({}, theme.breakpoints.down(Math.max(theme.breakpoints.values.xs, 360) + 48 * 2), {
+	        margin: 48
+	      })
 	    },
 	    paperWidthSm: {
-	      maxWidth: theme.breakpoints.values.sm
+	      maxWidth: theme.breakpoints.values.sm,
+	      '&$paperScrollBody': (0, _defineProperty2.default)({}, theme.breakpoints.down(theme.breakpoints.values.sm + 48 * 2), {
+	        margin: 48
+	      })
 	    },
 	    paperWidthMd: {
-	      maxWidth: theme.breakpoints.values.md
+	      maxWidth: theme.breakpoints.values.md,
+	      '&$paperScrollBody': (0, _defineProperty2.default)({}, theme.breakpoints.down(theme.breakpoints.values.md + 48 * 2), {
+	        margin: 48
+	      })
 	    },
 	    paperFullWidth: {
 	      width: '100%'
@@ -38285,7 +38453,7 @@
 	      width: '100%',
 	      maxWidth: '100%',
 	      height: '100%',
-	      maxHeight: '100%',
+	      maxHeight: 'none',
 	      borderRadius: 0
 	    }
 	  };
@@ -38320,12 +38488,13 @@
 	      onExiting = props.onExiting,
 	      open = props.open,
 	      PaperProps = props.PaperProps,
+	      scroll = props.scroll,
 	      TransitionComponent = props.TransitionComponent,
 	      transitionDuration = props.transitionDuration,
 	      TransitionProps = props.TransitionProps,
-	      other = (0, _objectWithoutProperties2.default)(props, ["BackdropProps", "children", "classes", "className", "disableBackdropClick", "disableEscapeKeyDown", "fullScreen", "fullWidth", "maxWidth", "onBackdropClick", "onClose", "onEnter", "onEntered", "onEntering", "onEscapeKeyDown", "onExit", "onExited", "onExiting", "open", "PaperProps", "TransitionComponent", "transitionDuration", "TransitionProps"]);
+	      other = (0, _objectWithoutProperties2.default)(props, ["BackdropProps", "children", "classes", "className", "disableBackdropClick", "disableEscapeKeyDown", "fullScreen", "fullWidth", "maxWidth", "onBackdropClick", "onClose", "onEnter", "onEntered", "onEntering", "onEscapeKeyDown", "onExit", "onExited", "onExiting", "open", "PaperProps", "scroll", "TransitionComponent", "transitionDuration", "TransitionProps"]);
 	  return _react.default.createElement(_Modal.default, (0, _extends2.default)({
-	    className: (0, _classnames.default)(classes.root, className),
+	    className: (0, _classnames.default)(classes.root, classes["scroll".concat((0, helpers.capitalize)(scroll))], className),
 	    BackdropProps: (0, _objectSpread2.default)({
 	      transitionDuration: transitionDuration
 	    }, BackdropProps),
@@ -38348,7 +38517,7 @@
 	    onExited: onExited
 	  }, TransitionProps), _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	    elevation: 24,
-	    className: (0, _classnames.default)(classes.paper, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["paperWidth".concat(maxWidth ? (0, helpers.capitalize)(maxWidth) : '')], maxWidth), (0, _defineProperty2.default)(_classNames, classes.paperFullScreen, fullScreen), (0, _defineProperty2.default)(_classNames, classes.paperFullWidth, fullWidth), _classNames))
+	    className: (0, _classnames.default)(classes.paper, classes["paperScroll".concat((0, helpers.capitalize)(scroll))], (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["paperWidth".concat(maxWidth ? (0, helpers.capitalize)(maxWidth) : '')], maxWidth), (0, _defineProperty2.default)(_classNames, classes.paperFullScreen, fullScreen), (0, _defineProperty2.default)(_classNames, classes.paperFullWidth, fullWidth), _classNames))
 	  }, PaperProps), children)));
 	}
 
@@ -38461,9 +38630,14 @@
 	  PaperProps: _propTypes.default.object,
 
 	  /**
+	   * Determine the container for scrolling the dialog.
+	   */
+	  scroll: _propTypes.default.oneOf(['body', 'paper']),
+
+	  /**
 	   * Transition component.
 	   */
-	  TransitionComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  TransitionComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * The duration for the transition, in milliseconds.
@@ -38485,6 +38659,7 @@
 	  fullScreen: false,
 	  fullWidth: false,
 	  maxWidth: 'sm',
+	  scroll: 'paper',
 	  TransitionComponent: _Fade.default,
 	  transitionDuration: {
 	    enter: transitions.duration.enteringScreen,
@@ -38546,22 +38721,18 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
-	var styles = function styles(theme) {
-	  var spacing = theme.spacing.unit * 3;
-	  return {
-	    root: {
-	      flex: '1 1 auto',
-	      overflowY: 'auto',
-	      WebkitOverflowScrolling: 'touch',
-	      // Add iOS momentum scrolling.
-	      padding: "0 ".concat(spacing, "px ").concat(spacing, "px ").concat(spacing, "px"),
-	      '&:first-child': {
-	        paddingTop: spacing
-	      }
+	var styles = {
+	  root: {
+	    flex: '1 1 auto',
+	    overflowY: 'auto',
+	    WebkitOverflowScrolling: 'touch',
+	    // Add iOS momentum scrolling.
+	    padding: '0 24px 24px',
+	    '&:first-child': {
+	      paddingTop: 24
 	    }
-	  };
+	  }
 	};
-
 	exports.styles = styles;
 
 	function DialogContent(props) {
@@ -38725,8 +38896,8 @@
 	      paddingBottom: 12
 	    },
 	    dense: {
-	      paddingTop: theme.spacing.unit,
-	      paddingBottom: theme.spacing.unit
+	      paddingTop: 8,
+	      paddingBottom: 8
 	    },
 	    disabled: {
 	      opacity: 0.5
@@ -38752,7 +38923,7 @@
 	    secondaryAction: {
 	      // Add some space to avoid collision as `ListItemSecondaryAction`
 	      // is absolutely positionned.
-	      paddingRight: theme.spacing.unit * 4
+	      paddingRight: 32
 	    }
 	  };
 	};
@@ -38869,12 +39040,12 @@
 	   * Either a string to use a DOM element or a component.
 	   * By default, it's a `li` when `button` is `false` and a `div` when `button` is `true`.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * The container component used when a `ListItemSecondaryAction` is rendered.
 	   */
-	  ContainerComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  ContainerComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Properties applied to the container element when the component
@@ -38982,14 +39153,14 @@
 	var styles = function styles(theme) {
 	  return {
 	    root: (0, _objectSpread2.default)({}, theme.typography.subheading, {
-	      height: theme.spacing.unit * 3,
+	      height: 24,
 	      boxSizing: 'content-box',
 	      width: 'auto',
 	      overflow: 'hidden',
 	      textOverflow: 'ellipsis',
 	      whiteSpace: 'nowrap',
-	      paddingLeft: theme.spacing.unit * 2,
-	      paddingRight: theme.spacing.unit * 2,
+	      paddingLeft: 16,
+	      paddingRight: 16,
 	      '&$selected': {
 	        backgroundColor: theme.palette.action.selected
 	      }
@@ -39037,7 +39208,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * @ignore
@@ -39115,28 +39286,25 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
-	var styles = function styles(theme) {
-	  return {
-	    root: {
-	      listStyle: 'none',
-	      margin: 0,
-	      padding: 0,
-	      position: 'relative'
-	    },
-	    padding: {
-	      paddingTop: theme.spacing.unit,
-	      paddingBottom: theme.spacing.unit
-	    },
-	    dense: {
-	      paddingTop: theme.spacing.unit / 2,
-	      paddingBottom: theme.spacing.unit / 2
-	    },
-	    subheader: {
-	      paddingTop: 0
-	    }
-	  };
+	var styles = {
+	  root: {
+	    listStyle: 'none',
+	    margin: 0,
+	    padding: 0,
+	    position: 'relative'
+	  },
+	  padding: {
+	    paddingTop: 8,
+	    paddingBottom: 8
+	  },
+	  dense: {
+	    paddingTop: 4,
+	    paddingBottom: 4
+	  },
+	  subheader: {
+	    paddingTop: 0
+	  }
 	};
-
 	exports.styles = styles;
 
 	var List =
@@ -39200,7 +39368,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, compact vertical padding designed for keyboard and mouse input will be used for
@@ -39286,9 +39454,7 @@
 
 	var _keycode = interopRequireDefault(keycode);
 
-	var _contains = interopRequireDefault(contains);
-
-	var _activeElement = interopRequireDefault(activeElement_1);
+	var _warning = interopRequireDefault(warning_1$1);
 
 	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
@@ -39311,16 +39477,16 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = MenuList.__proto__ || Object.getPrototypeOf(MenuList)).call.apply(_ref, [this].concat(args))), _this.state = {
-	      currentTabIndex: undefined
-	    }, _this.list = undefined, _this.selectedItem = undefined, _this.blurTimer = undefined, _this.handleBlur = function (event) {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = MenuList.__proto__ || Object.getPrototypeOf(MenuList)).call.apply(_ref, [this].concat(args))), _this.list = null, _this.selectedItem = null, _this.blurTimer = null, _this.state = {
+	      currentTabIndex: null
+	    }, _this.handleBlur = function (event) {
 	      _this.blurTimer = setTimeout(function () {
 	        if (_this.list) {
 	          var list = _reactDom.default.findDOMNode(_this.list);
 
-	          var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+	          var currentFocus = (0, _ownerDocument.default)(list).activeElement;
 
-	          if (!(0, _contains.default)(list, currentFocus)) {
+	          if (!list.contains(currentFocus)) {
 	            _this.resetTabIndex();
 	          }
 	        }
@@ -39333,9 +39499,9 @@
 	      var list = _reactDom.default.findDOMNode(_this.list);
 
 	      var key = (0, _keycode.default)(event);
-	      var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+	      var currentFocus = (0, _ownerDocument.default)(list).activeElement;
 
-	      if ((key === 'up' || key === 'down') && (!currentFocus || currentFocus && !(0, _contains.default)(list, currentFocus))) {
+	      if ((key === 'up' || key === 'down') && (!currentFocus || currentFocus && !list.contains(currentFocus))) {
 	        if (_this.selectedItem) {
 	          _reactDom.default.findDOMNode(_this.selectedItem).focus();
 	        } else {
@@ -39412,7 +39578,7 @@
 	    value: function resetTabIndex() {
 	      var list = _reactDom.default.findDOMNode(this.list);
 
-	      var currentFocus = (0, _activeElement.default)((0, _ownerDocument.default)(list));
+	      var currentFocus = (0, _ownerDocument.default)(list).activeElement;
 	      var items = [];
 
 	      for (var i = 0; i < list.children.length; i += 1) {
@@ -39455,6 +39621,7 @@
 	          return null;
 	        }
 
+	        (0, _warning.default)(child.type !== _react.default.Fragment, ["Material-UI: the MenuList component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n'));
 	        return _react.default.cloneElement(child, {
 	          tabIndex: index === _this2.state.currentTabIndex ? 0 : -1,
 	          ref: child.props.selected ? function (node) {
@@ -39836,7 +40003,7 @@
 	 * will remain to ensure logic does not differ in production.
 	 */
 
-	var invariant$2 = function(condition, format, a, b, c, d, e, f) {
+	var invariant$1 = function(condition, format, a, b, c, d, e, f) {
 	  {
 	    if (format === undefined) {
 	      throw new Error('invariant requires an error message argument');
@@ -39864,7 +40031,7 @@
 	  }
 	};
 
-	var browser$1 = invariant$2;
+	var browser$1 = invariant$1;
 
 	function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -41035,6 +41202,7 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
+	// < 1kb payload overhead when lodash/debounce is > 3kb.
 	var ROWS_HEIGHT = 19;
 	var styles = {
 	  root: {
@@ -41078,6 +41246,7 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(Textarea, _React$Component);
 
+	  // Corresponds to 10 frames at 60 Hz.
 	  function Textarea(props) {
 	    var _this;
 
@@ -41085,9 +41254,6 @@
 	    _this = (0, _possibleConstructorReturn2.default)(this, (Textarea.__proto__ || Object.getPrototypeOf(Textarea)).call(this, props)); // <Input> expects the components it renders to respond to 'value'
 	    // so that it can check whether they are filled.
 
-	    _this.state = {
-	      height: null
-	    };
 	    _this.shadow = null;
 	    _this.singlelineShadow = null;
 	    _this.input = null;
@@ -41095,6 +41261,9 @@
 	    _this.handleResize = (0, _debounce.default)(function () {
 	      _this.syncHeightWithShadow();
 	    }, 166);
+	    _this.state = {
+	      height: null
+	    };
 
 	    _this.handleRefInput = function (node) {
 	      _this.input = node;
@@ -41156,7 +41325,6 @@
 	    }
 	  }, {
 	    key: "syncHeightWithShadow",
-	    // Corresponds to 10 frames at 60 Hz.
 	    value: function syncHeightWithShadow() {
 	      var props = this.props;
 
@@ -41402,7 +41570,7 @@
 	    },
 	    formControl: {
 	      'label + &': {
-	        marginTop: theme.spacing.unit * 2
+	        marginTop: 16
 	      }
 	    },
 	    focused: {},
@@ -41455,7 +41623,7 @@
 	    },
 	    error: {},
 	    multiline: {
-	      padding: "".concat(theme.spacing.unit - 2, "px 0 ").concat(theme.spacing.unit - 1, "px")
+	      padding: "".concat(8 - 2, "px 0 ").concat(8 - 1, "px")
 	    },
 	    fullWidth: {
 	      width: '100%'
@@ -41463,7 +41631,7 @@
 	    input: {
 	      font: 'inherit',
 	      color: 'currentColor',
-	      padding: "".concat(theme.spacing.unit - 2, "px 0 ").concat(theme.spacing.unit - 1, "px"),
+	      padding: "".concat(8 - 2, "px 0 ").concat(8 - 1, "px"),
 	      border: 0,
 	      boxSizing: 'content-box',
 	      verticalAlign: 'middle',
@@ -41517,7 +41685,7 @@
 	      }
 	    },
 	    inputMarginDense: {
-	      paddingTop: theme.spacing.unit / 2 - 1
+	      paddingTop: 4 - 1
 	    },
 	    inputMultiline: {
 	      resize: 'none',
@@ -41569,16 +41737,17 @@
 	function (_React$Component) {
 	  (0, _inherits2.default)(Input, _React$Component);
 
+	  // Holds the input reference
 	  function Input(props, context) {
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Input);
 	    _this = (0, _possibleConstructorReturn2.default)(this, (Input.__proto__ || Object.getPrototypeOf(Input)).call(this, props, context));
+	    _this.isControlled = _this.props.value != null;
+	    _this.input = null;
 	    _this.state = {
 	      focused: false
 	    };
-	    _this.isControlled = _this.props.value != null;
-	    _this.input = null;
 
 	    _this.handleFocus = function (event) {
 	      // Fix a bug with IE11 where the focus/blur events are triggered
@@ -41820,7 +41989,6 @@
 	        className: className
 	      }, other), startAdornment, _react.default.createElement(InputComponent, (0, _extends2.default)({
 	        "aria-invalid": error,
-	        "aria-required": required,
 	        autoComplete: autoComplete,
 	        autoFocus: autoFocus,
 	        className: inputClassName,
@@ -41910,7 +42078,7 @@
 	   * The component used for the native input.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  inputComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  inputComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Attributes applied to the `input` element.
@@ -42075,42 +42243,39 @@
 
 
 
-	var styles = function styles(theme) {
-	  return {
-	    root: {
-	      display: 'inline-flex',
-	      flexDirection: 'column',
-	      position: 'relative',
-	      // Reset fieldset default style
-	      minWidth: 0,
-	      padding: 0,
-	      margin: 0,
-	      border: 0
-	    },
-	    marginNormal: {
-	      marginTop: theme.spacing.unit * 2,
-	      marginBottom: theme.spacing.unit
-	    },
-	    marginDense: {
-	      marginTop: theme.spacing.unit,
-	      marginBottom: theme.spacing.unit / 2
-	    },
-	    fullWidth: {
-	      width: '100%'
-	    }
-	  };
+	var styles = {
+	  root: {
+	    display: 'inline-flex',
+	    flexDirection: 'column',
+	    position: 'relative',
+	    // Reset fieldset default style
+	    minWidth: 0,
+	    padding: 0,
+	    margin: 0,
+	    border: 0
+	  },
+	  marginNormal: {
+	    marginTop: 16,
+	    marginBottom: 8
+	  },
+	  marginDense: {
+	    marginTop: 8,
+	    marginBottom: 4
+	  },
+	  fullWidth: {
+	    width: '100%'
+	  }
 	};
 	/**
 	 * Provides context such as filled/focused/error/required for form inputs.
 	 * Relying on the context provides high flexibilty and ensures that the state always stays
-	 * consitent across the children of the `FormControl`.
+	 * consistent across the children of the `FormControl`.
 	 * This context is used by the following components:
 	 *  - FormLabel
 	 *  - FormHelperText
 	 *  - Input
 	 *  - InputLabel
 	 */
-
 
 	exports.styles = styles;
 
@@ -42259,7 +42424,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the label, input and helper text should be displayed in a disabled state.
@@ -42358,7 +42523,7 @@
 	      fontFamily: theme.typography.fontFamily,
 	      fontSize: theme.typography.pxToRem(12),
 	      textAlign: 'left',
-	      marginTop: theme.spacing.unit,
+	      marginTop: 8,
 	      lineHeight: '1em',
 	      minHeight: '1em',
 	      margin: 0,
@@ -42372,7 +42537,7 @@
 	    error: {},
 	    disabled: {},
 	    marginDense: {
-	      marginTop: theme.spacing.unit / 2
+	      marginTop: 4
 	    }
 	  };
 	};
@@ -42435,7 +42600,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the helper text should be displayed in a disabled state.
@@ -42527,7 +42692,7 @@
 	      // Remove grey highlight
 	      WebkitTapHighlightColor: 'transparent',
 	      marginLeft: -14,
-	      marginRight: theme.spacing.unit * 2,
+	      marginRight: 16,
 	      // used for row presentation of radio/checkbox
 	      '&$disabled': {
 	        cursor: 'default'
@@ -42689,7 +42854,8 @@
 	exports.default = void 0;
 
 	//  weak
-	var requirePropFactory = function requirePropFactory(componentNameInError) {
+	function requirePropFactory(componentNameInError) {
+
 	  var requireProp = function requireProp(requiredProp) {
 	    return function (props, propName, componentName, location, propFullName) {
 	      var propFullNameSafe = propFullName || propName;
@@ -42703,7 +42869,7 @@
 	  };
 
 	  return requireProp;
-	};
+	}
 
 	var _default = requirePropFactory;
 	exports.default = _default;
@@ -42720,13 +42886,13 @@
 	});
 	exports.default = exports.styles = void 0;
 
+	var _defineProperty2 = interopRequireDefault(defineProperty$1);
+
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _objectSpread2 = interopRequireDefault(objectSpread);
 
 	var _extends2 = interopRequireDefault(_extends_1);
-
-	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _react = interopRequireDefault(react);
 
@@ -42751,31 +42917,39 @@
 	// Follow this flexbox Guide to better understand the underlying model:
 	// - https://css-tricks.com/snippets/css/a-guide-to-flexbox/
 	var GUTTERS = [0, 8, 16, 24, 32, 40];
-	var GRID_SIZES = [true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+	var GRID_SIZES = ['auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 	function generateGrid(globalStyles, theme, breakpoint) {
-	  // For the auto layouting
-	  var styles = (0, _defineProperty2.default)({}, "grid-".concat(breakpoint), {
-	    flexBasis: 0,
-	    flexGrow: 1,
-	    maxWidth: '100%'
-	  });
+	  var styles = {};
 	  GRID_SIZES.forEach(function (size) {
-	    if (typeof size === 'boolean') {
-	      // Skip the first one as handle above.
+	    var key = "grid-".concat(breakpoint, "-").concat(size);
+
+	    if (size === true) {
+	      // For the auto layouting
+	      styles[key] = {
+	        flexBasis: 0,
+	        flexGrow: 1,
+	        maxWidth: '100%'
+	      };
+	      return;
+	    }
+
+	    if (size === 'auto') {
+	      styles[key] = {
+	        flexBasis: 'auto',
+	        flexGrow: 0,
+	        maxWidth: 'none'
+	      };
 	      return;
 	    } // Only keep 6 significant numbers.
 
 
-	    var width = "".concat(Math.round(size / 12 * 10e6) / 10e4, "%");
-	    /* eslint-disable max-len */
-	    // Close to the bootstrap implementation:
+	    var width = "".concat(Math.round(size / 12 * 10e6) / 10e4, "%"); // Close to the bootstrap implementation:
 	    // https://github.com/twbs/bootstrap/blob/8fccaa2439e97ec72a4b7dc42ccc1f649790adb0/scss/mixins/_grid.scss#L41
 
-	    /* eslint-enable max-len */
-
-	    styles["grid-".concat(breakpoint, "-").concat(size)] = {
+	    styles[key] = {
 	      flexBasis: width,
+	      flexGrow: 0,
 	      maxWidth: width
 	    };
 	  }); // No need for a media query for the first size.
@@ -42912,7 +43086,7 @@
 	      xs = props.xs,
 	      zeroMinWidth = props.zeroMinWidth,
 	      other = (0, _objectWithoutProperties2.default)(props, ["alignContent", "alignItems", "classes", "className", "component", "container", "direction", "item", "justify", "lg", "md", "sm", "spacing", "wrap", "xl", "xs", "zeroMinWidth"]);
-	  var className = (0, _classnames.default)((_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.container, container), (0, _defineProperty2.default)(_classNames, classes.item, item), (0, _defineProperty2.default)(_classNames, classes.zeroMinWidth, zeroMinWidth), (0, _defineProperty2.default)(_classNames, classes["spacing-xs-".concat(String(spacing))], container && spacing !== 0), (0, _defineProperty2.default)(_classNames, classes["direction-xs-".concat(String(direction))], direction !== Grid.defaultProps.direction), (0, _defineProperty2.default)(_classNames, classes["wrap-xs-".concat(String(wrap))], wrap !== Grid.defaultProps.wrap), (0, _defineProperty2.default)(_classNames, classes["align-items-xs-".concat(String(alignItems))], alignItems !== Grid.defaultProps.alignItems), (0, _defineProperty2.default)(_classNames, classes["align-content-xs-".concat(String(alignContent))], alignContent !== Grid.defaultProps.alignContent), (0, _defineProperty2.default)(_classNames, classes["justify-xs-".concat(String(justify))], justify !== Grid.defaultProps.justify), (0, _defineProperty2.default)(_classNames, classes['grid-xs'], xs === true), (0, _defineProperty2.default)(_classNames, classes["grid-xs-".concat(String(xs))], xs && xs !== true), (0, _defineProperty2.default)(_classNames, classes['grid-sm'], sm === true), (0, _defineProperty2.default)(_classNames, classes["grid-sm-".concat(String(sm))], sm && sm !== true), (0, _defineProperty2.default)(_classNames, classes['grid-md'], md === true), (0, _defineProperty2.default)(_classNames, classes["grid-md-".concat(String(md))], md && md !== true), (0, _defineProperty2.default)(_classNames, classes['grid-lg'], lg === true), (0, _defineProperty2.default)(_classNames, classes["grid-lg-".concat(String(lg))], lg && lg !== true), (0, _defineProperty2.default)(_classNames, classes['grid-xl'], xl === true), (0, _defineProperty2.default)(_classNames, classes["grid-xl-".concat(String(xl))], xl && xl !== true), _classNames), classNameProp);
+	  var className = (0, _classnames.default)((_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.container, container), (0, _defineProperty2.default)(_classNames, classes.item, item), (0, _defineProperty2.default)(_classNames, classes.zeroMinWidth, zeroMinWidth), (0, _defineProperty2.default)(_classNames, classes["spacing-xs-".concat(String(spacing))], container && spacing !== 0), (0, _defineProperty2.default)(_classNames, classes["direction-xs-".concat(String(direction))], direction !== Grid.defaultProps.direction), (0, _defineProperty2.default)(_classNames, classes["wrap-xs-".concat(String(wrap))], wrap !== Grid.defaultProps.wrap), (0, _defineProperty2.default)(_classNames, classes["align-items-xs-".concat(String(alignItems))], alignItems !== Grid.defaultProps.alignItems), (0, _defineProperty2.default)(_classNames, classes["align-content-xs-".concat(String(alignContent))], alignContent !== Grid.defaultProps.alignContent), (0, _defineProperty2.default)(_classNames, classes["justify-xs-".concat(String(justify))], justify !== Grid.defaultProps.justify), (0, _defineProperty2.default)(_classNames, classes["grid-xs-".concat(String(xs))], xs !== false), (0, _defineProperty2.default)(_classNames, classes["grid-sm-".concat(String(sm))], sm !== false), (0, _defineProperty2.default)(_classNames, classes["grid-md-".concat(String(md))], md !== false), (0, _defineProperty2.default)(_classNames, classes["grid-lg-".concat(String(lg))], lg !== false), (0, _defineProperty2.default)(_classNames, classes["grid-xl-".concat(String(xl))], xl !== false), _classNames), classNameProp);
 	  return _react.default.createElement(Component, (0, _extends2.default)({
 	    className: className
 	  }, other));
@@ -42951,7 +43125,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the component will have the flex *container* behavior.
@@ -42981,19 +43155,19 @@
 	   * Defines the number of grids the component is going to use.
 	   * It's applied for the `lg` breakpoint and wider screens if not overridden.
 	   */
-	  lg: _propTypes.default.oneOf([false, true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+	  lg: _propTypes.default.oneOf([false, 'auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
 
 	  /**
 	   * Defines the number of grids the component is going to use.
 	   * It's applied for the `md` breakpoint and wider screens if not overridden.
 	   */
-	  md: _propTypes.default.oneOf([false, true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+	  md: _propTypes.default.oneOf([false, 'auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
 
 	  /**
 	   * Defines the number of grids the component is going to use.
 	   * It's applied for the `sm` breakpoint and wider screens if not overridden.
 	   */
-	  sm: _propTypes.default.oneOf([false, true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+	  sm: _propTypes.default.oneOf([false, 'auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
 
 	  /**
 	   * Defines the space between the type `item` component.
@@ -43011,13 +43185,13 @@
 	   * Defines the number of grids the component is going to use.
 	   * It's applied for the `xl` breakpoint and wider screens.
 	   */
-	  xl: _propTypes.default.oneOf([false, true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+	  xl: _propTypes.default.oneOf([false, 'auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
 
 	  /**
 	   * Defines the number of grids the component is going to use.
 	   * It's applied for all the screen sizes with the lowest priority.
 	   */
-	  xs: _propTypes.default.oneOf([false, true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+	  xs: _propTypes.default.oneOf([false, 'auto', true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
 
 	  /**
 	   * If `true`, it sets `min-width: 0` on the item.
@@ -43244,7 +43418,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If `true`, the label should be displayed in a disabled state.
@@ -43338,11 +43512,11 @@
 	      left: 0,
 	      top: 0,
 	      // slight alteration to spec spacing to match visual spec result
-	      transform: "translate(0, ".concat(theme.spacing.unit * 3, "px) scale(1)")
+	      transform: 'translate(0, 24px) scale(1)'
 	    },
 	    marginDense: {
 	      // Compensation for the `Input.inputDense` style.
-	      transform: "translate(0, ".concat(theme.spacing.unit * 2.5 + 1, "px) scale(1)")
+	      transform: 'translate(0, 21px) scale(1)'
 	    },
 	    shrink: {
 	      transform: 'translate(0, 1.5px) scale(0.75)',
@@ -43510,22 +43684,19 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
-	var styles = function styles(theme) {
-	  return {
-	    root: {
-	      display: 'flex',
-	      maxHeight: '2em',
-	      alignItems: 'center'
-	    },
-	    positionStart: {
-	      marginRight: theme.spacing.unit
-	    },
-	    positionEnd: {
-	      marginLeft: theme.spacing.unit
-	    }
-	  };
+	var styles = {
+	  root: {
+	    display: 'flex',
+	    maxHeight: '2em',
+	    alignItems: 'center'
+	  },
+	  positionStart: {
+	    marginRight: 8
+	  },
+	  positionEnd: {
+	    marginLeft: 8
+	  }
 	};
-
 	exports.styles = styles;
 
 	function InputAdornment(props) {
@@ -43566,7 +43737,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * If children is a string then disable wrapping in a Typography component.
@@ -43690,7 +43861,7 @@
 	var styles = function styles(theme) {
 	  return {
 	    root: {
-	      marginRight: theme.spacing.unit * 2,
+	      marginRight: 16,
 	      color: theme.palette.action.active,
 	      flexShrink: 0
 	    }
@@ -43791,14 +43962,14 @@
 	    root: {
 	      flex: '1 1 auto',
 	      minWidth: 0,
-	      padding: "0 ".concat(theme.spacing.unit * 2, "px"),
+	      padding: '0 16px',
 	      '&:first-child': {
 	        paddingLeft: 0
 	      }
 	    },
 	    inset: {
 	      '&:first-child': {
-	        paddingLeft: theme.spacing.unit * 7
+	        paddingLeft: 56
 	      }
 	    },
 	    dense: {
@@ -43829,27 +44000,29 @@
 	      disableTypography = props.disableTypography,
 	      inset = props.inset,
 	      primaryProp = props.primary,
+	      primaryTypographyProps = props.primaryTypographyProps,
 	      secondaryProp = props.secondary,
-	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableTypography", "inset", "primary", "secondary"]);
+	      secondaryTypographyProps = props.secondaryTypographyProps,
+	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableTypography", "inset", "primary", "primaryTypographyProps", "secondary", "secondaryTypographyProps"]);
 	  var dense = context.dense;
 	  var primary = primaryProp != null ? primaryProp : children;
 
-	  if (primary != null && !disableTypography) {
-	    primary = _react.default.createElement(_Typography.default, {
+	  if (primary != null && primary.type !== _Typography.default && !disableTypography) {
+	    primary = _react.default.createElement(_Typography.default, (0, _extends2.default)({
 	      variant: "subheading",
 	      className: (0, _classnames.default)(classes.primary, (0, _defineProperty2.default)({}, classes.textDense, dense)),
 	      component: "span"
-	    }, primary);
+	    }, primaryTypographyProps), primary);
 	  }
 
 	  var secondary = secondaryProp;
 
-	  if (secondary != null && !disableTypography) {
-	    secondary = _react.default.createElement(_Typography.default, {
+	  if (secondary != null && secondary.type !== _Typography.default && !disableTypography) {
+	    secondary = _react.default.createElement(_Typography.default, (0, _extends2.default)({
 	      variant: "body1",
 	      className: (0, _classnames.default)(classes.secondary, (0, _defineProperty2.default)({}, classes.textDense, dense)),
 	      color: "textSecondary"
-	    }, secondary);
+	    }, secondaryTypographyProps), secondary);
 	  }
 
 	  return _react.default.createElement("div", (0, _extends2.default)({
@@ -43894,9 +44067,21 @@
 	  primary: _propTypes.default.node,
 
 	  /**
+	   * These props will be forwarded to the primary typography component
+	   * (as long as disableTypography is not `true`).
+	   */
+	  primaryTypographyProps: _propTypes.default.object,
+
+	  /**
 	   * The secondary content element.
 	   */
-	  secondary: _propTypes.default.node
+	  secondary: _propTypes.default.node,
+
+	  /**
+	   * These props will be forwarded to the secondary typography component
+	   * (as long as disableTypography is not `true`).
+	   */
+	  secondaryTypographyProps: _propTypes.default.object
 	};
 	ListItemText.defaultProps = {
 	  disableTypography: false,
@@ -43962,7 +44147,7 @@
 
 
 
-	var SIZE = 50;
+	var SIZE = 44;
 
 	function getRelativeValue(value, min, max) {
 	  var clampedValue = Math.min(Math.max(min, value), max);
@@ -44001,8 +44186,9 @@
 	    },
 	    svg: {},
 	    circle: {
-	      stroke: 'currentColor',
-	      strokeLinecap: 'round'
+	      stroke: 'currentColor' // Use butt to follow the specification, by chance, it's already the default CSS value.
+	      // strokeLinecap: 'butt',
+
 	    },
 	    circleStatic: {
 	      transition: theme.transitions.create('stroke-dashoffset')
@@ -44063,7 +44249,7 @@
 	  var rootProps = {};
 
 	  if (variant === 'determinate' || variant === 'static') {
-	    var circumference = 2 * Math.PI * (SIZE / 2 - 5);
+	    var circumference = 2 * Math.PI * ((SIZE - thickness) / 2);
 	    circleStyle.strokeDasharray = circumference.toFixed(3);
 	    rootProps['aria-valuenow'] = Math.round(value);
 
@@ -44085,13 +44271,13 @@
 	    role: "progressbar"
 	  }, rootProps, other), _react.default.createElement("svg", {
 	    className: classes.svg,
-	    viewBox: "0 0 ".concat(SIZE, " ").concat(SIZE)
+	    viewBox: "".concat(SIZE / 2, " ").concat(SIZE / 2, " ").concat(SIZE, " ").concat(SIZE)
 	  }, _react.default.createElement("circle", {
 	    className: (0, _classnames.default)(classes.circle, (_classNames2 = {}, (0, _defineProperty2.default)(_classNames2, classes.circleIndeterminate, variant === 'indeterminate'), (0, _defineProperty2.default)(_classNames2, classes.circleStatic, variant === 'static'), _classNames2)),
 	    style: circleStyle,
-	    cx: SIZE / 2,
-	    cy: SIZE / 2,
-	    r: SIZE / 2 - 5,
+	    cx: SIZE,
+	    cy: SIZE,
+	    r: (SIZE - thickness) / 2,
 	    fill: "none",
 	    strokeWidth: thickness
 	  })));
@@ -44233,7 +44419,9 @@
 	    // the menu.
 	    maxHeight: 'calc(100% - 96px)',
 	    // Add iOS momentum scrolling.
-	    WebkitOverflowScrolling: 'touch'
+	    WebkitOverflowScrolling: 'touch',
+	    // Fix a scrolling issue on Chrome.
+	    transform: 'translateZ(0)'
 	  }
 	};
 	exports.styles = styles;
@@ -44254,13 +44442,13 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Menu.__proto__ || Object.getPrototypeOf(Menu)).call.apply(_ref, [this].concat(args))), _this.getContentAnchorEl = function () {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Menu.__proto__ || Object.getPrototypeOf(Menu)).call.apply(_ref, [this].concat(args))), _this.menuList = null, _this.getContentAnchorEl = function () {
 	      if (!_this.menuList || !_this.menuList.selectedItem) {
 	        return _reactDom.default.findDOMNode(_this.menuList).firstChild;
 	      }
 
 	      return _reactDom.default.findDOMNode(_this.menuList.selectedItem);
-	    }, _this.menuList = undefined, _this.focus = function () {
+	    }, _this.focus = function () {
 	      if (_this.menuList && _this.menuList.selectedItem) {
 	        _reactDom.default.findDOMNode(_this.menuList.selectedItem).focus();
 
@@ -44273,12 +44461,16 @@
 	        menuList.firstChild.focus();
 	      }
 	    }, _this.handleEnter = function (element) {
-	      var theme = _this.props.theme;
+	      var _this$props = _this.props,
+	          disableAutoFocusItem = _this$props.disableAutoFocusItem,
+	          theme = _this$props.theme;
 
 	      var menuList = _reactDom.default.findDOMNode(_this.menuList); // Focus so the scroll computation of the Popover works as expected.
 
 
-	      _this.focus(); // Let's ignore that piece of logic if users are already overriding the width
+	      if (disableAutoFocusItem !== true) {
+	        _this.focus();
+	      } // Let's ignore that piece of logic if users are already overriding the width
 	      // of the menu.
 
 
@@ -44305,7 +44497,7 @@
 	  (0, _createClass2.default)(Menu, [{
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
-	      if (this.props.open) {
+	      if (this.props.open && this.props.disableAutoFocusItem !== true) {
 	        this.focus();
 	      }
 	    }
@@ -44317,13 +44509,14 @@
 	      var _props = this.props,
 	          children = _props.children,
 	          classes = _props.classes,
+	          disableAutoFocusItem = _props.disableAutoFocusItem,
 	          MenuListProps = _props.MenuListProps,
 	          onEnter = _props.onEnter,
 	          _props$PaperProps = _props.PaperProps,
 	          PaperProps = _props$PaperProps === void 0 ? {} : _props$PaperProps,
 	          PopoverClasses = _props.PopoverClasses,
 	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "MenuListProps", "onEnter", "PaperProps", "PopoverClasses", "theme"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "disableAutoFocusItem", "MenuListProps", "onEnter", "PaperProps", "PopoverClasses", "theme"]);
 	      return _react.default.createElement(_Popover.default, (0, _extends2.default)({
 	        getContentAnchorEl: this.getContentAnchorEl,
 	        classes: PopoverClasses,
@@ -44364,6 +44557,11 @@
 	   * See [CSS API](#css-api) below for more details.
 	   */
 	  classes: _propTypes.default.object.isRequired,
+
+	  /**
+	   * If `true`, the selected / first menu item will not be auto focused.
+	   */
+	  disableAutoFocusItem: _propTypes.default.bool,
 
 	  /**
 	   * Properties applied to the `MenuList` element.
@@ -44436,6 +44634,7 @@
 	  }), _propTypes.default.oneOf(['auto'])])
 	};
 	Menu.defaultProps = {
+	  disableAutoFocusItem: false,
 	  transitionDuration: 'auto'
 	};
 
@@ -44485,6 +44684,8 @@
 
 	var _keycode = interopRequireDefault(keycode);
 
+	var _warning = interopRequireDefault(warning_1$1);
+
 	var _Menu = interopRequireDefault(Menu_1);
 
 
@@ -44508,25 +44709,26 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = SelectInput.__proto__ || Object.getPrototypeOf(SelectInput)).call.apply(_ref, [this].concat(args))), _this.state = {
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = SelectInput.__proto__ || Object.getPrototypeOf(SelectInput)).call.apply(_ref, [this].concat(args))), _this.ignoreNextBlur = false, _this.displayNode = null, _this.isOpenControlled = _this.props.open !== undefined, _this.state = {
+	      menuMinWidth: null,
 	      open: false
-	    }, _this.ignoreNextBlur = false, _this.displayNode = null, _this.displayWidth = null, _this.isOpenControlled = _this.props.open !== undefined, _this.updateDisplayWidth = function () {
-	      // Perfom the layout computation outside of the render method.
-	      if (_this.displayNode) {
-	        _this.displayWidth = _this.displayNode.clientWidth;
-	      }
-	    }, _this.update = _this.isOpenControlled ? function (_ref2) {
+	    }, _this.update = function (_ref2) {
 	      var event = _ref2.event,
 	          open = _ref2.open;
 
-	      if (open) {
-	        _this.props.onOpen(event);
-	      } else {
-	        _this.props.onClose(event);
+	      if (_this.isOpenControlled) {
+	        if (open) {
+	          _this.props.onOpen(event);
+	        } else {
+	          _this.props.onClose(event);
+	        }
+
+	        return;
 	      }
-	    } : function (_ref3) {
-	      var open = _ref3.open;
-	      return _this.setState({
+
+	      _this.setState({
+	        // Perfom the layout computation outside of the render method.
+	        menuMinWidth: _this.props.autoWidth ? null : _this.displayNode.clientWidth,
 	        open: open
 	      });
 	    }, _this.handleClick = function (event) {
@@ -44612,8 +44814,6 @@
 	      }
 	    }, _this.handleDisplayRef = function (node) {
 	      _this.displayNode = node;
-
-	      _this.updateDisplayWidth();
 	    }, _this.handleInputRef = function (node) {
 	      var inputRef = _this.props.inputRef;
 
@@ -44651,12 +44851,6 @@
 	      }
 	    }
 	  }, {
-	    key: "shouldComponentUpdate",
-	    value: function shouldComponentUpdate() {
-	      this.updateDisplayWidth();
-	      return true;
-	    }
-	  }, {
 	    key: "render",
 	    value: function render() {
 	      var _this2 = this;
@@ -44682,13 +44876,15 @@
 	          openProp = _props.open,
 	          readOnly = _props.readOnly,
 	          renderValue = _props.renderValue,
+	          required = _props.required,
 	          SelectDisplayProps = _props.SelectDisplayProps,
 	          tabIndexProp = _props.tabIndex,
 	          _props$type = _props.type,
 	          type = _props$type === void 0 ? 'hidden' : _props$type,
 	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["autoWidth", "children", "classes", "className", "disabled", "displayEmpty", "IconComponent", "inputRef", "MenuProps", "multiple", "name", "onBlur", "onChange", "onClose", "onFocus", "onOpen", "open", "readOnly", "renderValue", "SelectDisplayProps", "tabIndex", "type", "value"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["autoWidth", "children", "classes", "className", "disabled", "displayEmpty", "IconComponent", "inputRef", "MenuProps", "multiple", "name", "onBlur", "onChange", "onClose", "onFocus", "onOpen", "open", "readOnly", "renderValue", "required", "SelectDisplayProps", "tabIndex", "type", "value"]);
 	      var open = this.isOpenControlled && this.displayNode ? openProp : this.state.open;
+	      delete other['aria-invalid'];
 	      var display;
 	      var displaySingle = '';
 	      var displayMultiple = [];
@@ -44707,6 +44903,7 @@
 	          return null;
 	        }
 
+	        (0, _warning.default)(child.type !== _react.default.Fragment, ["Material-UI: the Select component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n'));
 	        var selected;
 
 	        if (multiple) {
@@ -44740,9 +44937,15 @@
 
 	      if (computeDisplay) {
 	        display = multiple ? displayMultiple.join(', ') : displaySingle;
+	      } // Avoid performing a layout computation in the render method.
+
+
+	      var menuMinWidth = this.state.menuMinWidth;
+
+	      if (!autoWidth && this.isOpenControlled && this.displayNode) {
+	        menuMinWidth = this.displayNode.clientWidth;
 	      }
 
-	      var MenuMinWidth = this.displayNode && !autoWidth ? this.displayWidth : undefined;
 	      var tabIndex;
 
 	      if (typeof tabIndexProp !== 'undefined') {
@@ -44772,7 +44975,6 @@
 	      })), _react.default.createElement("input", (0, _extends2.default)({
 	        value: Array.isArray(value) ? value.join(',') : value,
 	        name: name,
-	        readOnly: readOnly,
 	        ref: this.handleInputRef,
 	        type: type
 	      }, other)), _react.default.createElement(IconComponent, {
@@ -44788,7 +44990,7 @@
 	        }, MenuProps.MenuListProps),
 	        PaperProps: (0, _objectSpread2.default)({}, MenuProps.PaperProps, {
 	          style: (0, _objectSpread2.default)({
-	            minWidth: MenuMinWidth
+	            minWidth: menuMinWidth
 	          }, MenuProps.PaperProps != null ? MenuProps.PaperProps.style : null)
 	        })
 	      }), items));
@@ -44839,7 +45041,7 @@
 	  /**
 	   * The icon that displays the arrow.
 	   */
-	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Use that property to pass a ref callback to the native select element.
@@ -44913,6 +45115,11 @@
 	   * @returns {ReactElement}
 	   */
 	  renderValue: _propTypes.default.func,
+
+	  /**
+	   * @ignore
+	   */
+	  required: _propTypes.default.bool,
 
 	  /**
 	   * Properties applied to the clickable div element.
@@ -45049,7 +45256,7 @@
 	  /**
 	   * The icon that displays the arrow.
 	   */
-	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * Use that property to pass a ref callback to the native select element.
@@ -45120,9 +45327,9 @@
 	      // When interacting quickly, the text can end up selected.
 	      // Native select can't be selected either.
 	      userSelect: 'none',
-	      paddingRight: theme.spacing.unit * 4,
-	      width: "calc(100% - ".concat(theme.spacing.unit * 4, "px)"),
-	      minWidth: theme.spacing.unit * 2,
+	      paddingRight: 32,
+	      width: 'calc(100% - 32px)',
+	      minWidth: 16,
 	      // So it doesn't collapse.
 	      cursor: 'pointer',
 	      '&:focus': {
@@ -45210,7 +45417,7 @@
 	  /**
 	   * The icon that displays the arrow.
 	   */
-	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * An `Input` element; does not have to be a material-ui specific `Input`.
@@ -45272,6 +45479,8 @@
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
+	var _mergeClasses = interopRequireDefault(mergeClasses_1);
+
 	var _ArrowDropDown = interopRequireDefault(ArrowDropDown_1);
 
 	var _Input = interopRequireDefault(Input$1);
@@ -45302,21 +45511,16 @@
 	      SelectDisplayProps = props.SelectDisplayProps,
 	      other = (0, _objectWithoutProperties2.default)(props, ["autoWidth", "children", "classes", "displayEmpty", "IconComponent", "input", "inputProps", "MenuProps", "multiple", "native", "onClose", "onOpen", "open", "renderValue", "SelectDisplayProps"]);
 	  var inputComponent = native ? _NativeSelectInput.default : _SelectInput.default;
-	  var inputNativeProps = {
-	    children: children,
-	    classes: classes,
-	    IconComponent: IconComponent,
-	    type: undefined // We render a select. We can ignore the type provided by the `Input`.
-
-	  };
 	  return _react.default.cloneElement(input, (0, _objectSpread2.default)({
 	    // Most of the logic is implemented in `SelectInput`.
 	    // The `Select` component is a simple API wrapper to expose something better to play with.
 	    inputComponent: inputComponent,
-	    inputProps: (0, _objectSpread2.default)({}, inputNativeProps, native ? {} : {
-	      autoWidth: autoWidth,
+	    inputProps: (0, _objectSpread2.default)({
 	      children: children,
-	      classes: classes,
+	      IconComponent: IconComponent,
+	      type: undefined
+	    }, native ? {} : {
+	      autoWidth: autoWidth,
 	      displayEmpty: displayEmpty,
 	      MenuProps: MenuProps,
 	      multiple: multiple,
@@ -45325,7 +45529,13 @@
 	      open: open,
 	      renderValue: renderValue,
 	      SelectDisplayProps: SelectDisplayProps
-	    }, inputProps, input ? input.props.inputProps : {})
+	    }, inputProps, {
+	      classes: inputProps ? (0, _mergeClasses.default)({
+	        baseClasses: classes,
+	        newClasses: inputProps.classes,
+	        Component: Select
+	      }) : classes
+	    }, input ? input.props.inputProps : {})
 	  }, other));
 	}
 
@@ -45357,7 +45567,7 @@
 	  /**
 	   * The icon that displays the arrow.
 	   */
-	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func]),
+	  IconComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
 	   * An `Input` element; does not have to be a material-ui specific `Input`.
@@ -45546,9 +45756,9 @@
 
 	    (0, _classCallCheck2.default)(this, SwitchBase);
 	    _this = (0, _possibleConstructorReturn2.default)(this, (SwitchBase.__proto__ || Object.getPrototypeOf(SwitchBase)).call(this, props));
-	    _this.state = {};
 	    _this.input = null;
 	    _this.isControlled = null;
+	    _this.state = {};
 
 	    _this.handleFocus = function (event) {
 	      if (_this.props.onFocus) {
@@ -45871,7 +46081,7 @@
 	      }
 	    },
 	    bar: {
-	      borderRadius: 7,
+	      borderRadius: 14 / 2,
 	      display: 'block',
 	      position: 'absolute',
 	      width: 34,
@@ -46127,7 +46337,7 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func])
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object])
 	};
 	Table.defaultProps = {
 	  component: 'table'
@@ -46898,7 +47108,7 @@
 	      title: "Wallet"
 	    }, react.createElement(DialogContentText$2, null, "Before you can start mining, you have to tell the raccoon what to mine and who gets the profit. You can ", react.createElement(LinkEnhanced, {
 	      onClick: loadDefault$$1
-	    }, "load the default settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
+	    }, "load the test settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
 	      color: "error"
 	    }, "You have to stop mining before you can change these settings!"), react.createElement(FormControl$2, {
 	      margin: "normal"
@@ -46936,9 +47146,9 @@
 	    }, "More coming soon"))), react.createElement(TextField$2, {
 	      disabled: isMining,
 	      fullWidth: true,
-	      helperText: react.createElement(LinkEnhanced, {
+	      helperText: react.createElement(Typography$2, null, react.createElement(LinkEnhanced, {
 	        to: miner.links.wallet
-	      }, "Don't have a wallet address?"),
+	      }, "Don't have a wallet address?"), miner.developerAddress === address && ' Test address selected!'),
 	      InputProps: {
 	        endAdornment: react.createElement(InputAdornment$2, {
 	          position: "end"
@@ -48474,48 +48684,9 @@
 
 	/** `Object#toString` result references. */
 	var argsTag$2 = '[object Arguments]',
-	    arrayTag$1 = '[object Array]',
-	    boolTag$2 = '[object Boolean]',
-	    dateTag$2 = '[object Date]',
-	    errorTag$1 = '[object Error]',
 	    funcTag$2 = '[object Function]',
 	    genTag$1 = '[object GeneratorFunction]',
-	    mapTag$4 = '[object Map]',
-	    numberTag$2 = '[object Number]',
-	    objectTag$3 = '[object Object]',
-	    regexpTag$2 = '[object RegExp]',
-	    setTag$4 = '[object Set]',
-	    stringTag$2 = '[object String]',
-	    symbolTag$2 = '[object Symbol]',
-	    weakMapTag$2 = '[object WeakMap]';
-
-	var arrayBufferTag$2 = '[object ArrayBuffer]',
-	    dataViewTag$3 = '[object DataView]',
-	    float32Tag$2 = '[object Float32Array]',
-	    float64Tag$2 = '[object Float64Array]',
-	    int8Tag$2 = '[object Int8Array]',
-	    int16Tag$2 = '[object Int16Array]',
-	    int32Tag$2 = '[object Int32Array]',
-	    uint8Tag$2 = '[object Uint8Array]',
-	    uint8ClampedTag$2 = '[object Uint8ClampedArray]',
-	    uint16Tag$2 = '[object Uint16Array]',
-	    uint32Tag$2 = '[object Uint32Array]';
-
-	/** Used to identify `toStringTag` values supported by `_.clone`. */
-	var cloneableTags = {};
-	cloneableTags[argsTag$2] = cloneableTags[arrayTag$1] =
-	cloneableTags[arrayBufferTag$2] = cloneableTags[dataViewTag$3] =
-	cloneableTags[boolTag$2] = cloneableTags[dateTag$2] =
-	cloneableTags[float32Tag$2] = cloneableTags[float64Tag$2] =
-	cloneableTags[int8Tag$2] = cloneableTags[int16Tag$2] =
-	cloneableTags[int32Tag$2] = cloneableTags[mapTag$4] =
-	cloneableTags[numberTag$2] = cloneableTags[objectTag$3] =
-	cloneableTags[regexpTag$2] = cloneableTags[setTag$4] =
-	cloneableTags[stringTag$2] = cloneableTags[symbolTag$2] =
-	cloneableTags[uint8Tag$2] = cloneableTags[uint8ClampedTag$2] =
-	cloneableTags[uint16Tag$2] = cloneableTags[uint32Tag$2] = true;
-	cloneableTags[errorTag$1] = cloneableTags[funcTag$2] =
-	cloneableTags[weakMapTag$2] = false;
+	    objectTag$3 = '[object Object]';
 
 	/**
 	 * The base implementation of `_.clone` and `_.cloneDeep` which tracks
@@ -48569,7 +48740,7 @@
 	          : _copySymbols(value, _baseAssign(result, value));
 	      }
 	    } else {
-	      if (!cloneableTags[tag]) {
+	      {
 	        return object ? value : {};
 	      }
 	      result = _initCloneByTag(value, tag, isDeep);
@@ -49350,7 +49521,7 @@
 	  key: 'root',
 	  storage: storage$1,
 	  version: 1,
-	  blacklist: ['activeMiners', 'hardwareInfo', 'games', 'notifications'],
+	  blacklist: ['activeMiners', 'games', 'notifications'],
 	  migrate: createMigrate(migrations, {
 	    debug: true
 	  })
@@ -49469,6 +49640,7 @@
 
 	var _exactProp = interopRequireDefault(exactProp_1);
 
+	/* eslint-disable react/no-unused-prop-types */
 	var styles$$1 = function styles$$1(theme) {
 	  return {
 	    '@global': {
@@ -49531,7 +49703,7 @@
 	   */
 	  classes: _propTypes.default.object.isRequired
 	};
-	CssBaseline.propTypes = (0, _exactProp.default)(CssBaseline.propTypes, 'CssBaseline');
+	CssBaseline.propTypes = (0, _exactProp.default)(CssBaseline.propTypes);
 	CssBaseline.defaultProps = {
 	  children: null
 	};

@@ -51,5 +51,8 @@ const mapStateToProps = ({ mining: { selectedMinerIdentifier, miners } }) => {
   };
 };
 
-const enhance = compose(withStyles(styles), connect(mapStateToProps))(BalanceCard);
+const enhance = compose(
+  withStyles(styles),
+  connect(mapStateToProps)
+)(BalanceCard);
 export { enhance as BalanceCard };

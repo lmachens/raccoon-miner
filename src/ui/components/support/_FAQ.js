@@ -41,6 +41,18 @@ const FAQ = () => (
       answer="This depends on the selected mining pool. Take a look at their conditions."
       question="When do I get a payout?"
     />
+    <FAQEntry
+      answer="Yes, Raccoon Miner has no access to your wallet and only use it for payouts."
+      question="Is my wallet safe?"
+    />
+    <FAQEntry
+      answer="No, you can really mine crypto! Payouts are handled by the selected mining pool and not by Raccoon Miner, so make sure that you trust them."
+      question="Is this scam?"
+    />
+    <FAQEntry
+      answer="Right now I don't make any profit with this app. It is planned that a small percentage of your hashpower will donate to my wallet."
+      question="How do you make profit?"
+    />
   </Fragment>
 );
 

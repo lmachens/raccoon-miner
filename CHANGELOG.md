@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.12.0](https://github.com/lmachens/raccoon-miner/compare/v0.11.1...v0.12.0) (2018-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.2.2 ([#73](https://github.com/lmachens/raccoon-miner/issues/73)) ([40a8958](https://github.com/lmachens/raccoon-miner/commit/40a8958))
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.2.3 ([#77](https://github.com/lmachens/raccoon-miner/issues/77)) ([87f2c0c](https://github.com/lmachens/raccoon-miner/commit/87f2c0c))
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.3.1 ([#96](https://github.com/lmachens/raccoon-miner/issues/96)) ([f6490cd](https://github.com/lmachens/raccoon-miner/commit/f6490cd))
+* **deps:** update dependency prop-types to v15.6.2 ([#75](https://github.com/lmachens/raccoon-miner/issues/75)) ([656dc36](https://github.com/lmachens/raccoon-miner/commit/656dc36))
+* **hardware:** remember hardware info ([476c07a](https://github.com/lmachens/raccoon-miner/commit/476c07a))
+
+
+### Features
+
+* **faq:** add new questions about security, payouts and profit ([#108](https://github.com/lmachens/raccoon-miner/issues/108)) ([b9b79bd](https://github.com/lmachens/raccoon-miner/commit/b9b79bd))
+* **wallet:** replace "don't have a wallet address" links with guides ([#107](https://github.com/lmachens/raccoon-miner/issues/107)) ([b4b423f](https://github.com/lmachens/raccoon-miner/commit/b4b423f))
+* **wallet:** show warning if the test address is selected ([#106](https://github.com/lmachens/raccoon-miner/issues/106)) ([19b599f](https://github.com/lmachens/raccoon-miner/commit/19b599f))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.11.1](https://github.com/lmachens/raccoon-miner/compare/v0.11.0...v0.11.1) (2018-06-18)
 
 ### Bug Fixes

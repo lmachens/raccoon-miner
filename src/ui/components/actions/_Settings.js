@@ -39,5 +39,11 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhance = compose(withStyles(styles), connect(null, mapDispatchToProps))(SettingsButton);
+const enhance = compose(
+  withStyles(styles),
+  connect(
+    null,
+    mapDispatchToProps
+  )
+)(SettingsButton);
 export { enhance as SettingsButton };

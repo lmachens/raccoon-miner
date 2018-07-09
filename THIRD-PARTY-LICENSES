@@ -6,9 +6,3 @@ be distributed under licenses different than the Raccoon Miner software.
 Package: XMR-Stak
 License: GNU GPLv3
 https://github.com/fireice-uk/xmr-stak
-
--------------------------------------------------------------------------
-
-Package: ethminer
-License: GNU GPLv3
-https://github.com/ethereum-mining/ethminer

@@ -1,0 +1,12 @@
+"gpu_threads_conf" : [
+  // gpu: Tahiti memory:2688
+  // compute units: 28
+  { "index" : 0,
+    "intensity" : 896, "worksize" : 8,
+    "affine_to_cpu" : false, "strided_index" : 1, "mem_chunk" : 2,
+    "comp_mode" : true
+  },
+
+],
+"platform_index" : 0,
+

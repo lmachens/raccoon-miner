@@ -8,7 +8,6 @@ import {
   SET_GPUS,
   SET_MINING_ADDRESS,
   SET_MINING_ERROR_MESSAGE,
-  SET_MINING_POOL,
   SET_MINING_SPEED,
   SET_NOTIFICATION,
   SET_PROCESS_ID,
@@ -17,14 +16,8 @@ import {
   SUSPEND_MINING,
   UNSET_NOTIFICATION
 } from '../types';
-import {
-  ETHEREUM_MINER,
-  MONERO_MINER,
-  ethereum,
-  minersByIdentifier,
-  monero
-} from '../../api/mining';
-import { ETHERMINE, SUPPORT_XMR, miningPoolsByIdentifier } from '../../api/pools';
+import { CRYPTO_NIGHT_V7, minersByIdentifier } from '../../api/mining';
+import { developerAddress, getStats, isValidAddress } from '../../api/nice-hash';
 import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
 
 import { TEST_MODE } from '../../api/notifications';
@@ -35,23 +28,11 @@ export const loadDefault = () => {
   return dispatch => {
     dispatch({
       type: SELECT_MINER,
-      data: MONERO_MINER
+      data: CRYPTO_NIGHT_V7
     });
     dispatch({
       type: SET_MINING_ADDRESS,
-      data: { address: ethereum.developerAddress, minerIdentifier: ETHEREUM_MINER }
-    });
-    dispatch({
-      type: SET_MINING_POOL,
-      data: { minerIdentifier: ETHEREUM_MINER, miningPoolIdentifier: ETHERMINE }
-    });
-    dispatch({
-      type: SET_MINING_ADDRESS,
-      data: { address: monero.developerAddress, minerIdentifier: MONERO_MINER }
-    });
-    dispatch({
-      type: SET_MINING_POOL,
-      data: { minerIdentifier: MONERO_MINER, miningPoolIdentifier: SUPPORT_XMR }
+      data: { address: developerAddress }
     });
     dispatch({
       type: SET_NOTIFICATION,
@@ -67,8 +48,7 @@ export const setMiningAddress = (minerIdentifier, address) => {
       data: { address, minerIdentifier }
     });
 
-    const miner = minersByIdentifier[minerIdentifier];
-    const validAddress = miner.isValidAddress(address);
+    const validAddress = isValidAddress(address);
 
     if (validAddress) fetchWorkerStats(minerIdentifier);
     else {
@@ -82,15 +62,6 @@ export const setMiningAddress = (minerIdentifier, address) => {
     }
     dispatch({
       type: UNSET_NOTIFICATION
-    });
-  };
-};
-
-export const setMiningPool = (minerIdentifier, miningPoolIdentifier) => {
-  return dispatch => {
-    dispatch({
-      type: SET_MINING_POOL,
-      data: { minerIdentifier, miningPoolIdentifier }
     });
   };
 };
@@ -131,17 +102,15 @@ const fetchWorkerStats = () => {
     const {
       mining: { miners, selectedMinerIdentifier: minerIdentifier }
     } = getState();
-    const { address, miningPoolIdentifier } = miners[minerIdentifier];
-    const { apiUrl, apiParser } = miningPoolsByIdentifier[miningPoolIdentifier];
+    const { address } = miners[minerIdentifier];
 
-    fetch(apiUrl(address))
-      .then(response => response.json())
+    getStats(address, minerIdentifier)
       .then(result => {
         dispatch({
           type: RECEIVE_WORKER_STATS,
           data: {
             minerIdentifier,
-            workerStats: apiParser(result)
+            workerStats: result
           }
         });
       })
@@ -164,13 +133,10 @@ export const startMining = minerIdentifier => {
     const {
       mining: { miners, selectedMinerIdentifier }
     } = getState();
-    const { address = 'default', miningPoolIdentifier, cores, gpus } = miners[
-      selectedMinerIdentifier
-    ];
+    const { address = 'default', cores, gpus } = miners[selectedMinerIdentifier];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
-    const { servers, poolConfig } = miningPoolsByIdentifier[miningPoolIdentifier];
 
     dispatch({
       type: START_MINING,
@@ -208,7 +174,7 @@ export const startMining = minerIdentifier => {
       dispatch(appendMiningLog(line));
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, servers, cores, gpus, poolConfig });
+    const minerArgs = args({ address, cores, gpus });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({

@@ -1,4 +1,4 @@
-import { BalanceCard, CpusCard, GpusCard, HashRateCard } from '../components/cards';
+import { BalanceCard, CpusCard, EarningsCard, GpusCard } from '../components/cards';
 import React, { PureComponent } from 'react';
 
 import { Actions } from '../components/actions';
@@ -21,10 +21,10 @@ class MiningPage extends PureComponent {
           <Grid item xs={2}>
             <GpusCard />
           </Grid>
-          <Grid item xs={3}>
-            <HashRateCard />
+          <Grid item xs={4}>
+            <EarningsCard />
           </Grid>
-          <Grid item xs={5}>
+          <Grid item xs={4}>
             <BalanceCard />
           </Grid>
         </Grid>

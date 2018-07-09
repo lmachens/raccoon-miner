@@ -6,3 +6,4 @@ export { default as HelpIcon } from '@material-ui/icons/Help';
 export { default as SettingsIcon } from '@material-ui/icons/Settings';
 export { default as AddIcon } from '@material-ui/icons/Add';
 export { default as RemoveIcon } from '@material-ui/icons/Remove';
+export { default as WalletIcon } from '@material-ui/icons/AccountBalanceWallet';

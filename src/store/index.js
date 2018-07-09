@@ -5,6 +5,8 @@ import {
   fetchVersion,
   trackGameInfo,
   trackHardwareInfo,
+  trackPrice,
+  trackProfitability,
   trackWorkerStats
 } from './actions';
 
@@ -18,7 +20,7 @@ import thunk from 'redux-thunk';
 const persistConfig = {
   key: 'root',
   storage,
-  version: 1,
+  version: 4,
   blacklist: ['activeMiners', 'games', 'notifications'],
   migrate: createMigrate(migrations, { debug: true })
 };
@@ -40,4 +42,6 @@ export const persistor = persistStore(store, null, () => {
   store.dispatch(trackHardwareInfo());
   store.dispatch(trackGameInfo());
   store.dispatch(trackWorkerStats());
+  store.dispatch(trackProfitability());
+  store.dispatch(trackPrice());
 });

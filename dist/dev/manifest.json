@@ -53,8 +53,7 @@
         "https://*.google-analytics.com",
         "https://www.google-analytics.com",
         "https://widgetbot.io",
-        "https://supportxmr.com",
-        "https://ethermine.org",
+        "https://api.nicehash.com",
         "https://sentry.io"
       ]
     }

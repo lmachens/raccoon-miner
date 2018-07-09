@@ -12,7 +12,7 @@ import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
   load: {
-    fontSize: '1.5rem'
+    fontSize: '1.3rem'
   },
   remove: {
     position: 'absolute',
@@ -45,7 +45,7 @@ class CpusCard extends PureComponent {
     const { classes, cores, maxCores } = this.props;
 
     return (
-      <StatusCard helperText="The number of cores you use for mining. This setting has no effect on ethereum mining.">
+      <StatusCard helperText="The number of cores you use for mining.">
         <Typography className={classes.load} variant="display1">
           {cores}/{maxCores}
         </Typography>

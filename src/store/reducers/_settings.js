@@ -2,7 +2,8 @@ import { SET_SETTINGS } from '../types';
 
 export const settings = (
   state = {
-    stopMiningOnGameLaunch: true
+    stopMiningOnGameLaunch: true,
+    currency: 'usd'
   },
   { type, data }
 ) => {

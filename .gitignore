@@ -2,8 +2,8 @@
 node_modules/
 .env.json
 tools/*.zip
-**/monero/amd.txt
-**/monero/cpu.txt
-**/monero/nvidia.txt
+**/xmr-stak/amd.txt
+**/xmr-stak/cpu.txt
+**/xmr-stak/nvidia.txt
 simple-io-plugin64.dll
 process_manager64.dll

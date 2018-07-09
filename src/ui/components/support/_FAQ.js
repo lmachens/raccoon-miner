@@ -29,18 +29,10 @@ const FAQ = () => (
       question="What is a mining pool?"
     />
     <FAQEntry
-      answer="ETH is the short form of Ether which is the currency of Ethereum."
-      question="What is ETH?"
-    />
-    <FAQEntry answer="XMR is the currency of Monero." question="What is XMR?" />
-    <FAQEntry
       answer="This is normal when mining is active. Mining is a load intensive process which uses all ressources available."
       question="Why is my CPU or GPU at 100%?"
     />
-    <FAQEntry
-      answer="This depends on the selected mining pool. Take a look at their conditions."
-      question="When do I get a payout?"
-    />
+    <FAQEntry answer="0.001 BTC or 0.1 BTC." question="When do I get a payout?" />
     <FAQEntry
       answer="Yes, Raccoon Miner has no access to your wallet and only use it for payouts."
       question="Is my wallet safe?"

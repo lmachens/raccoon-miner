@@ -50,5 +50,8 @@ const mapStateToProps = ({ utilities: { version } }) => {
   };
 };
 
-const enhance = compose(withStyles(styles), connect(mapStateToProps))(AppLayout);
+const enhance = compose(
+  withStyles(styles),
+  connect(mapStateToProps)
+)(AppLayout);
 export { enhance as AppLayout };

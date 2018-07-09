@@ -1,0 +1,1 @@
+export const RECEIVE_PRICE = 'RECEIVE_PRICE';

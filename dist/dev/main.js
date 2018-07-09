@@ -1091,9 +1091,9 @@
 	}
 
 	const CLOSE_DIALOG = 'CLOSE_DIALOG';
-	const OPEN_CRYPTO_DIALOG = 'OPEN_CRYPTO_DIALOG';
+	const OPEN_WALLET_DIALOG = 'OPEN_WALLET_DIALOG';
 	const OPEN_SETTINGS_DIALOG = 'OPEN_SETTINGS_DIALOG';
-	const OPEN_ADVANCED_DIALOG = 'OPEN_ADVANCED_DIALOG';
+	const OPEN_LOGS_DIALOG = 'OPEN_LOGS_DIALOG';
 	const OPEN_SUPPORT_DIALOG = 'OPEN_SUPPORT_DIALOG';
 	const SET_SETTINGS_DIALOG_TAB = 'SET_SETTINGS_DIALOG_TAB';
 	const SET_SUPPORT_DIALOG_TAB = 'SET_SUPPORT_DIALOG_TAB';
@@ -1116,7 +1116,6 @@
 	const RECEIVE_WORKER_STATS = 'RECEIVE_WORKER_STATS';
 	const RECEIVE_MINING_METRICS = 'RECEIVE_MINING_METRICS';
 	const REQUEST_MINING_METRICS = 'REQUEST_MINING_METRICS';
-	const SET_MINING_POOL = 'SET_MINING_POOL';
 	const SUSPEND_MINING = 'SUSPEND_MINING';
 	const CONTINUE_MINING = 'CONTINUE_MINING';
 	const SET_CORES = 'SET_CORES';
@@ -1124,6 +1123,10 @@
 
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
+
+	const RECEIVE_PRICE = 'RECEIVE_PRICE';
+
+	const RECEIVE_PROFITABILITY = 'RECEIVE_PROFITABILITY';
 
 	const SET_SETTINGS = 'SET_SETTINGS';
 
@@ -1137,10 +1140,10 @@
 	    });
 	  };
 	};
-	const openCryptoDialog = () => {
+	const openWalletDialog = () => {
 	  return dispatch => {
 	    dispatch({
-	      type: OPEN_CRYPTO_DIALOG
+	      type: OPEN_WALLET_DIALOG
 	    });
 	  };
 	};
@@ -1151,10 +1154,10 @@
 	    });
 	  };
 	};
-	const openAdvancedDialog = () => {
+	const openLogsDialog = () => {
 	  return dispatch => {
 	    dispatch({
-	      type: OPEN_ADVANCED_DIALOG
+	      type: OPEN_LOGS_DIALOG
 	    });
 	  };
 	};
@@ -1215,101 +1218,793 @@
 	  return result;
 	};
 
-	const ETHEREUM_MINER = 'ETHEREUM_MINER';
-	const ethereum = {
-	  name: 'Ethereum',
-	  identifier: ETHEREUM_MINER,
-	  logo: 'assets/ethereum.png',
-	  currency: 'ETH',
-	  speedUnit: 'Mh/s',
-	  parser: generateParser({
-	    [SPEED_REGEX]: /Speed\s+(.+)\sMh\/s/,
-	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
-	    [CONNECTING]: /not-connected/
-	  }),
-	  path: 'ethereum/ethminer.exe',
-	  args: ({
-	    address,
-	    servers
-	  }) => `--farm-recheck 500 -G -P stratum+tcp://${address}.raccoon@${servers[0]} -P stratum+tcp://${address}.raccoon@${servers[1]}`,
-	  environmentVariables: () => JSON.stringify({
-	    GPU_FORCE_64BIT_PTR: '0',
-	    GPU_MAX_HEAP_SIZE: '100',
-	    GPU_USE_SYNC_OBJECTS: '1',
-	    GPU_MAX_ALLOC_PERCENT: '100',
-	    GPU_SINGLE_ALLOC_PERCENT: '100'
-	  }),
-	  links: {
-	    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-myetherwallet/'
-	  },
-	  isValidAddress: address => /^0x[0-9a-fA-F]{40}$/i.test(address),
-	  addressHint: 'It should start with 0x and have 42 characters.',
-	  developerAddress: '0x799db2f010a5a9934eca801c5d702a7d96373b9d'
-	};
-
-	const MONERO_MINER = 'MONERO_MINER';
-	const monero = {
-	  name: 'Monero',
-	  identifier: MONERO_MINER,
-	  logo: 'assets/monero.png',
-	  currency: 'XMR',
+	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
+	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
+	const pool = `stratum+tcp://cryptonightv7.${locations[0]}.nicehash.com:3363`;
+	const cryptoNightV7 = {
+	  name: 'CryptoNightV7',
+	  identifier: CRYPTO_NIGHT_V7,
 	  speedUnit: 'H/s',
 	  parser: generateParser({
 	    [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
 	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
 	    [CONNECTING]: /not-connected/
 	  }),
-	  path: 'monero/xmr-stak.exe',
+	  path: 'xmr-stak/xmr-stak.exe',
 	  args: ({
 	    address,
-	    servers,
 	    cores,
-	    gpus,
-	    poolConfig
-	  }) => `--noUAC -i 0 -o "${servers[0]}" -u ${address} --currency monero7 -p raccoon --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf pools/${poolConfig}`,
+	    gpus
+	  }) => `--noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 -p x --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
-	  }),
-	  links: {
-	    wallet: 'https://www.cryptocompare.com/wallets/guides/how-to-use-mymonero/'
-	  },
-	  isValidAddress: address => /^4[0-9AB][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{93}$/i.test(address),
-	  addressHint: 'It should have 95 characters.',
-	  developerAddress: '47nCkeWhyJDEoaDPbtm7xc2QyQh2gbRMSdQ8V3NUyuFm6J3UuLiVGn57KjXhLAJD4SZ6jzcukSPRa3auNb1WTfmHRA8ikzr'
+	  })
 	};
 
-	const miners = [ethereum, monero];
+	const miners = [cryptoNightV7];
 	const minersByIdentifier = {
-	  [ETHEREUM_MINER]: ethereum,
-	  [MONERO_MINER]: monero
+	  [CRYPTO_NIGHT_V7]: cryptoNightV7
+	};
+
+	const ALGORITHMS = {
+	  [CRYPTO_NIGHT_V7]: 30
+	};
+	const ALGORITHMS_BY_ID = {
+	  30: CRYPTO_NIGHT_V7
+	};
+
+	const parseStatsResponse = (result, minerIdentifier) => {
+	  const algorithm = ALGORITHMS[minerIdentifier];
+	  const statistic = result.result.stats.find(statistic => statistic.algo = algorithm);
+	  if (!statistic) return {};
+	  return {
+	    unpaidBalance: statistic.balance
+	  };
+	};
+
+	const getStats = (address, minerIdentifier) => {
+	  return new Promise((resolve, reject) => {
+	    fetch(`https://api.nicehash.com/api?method=stats.provider&addr=${address}`).then(response => response.json()).then(result => {
+	      const stats = parseStatsResponse(result, minerIdentifier);
+	      resolve(stats);
+	    }).catch(errorMsg => {
+	      reject(errorMsg);
+	    });
+	  });
+	};
+
+	const parseProfitability = result => {
+	  const profitability = result.result.simplemultialgo.reduce((prev, curr) => {
+	    const identifier = ALGORITHMS_BY_ID[curr.algo];
+	    if (!identifier) return prev;
+	    return { ...prev,
+	      [identifier]: parseFloat(curr.paying)
+	    };
+	  }, {});
+	  return profitability;
+	};
+
+	const getProfitability = () => {
+	  return new Promise((resolve, reject) => {
+	    fetch('https://api.nicehash.com/api?method=simplemultialgo.info').then(response => response.json()).then(result => {
+	      const profitability = parseProfitability(result);
+	      resolve(profitability);
+	    }).catch(errorMsg => {
+	      reject(errorMsg);
+	    });
+	  });
+	};
+
+	const developerAddress = '3QDZkfUqrzYc2KccWSemuGKUqoMNQmqiDV';
+	const isValidAddress = address => /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/i.test(address);
+	const addressHint = 'It should have 26-35 characters.';
+	const statsUrl = address => `https://www.nicehash.com/miner/${address}`;
+
+	const interval = 200;
+
+	const requestHardwareInfo = () => {
+	  overwolf.benchmarking.requestHardwareInfo(interval, result => {
+	    if (result.reason === 'Permissions Required') {
+	      overwolf.benchmarking.requestPermissions(({
+	        status
+	      }) => {
+	        if (status === 'success') {
+	          requestHardwareInfo();
+	        }
+	      });
+	    }
+	  });
+	};
+
+	const addHardwareInfoListener = listener => {
+	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
+	  requestHardwareInfo(listener);
+	};
+	const removeHardwareInfoListener = listener => {
+	  overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
+	};
+	const getMaxCores = cpus => {
+	  return cpus.reduce((pre, cur) => {
+	    return pre + cur.NumCores;
+	  }, 0);
+	};
+	const getMaxGPUs = gpus => {
+	  return gpus.length;
+	};
+
+	const TEST_MODE = {
+	  _id: 'testMode',
+	  message: 'TEST MODE! Please configure your wallet.',
+	  alert: true
+	};
+	const GAME_IS_RUNNING = title => ({
+	  _id: 'gameIsRunning',
+	  message: `${title} is running. Mining is suspended!`,
+	  alert: false
+	});
+
+	const callOverwolfWithPromise = (method, ...params) => {
+	  return new Promise((resolve, reject) => {
+	    const handleResult = result => {
+	      if (result) return resolve(result);
+	      return reject(result);
+	    };
+
+	    console.log(method, params);
+
+	    if (params) {
+	      method(...params, handleResult);
+	    } else {
+	      method(handleResult);
+	    }
+	  });
+	};
+
+	const getOverwolfUser = async function () {
+	  const currentUser = await callOverwolfWithPromise(overwolf.profile.getCurrentUser);
+	  const manifest = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
+	  return {
+	    overwolfVersion: overwolf.version,
+	    appVersion: manifest.meta.version,
+	    channel: currentUser.channel,
+	    userId: currentUser.userId,
+	    username: currentUser.username,
+	    partnerId: currentUser.partnerId,
+	    machineId: currentUser.machineId
+	  };
+	};
+
+	const getVersion = () => {
+	  return new Promise(async resolve => {
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
+	    resolve(result.meta.version);
+	  });
+	};
+
+	let processManager = null;
+	const getProcessManagerPlugin = () => {
+	  return new Promise(async resolve => {
+	    if (processManager) return resolve(processManager);
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'process-manager-plugin');
+	    processManager = result.object;
+	    resolve(result.object);
+	  });
+	};
+
+	let simpleIoPlugin;
+	const getSimpleIoPlugin = () => {
+	  return new Promise(async resolve => {
+	    if (simpleIoPlugin) return resolve(simpleIoPlugin);
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'simple-io-plugin');
+	    simpleIoPlugin = result.object;
+	    resolve(result.object);
+	  });
 	};
 
 	/**
-	 * Checks if `value` is classified as an `Array` object.
+	 * Checks if `value` is `null` or `undefined`.
 	 *
 	 * @static
 	 * @memberOf _
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+	 * @returns {boolean} Returns `true` if `value` is nullish, else `false`.
 	 * @example
 	 *
-	 * _.isArray([1, 2, 3]);
+	 * _.isNil(null);
 	 * // => true
 	 *
-	 * _.isArray(document.body.children);
-	 * // => false
+	 * _.isNil(void 0);
+	 * // => true
 	 *
-	 * _.isArray('abc');
-	 * // => false
-	 *
-	 * _.isArray(_.noop);
+	 * _.isNil(NaN);
 	 * // => false
 	 */
-	var isArray = Array.isArray;
+	function isNil(value) {
+	  return value == null;
+	}
 
-	var isArray_1 = isArray;
+	var isNil_1 = isNil;
+
+	const loadDefault = () => {
+	  return dispatch => {
+	    dispatch({
+	      type: SELECT_MINER,
+	      data: CRYPTO_NIGHT_V7
+	    });
+	    dispatch({
+	      type: SET_MINING_ADDRESS,
+	      data: {
+	        address: developerAddress
+	      }
+	    });
+	    dispatch({
+	      type: SET_NOTIFICATION,
+	      notification: TEST_MODE
+	    });
+	  };
+	};
+	const setMiningAddress = (minerIdentifier, address) => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_MINING_ADDRESS,
+	      data: {
+	        address,
+	        minerIdentifier
+	      }
+	    });
+	    const validAddress = isValidAddress(address);
+	    if (validAddress) ;else {
+	      dispatch({
+	        type: RECEIVE_WORKER_STATS,
+	        data: {
+	          minerIdentifier,
+	          workerStats: {}
+	        }
+	      });
+	    }
+	    dispatch({
+	      type: UNSET_NOTIFICATION
+	    });
+	  };
+	};
+	const selectMiner = minerIdentifier => {
+	  return dispatch => {
+	    dispatch({
+	      type: SELECT_MINER,
+	      data: minerIdentifier
+	    });
+	    dispatch(trackWorkerStats());
+	  };
+	};
+	const trackWorkerStats = () => {
+	  return dispatch => {
+	    dispatch(fetchWorkerStats());
+	    setInterval(() => {
+	      dispatch(fetchWorkerStats());
+	    }, 60000);
+	  };
+	};
+	const appendMiningLog = line => {
+	  return dispatch => {
+	    dispatch({
+	      type: APPEND_MINING_LOG,
+	      data: {
+	        timestamp: Date.now(),
+	        line
+	      }
+	    });
+	  };
+	};
+
+	const fetchWorkerStats = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier: minerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      address
+	    } = miners$$1[minerIdentifier];
+	    getStats(address, minerIdentifier).then(result => {
+	      dispatch({
+	        type: RECEIVE_WORKER_STATS,
+	        data: {
+	          minerIdentifier,
+	          workerStats: result
+	        }
+	      });
+	    }).catch(errorMsg => {
+	      dispatch({
+	        type: SET_MINING_ERROR_MESSAGE,
+	        data: {
+	          minerIdentifier,
+	          errorMsg
+	        }
+	      });
+	    });
+	  };
+	};
+
+	const handleDataByIdenfier = {};
+	let sendTextInterval = null;
+	const startMining = minerIdentifier => {
+	  return async (dispatch, getState) => {
+	    const {
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      address = 'default',
+	      cores,
+	      gpus
+	    } = miners$$1[selectedMinerIdentifier];
+	    if (handleDataByIdenfier[minerIdentifier]) return;
+	    const processManager = await getProcessManagerPlugin();
+	    const {
+	      parser,
+	      path,
+	      args,
+	      environmentVariables
+	    } = minersByIdentifier[minerIdentifier];
+	    dispatch({
+	      type: START_MINING,
+	      data: {
+	        minerIdentifier
+	      }
+	    });
+
+	    handleDataByIdenfier[minerIdentifier] = async ({
+	      error,
+	      data
+	    }) => {
+	      const line = error || data;
+	      const {
+	        connecting,
+	        errorMsg,
+	        speed
+	      } = parser(line);
+
+	      if (connecting) {
+	        dispatch({
+	          type: CONNECTING_POOL,
+	          data: {
+	            minerIdentifier
+	          }
+	        });
+	      } else if (!isNil_1(speed)) {
+	        dispatch({
+	          type: SET_MINING_SPEED,
+	          data: {
+	            minerIdentifier,
+	            speed
+	          }
+	        });
+	      } else if (!isNil_1(errorMsg)) {
+	        dispatch({
+	          type: SET_MINING_ERROR_MESSAGE,
+	          data: {
+	            minerIdentifier,
+	            errorMsg
+	          }
+	        });
+	      }
+
+	      dispatch(appendMiningLog(line));
+	    };
+
+	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
+	    const minerArgs = args({
+	      address,
+	      cores,
+	      gpus
+	    });
+	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
+	      data
+	    }) => {
+	      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
+	      dispatch({
+	        type: SET_PROCESS_ID,
+	        data: {
+	          minerIdentifier,
+	          processId: data
+	        }
+	      });
+	    });
+	  };
+	};
+	const stopMining = minerIdentifier => {
+	  return async (dispatch, getState) => {
+	    const processManager = await getProcessManagerPlugin();
+	    const {
+	      activeMiners
+	    } = getState();
+	    dispatch({
+	      type: STOP_MINING,
+	      data: {
+	        minerIdentifier
+	      }
+	    });
+	    const processId = activeMiners[minerIdentifier].processId;
+	    console.info(`%cStop mining ${processId}`, 'color: blue');
+
+	    if (processId || handleDataByIdenfier[minerIdentifier]) {
+	      if (sendTextInterval) {
+	        clearInterval(sendTextInterval);
+	        sendTextInterval = null;
+	      }
+
+	      processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
+	      processManager.terminateProcess(processId);
+	      delete handleDataByIdenfier[minerIdentifier];
+	    }
+	  };
+	};
+	const suspendMining = gameTitle => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining && !isSuspended) {
+	      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
+	      dispatch(stopMining(selectedMinerIdentifier));
+	      dispatch({
+	        type: SUSPEND_MINING,
+	        data: {
+	          minerIdentifier: selectedMinerIdentifier
+	        }
+	      });
+	    }
+	  };
+	};
+	const continueMining = gameTitle => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (!isMining && isSuspended) {
+	      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
+	      dispatch(startMining(selectedMinerIdentifier));
+	      dispatch({
+	        type: CONTINUE_MINING,
+	        data: {
+	          minerIdentifier: selectedMinerIdentifier
+	        }
+	      });
+	    }
+	  };
+	};
+	const addCore = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      },
+	      hardwareInfo: {
+	        Cpus
+	      }
+	    } = getState();
+	    const {
+	      cores
+	    } = miners$$1[selectedMinerIdentifier];
+	    const maxCores = getMaxCores(Cpus);
+	    if (cores + 1 > maxCores) return;
+	    dispatch({
+	      type: SET_CORES,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        cores: cores + 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+	const removeCore = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      cores
+	    } = miners$$1[selectedMinerIdentifier];
+	    if (cores - 1 < 0) return;
+	    dispatch({
+	      type: SET_CORES,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        cores: cores - 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+	const addGPU = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      },
+	      hardwareInfo: {
+	        Gpus: {
+	          Gpus
+	        }
+	      }
+	    } = getState();
+	    const {
+	      gpus
+	    } = miners$$1[selectedMinerIdentifier];
+	    const maxGPUs = getMaxGPUs(Gpus);
+	    if (gpus + 1 > maxGPUs) return;
+	    dispatch({
+	      type: SET_GPUS,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        gpus: gpus + 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+	const removeGPU = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      mining: {
+	        miners: miners$$1,
+	        selectedMinerIdentifier
+	      }
+	    } = getState();
+	    const {
+	      gpus
+	    } = miners$$1[selectedMinerIdentifier];
+	    if (gpus - 1 < 0) return;
+	    dispatch({
+	      type: SET_GPUS,
+	      data: {
+	        minerIdentifier: selectedMinerIdentifier,
+	        gpus: gpus - 1
+	      }
+	    });
+	    const {
+	      isMining
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining) {
+	      dispatch(stopMining(selectedMinerIdentifier));
+	    }
+	  };
+	};
+
+	const setNotification = notification => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_NOTIFICATION,
+	      notification
+	    });
+	  };
+	};
+	const unsetNotification = () => {
+	  return dispatch => {
+	    dispatch({
+	      type: UNSET_NOTIFICATION
+	    });
+	  };
+	};
+
+	const trackGameInfo = () => {
+	  return (dispatch, getState) => {
+	    const gameLaunchedListener = ({
+	      title,
+	      id
+	    }) => {
+	      const {
+	        settings: {
+	          stopMiningOnGameLaunch
+	        }
+	      } = getState();
+	      if (!stopMiningOnGameLaunch) return;
+	      dispatch({
+	        type: SET_GAME_IS_RUNNING,
+	        data: {
+	          title,
+	          id
+	        }
+	      });
+	      const notification = GAME_IS_RUNNING(title);
+	      dispatch(setNotification(notification));
+	      dispatch(suspendMining(title));
+	    };
+
+	    const gameInfoUpdatedListener = ({
+	      runningChanged,
+	      gameInfo
+	    }) => {
+	      const {
+	        settings: {
+	          stopMiningOnGameLaunch
+	        }
+	      } = getState();
+	      if (!stopMiningOnGameLaunch) return;
+	      if (!runningChanged) return;
+	      const data = {
+	        title: gameInfo.title,
+	        id: gameInfo.id
+	      };
+
+	      if (!gameInfo.isRunning) {
+	        dispatch({
+	          type: SET_GAME_IS_TERMINATED,
+	          data
+	        });
+	        dispatch(unsetNotification());
+	        dispatch(continueMining(gameInfo.title));
+	      }
+	    };
+
+	    addGameLaunchedListener(gameLaunchedListener);
+	    addGameInfoUpdatedListener(gameInfoUpdatedListener);
+	  };
+	};
+
+	const trackHardwareInfo = () => {
+	  return dispatch => {
+	    const hardwareInfoListener = hardwareInfo => {
+	      dispatch({
+	        type: RECEIVE_HARDWARE_INFO,
+	        data: hardwareInfo
+	      });
+	      removeHardwareInfoListener(hardwareInfoListener);
+	    };
+
+	    addHardwareInfoListener(hardwareInfoListener);
+	  };
+	};
+
+	const getPrice = () => {
+	  return new Promise((resolve, reject) => {
+	    fetch('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD,EUR').then(response => response.json()).then(result => {
+	      resolve(result);
+	    }).catch(errorMsg => {
+	      reject(errorMsg);
+	    });
+	  });
+	};
+
+	const fetchPrice = () => {
+	  return dispatch => {
+	    getPrice().then(result => {
+	      dispatch({
+	        type: RECEIVE_PRICE,
+	        data: {
+	          price: result
+	        }
+	      });
+	    });
+	  };
+	};
+
+	const trackPrice = () => {
+	  return dispatch => {
+	    dispatch(fetchPrice());
+	    setInterval(() => {
+	      dispatch(fetchPrice());
+	    }, 180000);
+	  };
+	};
+
+	const fetchProfitability = () => {
+	  return dispatch => {
+	    getProfitability().then(result => {
+	      dispatch({
+	        type: RECEIVE_PROFITABILITY,
+	        data: {
+	          profitability: result
+	        }
+	      });
+	    });
+	  };
+	};
+
+	const trackProfitability = () => {
+	  return dispatch => {
+	    dispatch(fetchProfitability());
+	    setInterval(() => {
+	      dispatch(fetchProfitability());
+	    }, 180000);
+	  };
+	};
+
+	const setSettings = settings => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_SETTINGS,
+	      data: settings
+	    });
+	  };
+	};
+
+	const fetchOverwolfUser = () => {
+	  return dispatch => {
+	    getOverwolfUser().then(overwolfUser => {
+	      dispatch({
+	        type: RECEIVE_OVERWOLF_USER,
+	        data: overwolfUser
+	      });
+	      Raven.setUserContext(overwolfUser);
+	    });
+	  };
+	};
+	const fetchVersion = () => {
+	  return dispatch => {
+	    getVersion().then(version => {
+	      dispatch({
+	        type: RECEIVE_VERSION,
+	        data: version
+	      });
+	      Raven.setRelease(version);
+	    });
+	  };
+	};
+
+	// These envs will be replaced by rollup
+
+	/* eslint-disable no-undef */
+	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
+	const HOT_RELOAD_FILES = ["main.js"];
+	const TRACKING_ID = false;
+
+	const migrations = {
+	  4: () => {
+	    return null;
+	  }
+	};
 
 	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1430,90 +2125,6 @@
 	}
 
 	var _baseGetTag = baseGetTag;
-
-	/**
-	 * Checks if `value` is object-like. A value is object-like if it's not `null`
-	 * and has a `typeof` result of "object".
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
-	 * @example
-	 *
-	 * _.isObjectLike({});
-	 * // => true
-	 *
-	 * _.isObjectLike([1, 2, 3]);
-	 * // => true
-	 *
-	 * _.isObjectLike(_.noop);
-	 * // => false
-	 *
-	 * _.isObjectLike(null);
-	 * // => false
-	 */
-	function isObjectLike(value) {
-	  return value != null && typeof value == 'object';
-	}
-
-	var isObjectLike_1 = isObjectLike;
-
-	/** `Object#toString` result references. */
-	var symbolTag = '[object Symbol]';
-
-	/**
-	 * Checks if `value` is classified as a `Symbol` primitive or object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
-	 * @example
-	 *
-	 * _.isSymbol(Symbol.iterator);
-	 * // => true
-	 *
-	 * _.isSymbol('abc');
-	 * // => false
-	 */
-	function isSymbol(value) {
-	  return typeof value == 'symbol' ||
-	    (isObjectLike_1(value) && _baseGetTag(value) == symbolTag);
-	}
-
-	var isSymbol_1 = isSymbol;
-
-	/** Used to match property names within property paths. */
-	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
-	    reIsPlainProp = /^\w*$/;
-
-	/**
-	 * Checks if `value` is a property name and not a property path.
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @param {Object} [object] The object to query keys on.
-	 * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
-	 */
-	function isKey(value, object) {
-	  if (isArray_1(value)) {
-	    return false;
-	  }
-	  var type = typeof value;
-	  if (type == 'number' || type == 'symbol' || type == 'boolean' ||
-	      value == null || isSymbol_1(value)) {
-	    return true;
-	  }
-	  return reIsPlainProp.test(value) || !reIsDeepProp.test(value) ||
-	    (object != null && value in Object(object));
-	}
-
-	var _isKey = isKey;
 
 	/**
 	 * Checks if `value` is the
@@ -1705,6 +2316,215 @@
 
 	var _getNative = getNative;
 
+	var defineProperty = (function() {
+	  try {
+	    var func = _getNative(Object, 'defineProperty');
+	    func({}, '', {});
+	    return func;
+	  } catch (e) {}
+	}());
+
+	var _defineProperty = defineProperty;
+
+	/**
+	 * The base implementation of `assignValue` and `assignMergeValue` without
+	 * value checks.
+	 *
+	 * @private
+	 * @param {Object} object The object to modify.
+	 * @param {string} key The key of the property to assign.
+	 * @param {*} value The value to assign.
+	 */
+	function baseAssignValue(object, key, value) {
+	  if (key == '__proto__' && _defineProperty) {
+	    _defineProperty(object, key, {
+	      'configurable': true,
+	      'enumerable': true,
+	      'value': value,
+	      'writable': true
+	    });
+	  } else {
+	    object[key] = value;
+	  }
+	}
+
+	var _baseAssignValue = baseAssignValue;
+
+	/**
+	 * Performs a
+	 * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+	 * comparison between two values to determine if they are equivalent.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to compare.
+	 * @param {*} other The other value to compare.
+	 * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
+	 * @example
+	 *
+	 * var object = { 'a': 1 };
+	 * var other = { 'a': 1 };
+	 *
+	 * _.eq(object, object);
+	 * // => true
+	 *
+	 * _.eq(object, other);
+	 * // => false
+	 *
+	 * _.eq('a', 'a');
+	 * // => true
+	 *
+	 * _.eq('a', Object('a'));
+	 * // => false
+	 *
+	 * _.eq(NaN, NaN);
+	 * // => true
+	 */
+	function eq(value, other) {
+	  return value === other || (value !== value && other !== other);
+	}
+
+	var eq_1 = eq;
+
+	/** Used for built-in method references. */
+	var objectProto$3 = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty$2 = objectProto$3.hasOwnProperty;
+
+	/**
+	 * Assigns `value` to `key` of `object` if the existing value is not equivalent
+	 * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+	 * for equality comparisons.
+	 *
+	 * @private
+	 * @param {Object} object The object to modify.
+	 * @param {string} key The key of the property to assign.
+	 * @param {*} value The value to assign.
+	 */
+	function assignValue(object, key, value) {
+	  var objValue = object[key];
+	  if (!(hasOwnProperty$2.call(object, key) && eq_1(objValue, value)) ||
+	      (value === undefined && !(key in object))) {
+	    _baseAssignValue(object, key, value);
+	  }
+	}
+
+	var _assignValue = assignValue;
+
+	/**
+	 * Checks if `value` is classified as an `Array` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+	 * @example
+	 *
+	 * _.isArray([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArray(document.body.children);
+	 * // => false
+	 *
+	 * _.isArray('abc');
+	 * // => false
+	 *
+	 * _.isArray(_.noop);
+	 * // => false
+	 */
+	var isArray = Array.isArray;
+
+	var isArray_1 = isArray;
+
+	/**
+	 * Checks if `value` is object-like. A value is object-like if it's not `null`
+	 * and has a `typeof` result of "object".
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 * @example
+	 *
+	 * _.isObjectLike({});
+	 * // => true
+	 *
+	 * _.isObjectLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObjectLike(_.noop);
+	 * // => false
+	 *
+	 * _.isObjectLike(null);
+	 * // => false
+	 */
+	function isObjectLike(value) {
+	  return value != null && typeof value == 'object';
+	}
+
+	var isObjectLike_1 = isObjectLike;
+
+	/** `Object#toString` result references. */
+	var symbolTag = '[object Symbol]';
+
+	/**
+	 * Checks if `value` is classified as a `Symbol` primitive or object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+	 * @example
+	 *
+	 * _.isSymbol(Symbol.iterator);
+	 * // => true
+	 *
+	 * _.isSymbol('abc');
+	 * // => false
+	 */
+	function isSymbol(value) {
+	  return typeof value == 'symbol' ||
+	    (isObjectLike_1(value) && _baseGetTag(value) == symbolTag);
+	}
+
+	var isSymbol_1 = isSymbol;
+
+	/** Used to match property names within property paths. */
+	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
+	    reIsPlainProp = /^\w*$/;
+
+	/**
+	 * Checks if `value` is a property name and not a property path.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {Object} [object] The object to query keys on.
+	 * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+	 */
+	function isKey(value, object) {
+	  if (isArray_1(value)) {
+	    return false;
+	  }
+	  var type = typeof value;
+	  if (type == 'number' || type == 'symbol' || type == 'boolean' ||
+	      value == null || isSymbol_1(value)) {
+	    return true;
+	  }
+	  return reIsPlainProp.test(value) || !reIsDeepProp.test(value) ||
+	    (object != null && value in Object(object));
+	}
+
+	var _isKey = isKey;
+
 	/* Built-in method references that are verified to be native. */
 	var nativeCreate = _getNative(Object, 'create');
 
@@ -1746,10 +2566,10 @@
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
 
 	/** Used for built-in method references. */
-	var objectProto$3 = Object.prototype;
+	var objectProto$4 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$2 = objectProto$3.hasOwnProperty;
+	var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
 
 	/**
 	 * Gets the hash value for `key`.
@@ -1766,16 +2586,16 @@
 	    var result = data[key];
 	    return result === HASH_UNDEFINED ? undefined : result;
 	  }
-	  return hasOwnProperty$2.call(data, key) ? data[key] : undefined;
+	  return hasOwnProperty$3.call(data, key) ? data[key] : undefined;
 	}
 
 	var _hashGet = hashGet;
 
 	/** Used for built-in method references. */
-	var objectProto$4 = Object.prototype;
+	var objectProto$5 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
+	var hasOwnProperty$4 = objectProto$5.hasOwnProperty;
 
 	/**
 	 * Checks if a hash value for `key` exists.
@@ -1788,7 +2608,7 @@
 	 */
 	function hashHas(key) {
 	  var data = this.__data__;
-	  return _nativeCreate ? (data[key] !== undefined) : hasOwnProperty$3.call(data, key);
+	  return _nativeCreate ? (data[key] !== undefined) : hasOwnProperty$4.call(data, key);
 	}
 
 	var _hashHas = hashHas;
@@ -1855,44 +2675,6 @@
 	}
 
 	var _listCacheClear = listCacheClear;
-
-	/**
-	 * Performs a
-	 * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
-	 * comparison between two values to determine if they are equivalent.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to compare.
-	 * @param {*} other The other value to compare.
-	 * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
-	 * @example
-	 *
-	 * var object = { 'a': 1 };
-	 * var other = { 'a': 1 };
-	 *
-	 * _.eq(object, object);
-	 * // => true
-	 *
-	 * _.eq(object, other);
-	 * // => false
-	 *
-	 * _.eq('a', 'a');
-	 * // => true
-	 *
-	 * _.eq('a', Object('a'));
-	 * // => false
-	 *
-	 * _.eq(NaN, NaN);
-	 * // => true
-	 */
-	function eq(value, other) {
-	  return value === other || (value !== value && other !== other);
-	}
-
-	var eq_1 = eq;
 
 	/**
 	 * Gets the index at which the `key` is found in `array` of key-value pairs.
@@ -2407,885 +3189,6 @@
 	var _castPath = castPath;
 
 	/** Used as references for various `Number` constants. */
-	var INFINITY$1 = 1 / 0;
-
-	/**
-	 * Converts `value` to a string key if it's not a string or symbol.
-	 *
-	 * @private
-	 * @param {*} value The value to inspect.
-	 * @returns {string|symbol} Returns the key.
-	 */
-	function toKey(value) {
-	  if (typeof value == 'string' || isSymbol_1(value)) {
-	    return value;
-	  }
-	  var result = (value + '');
-	  return (result == '0' && (1 / value) == -INFINITY$1) ? '-0' : result;
-	}
-
-	var _toKey = toKey;
-
-	/**
-	 * The base implementation of `_.get` without support for default values.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @param {Array|string} path The path of the property to get.
-	 * @returns {*} Returns the resolved value.
-	 */
-	function baseGet(object, path) {
-	  path = _castPath(path, object);
-
-	  var index = 0,
-	      length = path.length;
-
-	  while (object != null && index < length) {
-	    object = object[_toKey(path[index++])];
-	  }
-	  return (index && index == length) ? object : undefined;
-	}
-
-	var _baseGet = baseGet;
-
-	/**
-	 * Gets the value at `path` of `object`. If the resolved value is
-	 * `undefined`, the `defaultValue` is returned in its place.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 3.7.0
-	 * @category Object
-	 * @param {Object} object The object to query.
-	 * @param {Array|string} path The path of the property to get.
-	 * @param {*} [defaultValue] The value returned for `undefined` resolved values.
-	 * @returns {*} Returns the resolved value.
-	 * @example
-	 *
-	 * var object = { 'a': [{ 'b': { 'c': 3 } }] };
-	 *
-	 * _.get(object, 'a[0].b.c');
-	 * // => 3
-	 *
-	 * _.get(object, ['a', '0', 'b', 'c']);
-	 * // => 3
-	 *
-	 * _.get(object, 'a.b.c', 'default');
-	 * // => 'default'
-	 */
-	function get(object, path, defaultValue) {
-	  var result = object == null ? undefined : _baseGet(object, path);
-	  return result === undefined ? defaultValue : result;
-	}
-
-	var get_1 = get;
-
-	const ETHERMINE = 'ETHERMINE';
-	const ethermine = {
-	  name: 'Ethermine',
-	  identifier: ETHERMINE,
-	  servers: ['eu1.ethermine.org:4444', 'us1.ethermine.org:4444'],
-	  statsUrl: address => `https://ethermine.org/miners/${address}/dashboard`,
-	  apiUrl: address => `https://api.ethermine.org/miner/${address}/dashboard`,
-	  apiParser: result => ({
-	    unpaidBalance: (get_1(result, 'data.currentStatistics.unpaid') || 0) / 1000000000000000000,
-	    payoutThreshold: (get_1(result, 'data.settings.minPayout') || 1000000000000000000) / 1000000000000000000
-	  })
-	};
-
-	const SUPPORT_XMR = 'SUPPORT_XMR';
-	const supportXMR = {
-	  name: 'SupportXMR',
-	  identifier: SUPPORT_XMR,
-	  servers: ['pool.supportxmr.com:5555'],
-	  poolConfig: 'supportxmr.txt',
-	  statsUrl: () => 'https://supportxmr.com/#/dashboard',
-	  apiUrl: address => `https://supportxmr.com/api/miner/${address}/stats`,
-	  apiParser: result => ({
-	    unpaidBalance: (get_1(result, 'amtDue') || 0) / 1000000000000,
-	    payoutThreshold: 0.3
-	  })
-	};
-
-	const miningPoolsByMinerIdentifier = {
-	  [ETHEREUM_MINER]: [ethermine],
-	  [MONERO_MINER]: [supportXMR]
-	};
-	const miningPoolsByIdentifier = {
-	  [ETHERMINE]: ethermine,
-	  [SUPPORT_XMR]: supportXMR
-	};
-
-	const interval = 200;
-
-	const requestHardwareInfo = () => {
-	  overwolf.benchmarking.requestHardwareInfo(interval, result => {
-	    if (result.reason === 'Permissions Required') {
-	      overwolf.benchmarking.requestPermissions(({
-	        status
-	      }) => {
-	        if (status === 'success') {
-	          requestHardwareInfo();
-	        }
-	      });
-	    }
-	  });
-	};
-
-	const addHardwareInfoListener = listener => {
-	  overwolf.benchmarking.onHardwareInfoReady.addListener(listener);
-	  requestHardwareInfo(listener);
-	};
-	const removeHardwareInfoListener = listener => {
-	  overwolf.benchmarking.onHardwareInfoReady.removeListener(listener);
-	};
-	const getMaxCores = cpus => {
-	  return cpus.reduce((pre, cur) => {
-	    return pre + cur.NumCores;
-	  }, 0);
-	};
-	const getMaxGPUs = gpus => {
-	  return gpus.length;
-	};
-
-	const TEST_MODE = {
-	  _id: 'testMode',
-	  message: 'TEST MODE! Please configure your wallet.',
-	  alert: true
-	};
-	const GAME_IS_RUNNING = title => ({
-	  _id: 'gameIsRunning',
-	  message: `${title} is running. Mining is suspended!`,
-	  alert: false
-	});
-
-	const callOverwolfWithPromise = (method, ...params) => {
-	  return new Promise((resolve, reject) => {
-	    const handleResult = result => {
-	      if (result) return resolve(result);
-	      return reject(result);
-	    };
-
-	    console.log(method, params);
-
-	    if (params) {
-	      method(...params, handleResult);
-	    } else {
-	      method(handleResult);
-	    }
-	  });
-	};
-
-	const getOverwolfUser = async function () {
-	  const currentUser = await callOverwolfWithPromise(overwolf.profile.getCurrentUser);
-	  const manifest = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
-	  return {
-	    overwolfVersion: overwolf.version,
-	    appVersion: manifest.meta.version,
-	    channel: currentUser.channel,
-	    userId: currentUser.userId,
-	    username: currentUser.username,
-	    partnerId: currentUser.partnerId,
-	    machineId: currentUser.machineId
-	  };
-	};
-
-	const getVersion = () => {
-	  return new Promise(async resolve => {
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
-	    resolve(result.meta.version);
-	  });
-	};
-
-	let processManager = null;
-	const getProcessManagerPlugin = () => {
-	  return new Promise(async resolve => {
-	    if (processManager) return resolve(processManager);
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'process-manager-plugin');
-	    processManager = result.object;
-	    resolve(result.object);
-	  });
-	};
-
-	let simpleIoPlugin;
-	const getSimpleIoPlugin = () => {
-	  return new Promise(async resolve => {
-	    if (simpleIoPlugin) return resolve(simpleIoPlugin);
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'simple-io-plugin');
-	    simpleIoPlugin = result.object;
-	    resolve(result.object);
-	  });
-	};
-
-	/**
-	 * Checks if `value` is `null` or `undefined`.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is nullish, else `false`.
-	 * @example
-	 *
-	 * _.isNil(null);
-	 * // => true
-	 *
-	 * _.isNil(void 0);
-	 * // => true
-	 *
-	 * _.isNil(NaN);
-	 * // => false
-	 */
-	function isNil(value) {
-	  return value == null;
-	}
-
-	var isNil_1 = isNil;
-
-	const loadDefault = () => {
-	  return dispatch => {
-	    dispatch({
-	      type: SELECT_MINER,
-	      data: MONERO_MINER
-	    });
-	    dispatch({
-	      type: SET_MINING_ADDRESS,
-	      data: {
-	        address: ethereum.developerAddress,
-	        minerIdentifier: ETHEREUM_MINER
-	      }
-	    });
-	    dispatch({
-	      type: SET_MINING_POOL,
-	      data: {
-	        minerIdentifier: ETHEREUM_MINER,
-	        miningPoolIdentifier: ETHERMINE
-	      }
-	    });
-	    dispatch({
-	      type: SET_MINING_ADDRESS,
-	      data: {
-	        address: monero.developerAddress,
-	        minerIdentifier: MONERO_MINER
-	      }
-	    });
-	    dispatch({
-	      type: SET_MINING_POOL,
-	      data: {
-	        minerIdentifier: MONERO_MINER,
-	        miningPoolIdentifier: SUPPORT_XMR
-	      }
-	    });
-	    dispatch({
-	      type: SET_NOTIFICATION,
-	      notification: TEST_MODE
-	    });
-	  };
-	};
-	const setMiningAddress = (minerIdentifier, address) => {
-	  return dispatch => {
-	    dispatch({
-	      type: SET_MINING_ADDRESS,
-	      data: {
-	        address,
-	        minerIdentifier
-	      }
-	    });
-	    const miner = minersByIdentifier[minerIdentifier];
-	    const validAddress = miner.isValidAddress(address);
-	    if (validAddress) ;else {
-	      dispatch({
-	        type: RECEIVE_WORKER_STATS,
-	        data: {
-	          minerIdentifier,
-	          workerStats: {}
-	        }
-	      });
-	    }
-	    dispatch({
-	      type: UNSET_NOTIFICATION
-	    });
-	  };
-	};
-	const setMiningPool = (minerIdentifier, miningPoolIdentifier) => {
-	  return dispatch => {
-	    dispatch({
-	      type: SET_MINING_POOL,
-	      data: {
-	        minerIdentifier,
-	        miningPoolIdentifier
-	      }
-	    });
-	  };
-	};
-	const selectMiner = minerIdentifier => {
-	  return dispatch => {
-	    dispatch({
-	      type: SELECT_MINER,
-	      data: minerIdentifier
-	    });
-	    dispatch(trackWorkerStats());
-	  };
-	};
-	const trackWorkerStats = () => {
-	  return dispatch => {
-	    dispatch(fetchWorkerStats());
-	    setInterval(() => {
-	      dispatch(fetchWorkerStats());
-	    }, 60000);
-	  };
-	};
-	const appendMiningLog = line => {
-	  return dispatch => {
-	    dispatch({
-	      type: APPEND_MINING_LOG,
-	      data: {
-	        timestamp: Date.now(),
-	        line
-	      }
-	    });
-	  };
-	};
-
-	const fetchWorkerStats = () => {
-	  return (dispatch, getState) => {
-	    const {
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier: minerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      address,
-	      miningPoolIdentifier
-	    } = miners$$1[minerIdentifier];
-	    const {
-	      apiUrl,
-	      apiParser
-	    } = miningPoolsByIdentifier[miningPoolIdentifier];
-	    fetch(apiUrl(address)).then(response => response.json()).then(result => {
-	      dispatch({
-	        type: RECEIVE_WORKER_STATS,
-	        data: {
-	          minerIdentifier,
-	          workerStats: apiParser(result)
-	        }
-	      });
-	    }).catch(errorMsg => {
-	      dispatch({
-	        type: SET_MINING_ERROR_MESSAGE,
-	        data: {
-	          minerIdentifier,
-	          errorMsg
-	        }
-	      });
-	    });
-	  };
-	};
-
-	const handleDataByIdenfier = {};
-	let sendTextInterval = null;
-	const startMining = minerIdentifier => {
-	  return async (dispatch, getState) => {
-	    const {
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      address = 'default',
-	      miningPoolIdentifier,
-	      cores,
-	      gpus
-	    } = miners$$1[selectedMinerIdentifier];
-	    if (handleDataByIdenfier[minerIdentifier]) return;
-	    const processManager = await getProcessManagerPlugin();
-	    const {
-	      parser,
-	      path,
-	      args,
-	      environmentVariables
-	    } = minersByIdentifier[minerIdentifier];
-	    const {
-	      servers,
-	      poolConfig
-	    } = miningPoolsByIdentifier[miningPoolIdentifier];
-	    dispatch({
-	      type: START_MINING,
-	      data: {
-	        minerIdentifier
-	      }
-	    });
-
-	    handleDataByIdenfier[minerIdentifier] = async ({
-	      error,
-	      data
-	    }) => {
-	      const line = error || data;
-	      const {
-	        connecting,
-	        errorMsg,
-	        speed
-	      } = parser(line);
-
-	      if (connecting) {
-	        dispatch({
-	          type: CONNECTING_POOL,
-	          data: {
-	            minerIdentifier
-	          }
-	        });
-	      } else if (!isNil_1(speed)) {
-	        dispatch({
-	          type: SET_MINING_SPEED,
-	          data: {
-	            minerIdentifier,
-	            speed
-	          }
-	        });
-	      } else if (!isNil_1(errorMsg)) {
-	        dispatch({
-	          type: SET_MINING_ERROR_MESSAGE,
-	          data: {
-	            minerIdentifier,
-	            errorMsg
-	          }
-	        });
-	      }
-
-	      dispatch(appendMiningLog(line));
-	    };
-
-	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-	    const minerArgs = args({
-	      address,
-	      servers,
-	      cores,
-	      gpus,
-	      poolConfig
-	    });
-	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
-	      data
-	    }) => {
-	      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
-	      dispatch({
-	        type: SET_PROCESS_ID,
-	        data: {
-	          minerIdentifier,
-	          processId: data
-	        }
-	      });
-	    });
-	  };
-	};
-	const stopMining = minerIdentifier => {
-	  return async (dispatch, getState) => {
-	    const processManager = await getProcessManagerPlugin();
-	    const {
-	      activeMiners
-	    } = getState();
-	    dispatch({
-	      type: STOP_MINING,
-	      data: {
-	        minerIdentifier
-	      }
-	    });
-	    const processId = activeMiners[minerIdentifier].processId;
-	    console.info(`%cStop mining ${processId}`, 'color: blue');
-
-	    if (processId || handleDataByIdenfier[minerIdentifier]) {
-	      if (sendTextInterval) {
-	        clearInterval(sendTextInterval);
-	        sendTextInterval = null;
-	      }
-
-	      processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
-	      processManager.terminateProcess(processId);
-	      delete handleDataByIdenfier[minerIdentifier];
-	    }
-	  };
-	};
-	const suspendMining = gameTitle => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        selectedMinerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      isMining,
-	      isSuspended
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (isMining && !isSuspended) {
-	      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
-	      dispatch(stopMining(selectedMinerIdentifier));
-	      dispatch({
-	        type: SUSPEND_MINING,
-	        data: {
-	          minerIdentifier: selectedMinerIdentifier
-	        }
-	      });
-	    }
-	  };
-	};
-	const continueMining = gameTitle => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        selectedMinerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      isMining,
-	      isSuspended
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (!isMining && isSuspended) {
-	      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
-	      dispatch(startMining(selectedMinerIdentifier));
-	      dispatch({
-	        type: CONTINUE_MINING,
-	        data: {
-	          minerIdentifier: selectedMinerIdentifier
-	        }
-	      });
-	    }
-	  };
-	};
-	const addCore = () => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
-	      },
-	      hardwareInfo: {
-	        Cpus
-	      }
-	    } = getState();
-	    const {
-	      cores
-	    } = miners$$1[selectedMinerIdentifier];
-	    const maxCores = getMaxCores(Cpus);
-	    if (cores + 1 > maxCores) return;
-	    dispatch({
-	      type: SET_CORES,
-	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
-	        cores: cores + 1
-	      }
-	    });
-	    const {
-	      isMining
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (isMining) {
-	      dispatch(stopMining(selectedMinerIdentifier));
-	    }
-	  };
-	};
-	const removeCore = () => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      cores
-	    } = miners$$1[selectedMinerIdentifier];
-	    if (cores - 1 < 0) return;
-	    dispatch({
-	      type: SET_CORES,
-	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
-	        cores: cores - 1
-	      }
-	    });
-	    const {
-	      isMining
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (isMining) {
-	      dispatch(stopMining(selectedMinerIdentifier));
-	    }
-	  };
-	};
-	const addGPU = () => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
-	      },
-	      hardwareInfo: {
-	        Gpus: {
-	          Gpus
-	        }
-	      }
-	    } = getState();
-	    const {
-	      gpus
-	    } = miners$$1[selectedMinerIdentifier];
-	    const maxGPUs = getMaxGPUs(Gpus);
-	    if (gpus + 1 > maxGPUs) return;
-	    dispatch({
-	      type: SET_GPUS,
-	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
-	        gpus: gpus + 1
-	      }
-	    });
-	    const {
-	      isMining
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (isMining) {
-	      dispatch(stopMining(selectedMinerIdentifier));
-	    }
-	  };
-	};
-	const removeGPU = () => {
-	  return (dispatch, getState) => {
-	    const {
-	      activeMiners,
-	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
-	      }
-	    } = getState();
-	    const {
-	      gpus
-	    } = miners$$1[selectedMinerIdentifier];
-	    if (gpus - 1 < 0) return;
-	    dispatch({
-	      type: SET_GPUS,
-	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
-	        gpus: gpus - 1
-	      }
-	    });
-	    const {
-	      isMining
-	    } = activeMiners[selectedMinerIdentifier];
-
-	    if (isMining) {
-	      dispatch(stopMining(selectedMinerIdentifier));
-	    }
-	  };
-	};
-
-	const setNotification = notification => {
-	  return dispatch => {
-	    dispatch({
-	      type: SET_NOTIFICATION,
-	      notification
-	    });
-	  };
-	};
-	const unsetNotification = () => {
-	  return dispatch => {
-	    dispatch({
-	      type: UNSET_NOTIFICATION
-	    });
-	  };
-	};
-
-	const trackGameInfo = () => {
-	  return (dispatch, getState) => {
-	    const gameLaunchedListener = ({
-	      title,
-	      id
-	    }) => {
-	      const {
-	        settings: {
-	          stopMiningOnGameLaunch
-	        }
-	      } = getState();
-	      if (!stopMiningOnGameLaunch) return;
-	      dispatch({
-	        type: SET_GAME_IS_RUNNING,
-	        data: {
-	          title,
-	          id
-	        }
-	      });
-	      const notification = GAME_IS_RUNNING(title);
-	      dispatch(setNotification(notification));
-	      dispatch(suspendMining(title));
-	    };
-
-	    const gameInfoUpdatedListener = ({
-	      runningChanged,
-	      gameInfo
-	    }) => {
-	      const {
-	        settings: {
-	          stopMiningOnGameLaunch
-	        }
-	      } = getState();
-	      if (!stopMiningOnGameLaunch) return;
-	      if (!runningChanged) return;
-	      const data = {
-	        title: gameInfo.title,
-	        id: gameInfo.id
-	      };
-
-	      if (!gameInfo.isRunning) {
-	        dispatch({
-	          type: SET_GAME_IS_TERMINATED,
-	          data
-	        });
-	        dispatch(unsetNotification());
-	        dispatch(continueMining(gameInfo.title));
-	      }
-	    };
-
-	    addGameLaunchedListener(gameLaunchedListener);
-	    addGameInfoUpdatedListener(gameInfoUpdatedListener);
-	  };
-	};
-
-	const trackHardwareInfo = () => {
-	  return dispatch => {
-	    const hardwareInfoListener = hardwareInfo => {
-	      dispatch({
-	        type: RECEIVE_HARDWARE_INFO,
-	        data: hardwareInfo
-	      });
-	      removeHardwareInfoListener(hardwareInfoListener);
-	    };
-
-	    addHardwareInfoListener(hardwareInfoListener);
-	  };
-	};
-
-	const setSettings = settings => {
-	  return dispatch => {
-	    dispatch({
-	      type: SET_SETTINGS,
-	      data: settings
-	    });
-	  };
-	};
-
-	const fetchOverwolfUser = () => {
-	  return dispatch => {
-	    getOverwolfUser().then(overwolfUser => {
-	      dispatch({
-	        type: RECEIVE_OVERWOLF_USER,
-	        data: overwolfUser
-	      });
-	      Raven.setUserContext(overwolfUser);
-	    });
-	  };
-	};
-	const fetchVersion = () => {
-	  return dispatch => {
-	    getVersion().then(version => {
-	      dispatch({
-	        type: RECEIVE_VERSION,
-	        data: version
-	      });
-	      Raven.setRelease(version);
-	    });
-	  };
-	};
-
-	// These envs will be replaced by rollup
-
-	/* eslint-disable no-undef */
-	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
-	const HOT_RELOAD_FILES = ["main.js"];
-	const TRACKING_ID = false;
-
-	const migrations = {
-	  1: state => {
-	    const {
-	      mining
-	    } = state;
-	    const newMining = { ...mining
-	    };
-	    newMining.miners[ETHEREUM_MINER].cores = 1;
-	    newMining.miners[MONERO_MINER].cores = 1;
-	    newMining.miners[ETHEREUM_MINER].gpus = 1;
-	    newMining.miners[MONERO_MINER].gpus = 1;
-	    return { ...state,
-	      mining: newMining
-	    };
-	  }
-	};
-
-	var defineProperty = (function() {
-	  try {
-	    var func = _getNative(Object, 'defineProperty');
-	    func({}, '', {});
-	    return func;
-	  } catch (e) {}
-	}());
-
-	var _defineProperty = defineProperty;
-
-	/**
-	 * The base implementation of `assignValue` and `assignMergeValue` without
-	 * value checks.
-	 *
-	 * @private
-	 * @param {Object} object The object to modify.
-	 * @param {string} key The key of the property to assign.
-	 * @param {*} value The value to assign.
-	 */
-	function baseAssignValue(object, key, value) {
-	  if (key == '__proto__' && _defineProperty) {
-	    _defineProperty(object, key, {
-	      'configurable': true,
-	      'enumerable': true,
-	      'value': value,
-	      'writable': true
-	    });
-	  } else {
-	    object[key] = value;
-	  }
-	}
-
-	var _baseAssignValue = baseAssignValue;
-
-	/** Used for built-in method references. */
-	var objectProto$5 = Object.prototype;
-
-	/** Used to check objects for own properties. */
-	var hasOwnProperty$4 = objectProto$5.hasOwnProperty;
-
-	/**
-	 * Assigns `value` to `key` of `object` if the existing value is not equivalent
-	 * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
-	 * for equality comparisons.
-	 *
-	 * @private
-	 * @param {Object} object The object to modify.
-	 * @param {string} key The key of the property to assign.
-	 * @param {*} value The value to assign.
-	 */
-	function assignValue(object, key, value) {
-	  var objValue = object[key];
-	  if (!(hasOwnProperty$4.call(object, key) && eq_1(objValue, value)) ||
-	      (value === undefined && !(key in object))) {
-	    _baseAssignValue(object, key, value);
-	  }
-	}
-
-	var _assignValue = assignValue;
-
-	/** Used as references for various `Number` constants. */
 	var MAX_SAFE_INTEGER = 9007199254740991;
 
 	/** Used to detect unsigned integer values. */
@@ -3310,6 +3213,26 @@
 	}
 
 	var _isIndex = isIndex;
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY$1 = 1 / 0;
+
+	/**
+	 * Converts `value` to a string key if it's not a string or symbol.
+	 *
+	 * @private
+	 * @param {*} value The value to inspect.
+	 * @returns {string|symbol} Returns the key.
+	 */
+	function toKey(value) {
+	  if (typeof value == 'string' || isSymbol_1(value)) {
+	    return value;
+	  }
+	  var result = (value + '');
+	  return (result == '0' && (1 / value) == -INFINITY$1) ? '-0' : result;
+	}
+
+	var _toKey = toKey;
 
 	/**
 	 * The base implementation of `_.set`.
@@ -3394,24 +3317,18 @@
 	    to: 0,
 	    data: []
 	  },
-	  workerStats: {
-	    unpaidBalance: 0,
-	    payoutThreshold: 1
-	  },
 	  cores: 1,
-	  gpus: 1
+	  gpus: 1,
+	  address: developerAddress
 	};
 	const mining = (state = {
-	  selectedMinerIdentifier: MONERO_MINER,
+	  selectedMinerIdentifier: CRYPTO_NIGHT_V7,
 	  miners: {
-	    [ETHEREUM_MINER]: { ...defaultMinerProps,
-	      miningPoolIdentifier: ETHERMINE,
-	      address: ethereum.developerAddress
-	    },
-	    [MONERO_MINER]: { ...defaultMinerProps,
-	      miningPoolIdentifier: SUPPORT_XMR,
-	      address: monero.developerAddress
+	    [CRYPTO_NIGHT_V7]: { ...defaultMinerProps
 	    }
+	  },
+	  workerStats: {
+	    unpaidBalance: 0
 	  }
 	}, {
 	  type,
@@ -3429,10 +3346,6 @@
 	      set_1(newState, `selectedMinerIdentifier`, data);
 	      break;
 
-	    case SET_MINING_POOL:
-	      set_1(newState, `miners.${data.minerIdentifier}.miningPoolIdentifier`, data.miningPoolIdentifier);
-	      break;
-
 	    case REQUEST_MINING_METRICS:
 	      set_1(newState, `miners.${data.minerIdentifier}.metrics.fetching`, true);
 	      set_1(newState, `miners.${data.minerIdentifier}.metrics.from`, data.from);
@@ -3445,7 +3358,7 @@
 	      break;
 
 	    case RECEIVE_WORKER_STATS:
-	      set_1(newState, `miners.${data.minerIdentifier}.workerStats`, data.workerStats);
+	      set_1(newState, `miners.workerStats`, data.workerStats);
 	      break;
 
 	    case SET_CORES:
@@ -3471,9 +3384,7 @@
 	  connecting: false
 	};
 	const activeMiners = (state = {
-	  [ETHEREUM_MINER]: { ...defaultActiveMinersProps
-	  },
-	  [MONERO_MINER]: { ...defaultActiveMinersProps
+	  [CRYPTO_NIGHT_V7]: { ...defaultActiveMinersProps
 	  }
 	}, {
 	  type,
@@ -33326,7 +33237,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -34341,6 +34252,28 @@
 	});
 
 	var RemoveIcon = unwrapExports(Remove);
+
+	var AccountBalanceWallet = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _react = interopRequireDefault(react);
+
+	var _createSvgIcon = interopRequireDefault(createSvgIcon_1);
+
+	var _default = (0, _createSvgIcon.default)(_react.default.createElement("g", null, _react.default.createElement("path", {
+	  d: "M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
+	})), 'AccountBalanceWallet');
+
+	exports.default = _default;
+	});
+
+	var WalletIcon = unwrapExports(AccountBalanceWallet);
 
 	var IconButton_1 = createCommonjsModule(function (module, exports) {
 
@@ -46722,13 +46655,31 @@
 	        [key]: event.target.checked
 	      });
 	    });
+
+	    _defineProperty$1(this, "handleMinerChange", event => {
+	      const {
+	        selectMiner: selectMiner$$1
+	      } = this.props;
+	      const minerIdentifier = event.target.value;
+	      selectMiner$$1(minerIdentifier);
+	    });
+
+	    _defineProperty$1(this, "handleSelectChange", key => event => {
+	      const {
+	        setSettings: setSettings$$1
+	      } = this.props;
+	      setSettings$$1({
+	        [key]: event.target.value
+	      });
+	    });
 	  }
 
 	  render() {
 	    const {
 	      open,
 	      tab,
-	      settings
+	      settings,
+	      selectedMinerIdentifier
 	    } = this.props;
 	    const menuItems = [react.createElement(MenuItem$2, {
 	      button: true,
@@ -46760,7 +46711,21 @@
 	        value: 'en'
 	      }, react.createElement(MenuItem$2, {
 	        value: 'en'
-	      }, "English"))));
+	      }, "English"))), react.createElement(FormControl$2, {
+	        margin: "normal"
+	      }, react.createElement(InputLabel$2, {
+	        htmlFor: "currency"
+	      }, "Currency"), react.createElement(Select$2, {
+	        inputProps: {
+	          id: 'currency'
+	        },
+	        onChange: this.handleSelectChange('currency'),
+	        value: settings.currency
+	      }, react.createElement(MenuItem$2, {
+	        value: 'usd'
+	      }, "USD"), react.createElement(MenuItem$2, {
+	        value: 'btc'
+	      }, "BTC"))));
 	    } else if (tab === SETTINGS_DIALOG_MINING) {
 	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "Mining configurations"), react.createElement(FormControlLabel$2, {
 	        control: react.createElement(Switch$2, {
@@ -46769,7 +46734,21 @@
 	          value: "stopMiningOnGameLaunch"
 	        }),
 	        label: "Stop mining on game launch"
-	      }));
+	      }), react.createElement(FormControl$2, {
+	        margin: "normal"
+	      }, react.createElement(InputLabel$2, {
+	        htmlFor: "crypto-select"
+	      }, "Selected Miner"), react.createElement(Select$2, {
+	        disabled: true,
+	        inputProps: {
+	          id: 'crypto-select'
+	        },
+	        onChange: this.handleMinerChange,
+	        value: selectedMinerIdentifier
+	      }, miners.map(miner => react.createElement(MenuItem$2, {
+	        key: miner.identifier,
+	        value: miner.identifier
+	      }, miner.name)))));
 	    }
 
 	    return react.createElement(enhanced, {
@@ -46786,7 +46765,9 @@
 	  tab: propTypes.string.isRequired,
 	  setSettingsDialogTab: propTypes.func.isRequired,
 	  settings: propTypes.object.isRequired,
-	  setSettings: propTypes.func.isRequired
+	  setSettings: propTypes.func.isRequired,
+	  selectedMinerIdentifier: propTypes.string.isRequired,
+	  selectMiner: propTypes.func.isRequired
 	};
 
 	const mapStateToProps = ({
@@ -46794,19 +46775,24 @@
 	    settingsDialogOpen,
 	    settingsDialogTab
 	  },
-	  settings
+	  settings,
+	  mining: {
+	    selectedMinerIdentifier
+	  }
 	}) => {
 	  return {
 	    open: settingsDialogOpen,
 	    tab: settingsDialogTab,
-	    settings
+	    settings,
+	    selectedMinerIdentifier
 	  };
 	};
 
 	const mapDispatchToProps$1 = dispatch => {
 	  return {
 	    setSettingsDialogTab: bindActionCreators(setSettingsDialogTab, dispatch),
-	    setSettings: bindActionCreators(setSettings, dispatch)
+	    setSettings: bindActionCreators(setSettings, dispatch),
+	    selectMiner: bindActionCreators(selectMiner, dispatch)
 	  };
 	};
 
@@ -46892,16 +46878,10 @@
 	  answer: "A mining pool is the pooling of resources by miners, who share their processing power over\r a network, to split the reward equally, according to the amount of work they contributed\r to the probability of finding a block.",
 	  question: "What is a mining pool?"
 	}), react.createElement(FAQEntry, {
-	  answer: "ETH is the short form of Ether which is the currency of Ethereum.",
-	  question: "What is ETH?"
-	}), react.createElement(FAQEntry, {
-	  answer: "XMR is the currency of Monero.",
-	  question: "What is XMR?"
-	}), react.createElement(FAQEntry, {
 	  answer: "This is normal when mining is active. Mining is a load intensive process which uses all ressources available.",
 	  question: "Why is my CPU or GPU at 100%?"
 	}), react.createElement(FAQEntry, {
-	  answer: "This depends on the selected mining pool. Take a look at their conditions.",
+	  answer: "0.001 BTC or 0.1 BTC.",
 	  question: "When do I get a payout?"
 	}), react.createElement(FAQEntry, {
 	  answer: "Yes, Raccoon Miner has no access to your wallet and only use it for payouts.",
@@ -47010,7 +46990,7 @@
 	  }
 	};
 
-	class AdvancedDialog extends react_2 {
+	class LogsDialog extends react_2 {
 	  render() {
 	    const {
 	      classes,
@@ -47020,8 +47000,8 @@
 	    } = this.props;
 	    return react.createElement(enhanced, {
 	      open: open,
-	      title: "Advanced (under construction)"
-	    }, react.createElement(DialogContentText$2, null, "Here you can see advanced details like the mining logs. To get more details from the mining pool, click on ", react.createElement(LinkEnhanced, {
+	      title: "Logs (under construction)"
+	    }, react.createElement(DialogContentText$2, null, "Here you can see the mining logs. To get more details from the mining pool, click on", ' ', react.createElement(LinkEnhanced, {
 	      to: statsLink
 	    }, "Open Pool Stats"), "."), react.createElement("code", {
 	      className: classes.logs
@@ -47034,7 +47014,7 @@
 
 	}
 
-	AdvancedDialog.propTypes = {
+	LogsDialog.propTypes = {
 	  classes: propTypes.object.isRequired,
 	  open: propTypes.bool.isRequired,
 	  statsLink: propTypes.string.isRequired,
@@ -47043,7 +47023,7 @@
 
 	const mapStateToProps$2 = ({
 	  dialogs: {
-	    advancedDialogOpen
+	    logsDialogOpen
 	  },
 	  mining: {
 	    miners,
@@ -47054,23 +47034,19 @@
 	  }
 	}) => {
 	  const {
-	    address,
-	    miningPoolIdentifier
+	    address
 	  } = miners[selectedMinerIdentifier];
-	  const {
-	    statsUrl
-	  } = miningPoolsByIdentifier[miningPoolIdentifier];
 	  const statsLink = statsUrl(address);
 	  return {
 	    statsLink,
-	    open: advancedDialogOpen,
+	    open: logsDialogOpen,
 	    logs: miningLogs
 	  };
 	};
 
-	const enhance$3 = compose$1(styles_3(styles$5), connect(mapStateToProps$2))(AdvancedDialog);
+	const enhance$3 = compose$1(styles_3(styles$5), connect(mapStateToProps$2))(LogsDialog);
 
-	class CryptoDialog extends react_2 {
+	class WalletDialog extends react_2 {
 	  constructor(...args) {
 	    super(...args);
 
@@ -47082,114 +47058,64 @@
 	      const address = event.target.value;
 	      setMiningAddress$$1(minerIdentifier, address);
 	    });
-
-	    _defineProperty$1(this, "handleMiningPoolChange", event => {
-	      const {
-	        setMiningPool: setMiningPool$$1,
-	        minerIdentifier
-	      } = this.props;
-	      const miningPoolIdentifier = event.target.value;
-	      setMiningPool$$1(minerIdentifier, miningPoolIdentifier);
-	    });
-
-	    _defineProperty$1(this, "handleCurrencyChange", event => {
-	      const {
-	        selectMiner: selectMiner$$1
-	      } = this.props;
-	      const minerIdentifier = event.target.value;
-	      selectMiner$$1(minerIdentifier);
-	    });
 	  }
 
 	  render() {
 	    const {
 	      open,
 	      address,
-	      miner,
 	      isMining,
-	      isValidAddress,
-	      selectedMinerIdentifier,
-	      miningPoolIdentifier,
+	      isValidAddress: isValidAddress$$1,
 	      loadDefault: loadDefault$$1
 	    } = this.props;
 	    return react.createElement(enhanced, {
 	      open: open,
 	      title: "Wallet"
-	    }, react.createElement(DialogContentText$2, null, "Before you can start mining, you have to tell the raccoon what to mine and who gets the profit. You can ", react.createElement(LinkEnhanced, {
+	    }, react.createElement(DialogContentText$2, null, "You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments. You can ", react.createElement(LinkEnhanced, {
 	      onClick: loadDefault$$1
 	    }, "load the test settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
 	      color: "error"
-	    }, "You have to stop mining before you can change these settings!"), react.createElement(FormControl$2, {
-	      margin: "normal"
-	    }, react.createElement(InputLabel$2, {
-	      htmlFor: "crypto-select"
-	    }, "Currency"), react.createElement(Select$2, {
-	      disabled: isMining,
-	      inputProps: {
-	        id: 'crypto-select'
-	      },
-	      onChange: this.handleCurrencyChange,
-	      value: selectedMinerIdentifier
-	    }, miners.map(miner => react.createElement(MenuItem$2, {
-	      key: miner.identifier,
-	      value: miner.identifier
-	    }, miner.name, " (", miner.currency, ")")), react.createElement(MenuItem$2, {
-	      disabled: true,
-	      value: null
-	    }, "More coming soon"))), react.createElement(FormControl$2, {
-	      margin: "normal"
-	    }, react.createElement(InputLabel$2, {
-	      htmlFor: "pool-select"
-	    }, "Mining Pool"), react.createElement(Select$2, {
-	      inputProps: {
-	        id: 'pool-select'
-	      },
-	      onChange: this.handleMiningPoolChange,
-	      value: miningPoolIdentifier
-	    }, miningPoolsByMinerIdentifier[selectedMinerIdentifier].map(miningPool => react.createElement(MenuItem$2, {
-	      key: miningPool.identifier,
-	      value: miningPool.identifier
-	    }, miningPool.name)), react.createElement(MenuItem$2, {
-	      disabled: true,
-	      value: null
-	    }, "More coming soon"))), react.createElement(TextField$2, {
+	    }, "You have to stop mining before you can change these settings!"), react.createElement(TextField$2, {
 	      disabled: isMining,
 	      fullWidth: true,
-	      helperText: react.createElement(Typography$2, null, react.createElement(LinkEnhanced, {
-	        to: miner.links.wallet
-	      }, "Don't have a wallet address?"), miner.developerAddress === address && ' Test address selected!'),
+	      helperText: react.createElement(react.Fragment, null, react.createElement(LinkEnhanced, {
+	        to: 'https://www.nicehash.com/register'
+	      }, "Don't have a NiceHash account or bitcoin wallet?"), developerAddress === address && ' Test address selected!'),
 	      InputProps: {
 	        endAdornment: react.createElement(InputAdornment$2, {
 	          position: "end"
 	        }, react.createElement(InfoButton, {
-	          popover: react.createElement(Typography$2, null, isValidAddress ? 'Valid address' : `Invalid address! ${miner.addressHint}`)
-	        }, isValidAddress ? react.createElement(DoneIcon, null) : react.createElement(ErrorIcon, {
+	          popover: react.createElement(Typography$2, null, isValidAddress$$1 ? 'Valid address' : `Invalid address! ${addressHint}`)
+	        }, isValidAddress$$1 ? react.createElement(DoneIcon, null) : react.createElement(ErrorIcon, {
 	          color: "error"
 	        })))
 	      },
-	      label: `${miner.name} address`,
+	      label: "Your Bitcoin address",
 	      margin: "normal",
 	      onChange: this.handleAddressChange,
-	      placeholder: miner.developerAddress,
+	      placeholder: developerAddress,
 	      value: address
+	    }), react.createElement(TextField$2, {
+	      disabled: true,
+	      fullWidth: true,
+	      helperText: "Use a unique name if you use Raccoon Miner on multiple computers.",
+	      label: "Worker name",
+	      margin: "normal",
+	      value: "raccoon"
 	    }));
 	  }
 
 	}
 
-	CryptoDialog.propTypes = {
+	WalletDialog.propTypes = {
 	  open: propTypes.bool.isRequired,
-	  miner: propTypes.object.isRequired,
 	  address: propTypes.string.isRequired,
-	  miningPoolIdentifier: propTypes.string.isRequired,
 	  minerIdentifier: propTypes.string.isRequired,
 	  isMining: propTypes.bool.isRequired,
 	  isValidAddress: propTypes.bool.isRequired,
 	  loadDefault: propTypes.func.isRequired,
 	  setMiningAddress: propTypes.func.isRequired,
-	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  selectMiner: propTypes.func.isRequired,
-	  setMiningPool: propTypes.func.isRequired
+	  selectedMinerIdentifier: propTypes.string.isRequired
 	};
 
 	const mapStateToProps$3 = ({
@@ -47197,23 +47123,19 @@
 	    cryptoDialogOpen
 	  },
 	  mining: {
-	    miners: miners$$1,
+	    miners,
 	    selectedMinerIdentifier
 	  },
 	  activeMiners
 	}) => {
-	  const miner = minersByIdentifier[selectedMinerIdentifier];
 	  const {
-	    address,
-	    miningPoolIdentifier
-	  } = miners$$1[selectedMinerIdentifier];
+	    address
+	  } = miners[selectedMinerIdentifier];
 	  return {
 	    open: cryptoDialogOpen,
 	    minerIdentifier: selectedMinerIdentifier,
 	    address,
-	    miningPoolIdentifier,
-	    isValidAddress: miner.isValidAddress(address),
-	    miner,
+	    isValidAddress: isValidAddress(address),
 	    isMining: activeMiners[selectedMinerIdentifier].isMining,
 	    selectedMinerIdentifier
 	  };
@@ -47222,13 +47144,11 @@
 	const mapDispatchToProps$3 = dispatch => {
 	  return {
 	    loadDefault: bindActionCreators(loadDefault, dispatch),
-	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-	    selectMiner: bindActionCreators(selectMiner, dispatch),
-	    setMiningPool: bindActionCreators(setMiningPool, dispatch)
+	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch)
 	  };
 	};
 
-	const enhance$4 = connect(mapStateToProps$3, mapDispatchToProps$3)(CryptoDialog);
+	const enhance$4 = connect(mapStateToProps$3, mapDispatchToProps$3)(WalletDialog);
 
 	class Dialogs extends react_2 {
 	  render() {
@@ -47240,13 +47160,13 @@
 	const closeAllState = {
 	  cryptoDialogOpen: false,
 	  settingsDialogOpen: false,
-	  advancedDialogOpen: false,
+	  logsDialogOpen: false,
 	  supportDialogOpen: false
 	};
 	const dialogs = (state = {
 	  cryptoDialogOpen: false,
 	  settingsDialogOpen: false,
-	  advancedDialogOpen: false,
+	  logsDialogOpen: false,
 	  supportDialogOpen: false,
 	  settingsDialogTab: SETTINGS_DIALOG_GENERAL,
 	  supportDialogTab: SUPPORT_DIALOG_DISCORD
@@ -47260,7 +47180,7 @@
 	        ...closeAllState
 	      };
 
-	    case OPEN_CRYPTO_DIALOG:
+	    case OPEN_WALLET_DIALOG:
 	      return { ...state,
 	        ...closeAllState,
 	        cryptoDialogOpen: true
@@ -47272,10 +47192,10 @@
 	        settingsDialogOpen: true
 	      };
 
-	    case OPEN_ADVANCED_DIALOG:
+	    case OPEN_LOGS_DIALOG:
 	      return { ...state,
 	        ...closeAllState,
-	        advancedDialogOpen: true
+	        logsDialogOpen: true
 	      };
 
 	    case OPEN_SUPPORT_DIALOG:
@@ -48819,6 +48739,28 @@
 	var last_1 = last;
 
 	/**
+	 * The base implementation of `_.get` without support for default values.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path of the property to get.
+	 * @returns {*} Returns the resolved value.
+	 */
+	function baseGet(object, path) {
+	  path = _castPath(path, object);
+
+	  var index = 0,
+	      length = path.length;
+
+	  while (object != null && index < length) {
+	    object = object[_toKey(path[index++])];
+	  }
+	  return (index && index == length) ? object : undefined;
+	}
+
+	var _baseGet = baseGet;
+
+	/**
 	 * The base implementation of `_.slice` without an iteratee call guard.
 	 *
 	 * @private
@@ -49331,6 +49273,38 @@
 	  }
 	};
 
+	/**
+	 * Gets the value at `path` of `object`. If the resolved value is
+	 * `undefined`, the `defaultValue` is returned in its place.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.7.0
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path of the property to get.
+	 * @param {*} [defaultValue] The value returned for `undefined` resolved values.
+	 * @returns {*} Returns the resolved value.
+	 * @example
+	 *
+	 * var object = { 'a': [{ 'b': { 'c': 3 } }] };
+	 *
+	 * _.get(object, 'a[0].b.c');
+	 * // => 3
+	 *
+	 * _.get(object, ['a', '0', 'b', 'c']);
+	 * // => 3
+	 *
+	 * _.get(object, 'a.b.c', 'default');
+	 * // => 'default'
+	 */
+	function get(object, path, defaultValue) {
+	  var result = object == null ? undefined : _baseGet(object, path);
+	  return result === undefined ? defaultValue : result;
+	}
+
+	var get_1 = get;
+
 	const notifications = (state = {
 	  currentNotification: TEST_MODE,
 	  pastNotifications: []
@@ -49357,8 +49331,35 @@
 	  }
 	};
 
+	const price = (state = {}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case RECEIVE_PRICE:
+	      return { ...data.price
+	      };
+	  }
+
+	  return state;
+	};
+
+	const profitability = (state = {}, {
+	  type,
+	  data
+	}) => {
+	  switch (type) {
+	    case RECEIVE_PROFITABILITY:
+	      return { ...data.profitability
+	      };
+	  }
+
+	  return state;
+	};
+
 	const settings = (state = {
-	  stopMiningOnGameLaunch: true
+	  stopMiningOnGameLaunch: true,
+	  currency: 'usd'
 	}, {
 	  type,
 	  data
@@ -49405,6 +49406,8 @@
 	  mining,
 	  activeMiners,
 	  notifications,
+	  price,
+	  profitability,
 	  settings,
 	  utilities
 	});
@@ -49529,7 +49532,7 @@
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
-	  version: 1,
+	  version: 4,
 	  blacklist: ['activeMiners', 'games', 'notifications'],
 	  migrate: createMigrate(migrations, {
 	    debug: true
@@ -49549,6 +49552,8 @@
 	  store$1.dispatch(trackHardwareInfo());
 	  store$1.dispatch(trackGameInfo());
 	  store$1.dispatch(trackWorkerStats());
+	  store$1.dispatch(trackProfitability());
+	  store$1.dispatch(trackPrice());
 	});
 
 	const styles$6 = {
@@ -49747,7 +49752,7 @@
 
 	const styles$8 = {
 	  load: {
-	    fontSize: '1.5rem'
+	    fontSize: '1.3rem'
 	  }
 	};
 
@@ -49755,39 +49760,48 @@
 	  render() {
 	    const {
 	      classes,
-	      miner,
-	      workerStats: {
-	        unpaidBalance,
-	        payoutThreshold
-	      }
+	      currency,
+	      balanceInBTC,
+	      balanceInUSD
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: `This is the balance reported by the mining pool. The payout is automatically triggered when you reached the payment threshold of ${payoutThreshold} ${miner.currency}.`
+	      helperText: react.createElement(Typography$2, null, "This is your unpaid balance. The payout is automatically triggered when you reached the payment threshold of 0.001 BTC. See", ' ', react.createElement(LinkEnhanced, {
+	        to: "https://www.nicehash.com/support"
+	      }, "NiceHash support"), " for more details.")
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, (unpaidBalance || 0).toFixed(10), " ", miner.currency), react.createElement(Typography$2, {
+	    }, currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`, currency === 'usd' && `USD ${balanceInUSD.toFixed(2)}`), react.createElement(Typography$2, {
 	      variant: "caption"
-	    }, "Unpaid Balance (Payment at ", payoutThreshold, " ", miner.currency, ")"));
+	    }, "Unpaid Balance"));
 	  }
 
 	}
 
 	BalanceCard.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  miner: propTypes.object.isRequired,
-	  workerStats: propTypes.object.isRequired
+	  balanceInBTC: propTypes.number.isRequired,
+	  balanceInUSD: propTypes.number.isRequired,
+	  currency: propTypes.string.isRequired
 	};
 
 	const mapStateToProps$5 = ({
 	  mining: {
-	    selectedMinerIdentifier,
-	    miners: miners$$1
+	    workerStats: {
+	      unpaidBalance
+	    }
+	  },
+	  price,
+	  settings: {
+	    currency
 	  }
 	}) => {
+	  const balanceInBTC = unpaidBalance;
+	  const balanceInUSD = balanceInBTC * price.USD;
 	  return {
-	    miner: minersByIdentifier[selectedMinerIdentifier],
-	    workerStats: miners$$1[selectedMinerIdentifier].workerStats
+	    balanceInBTC,
+	    balanceInUSD,
+	    currency
 	  };
 	};
 
@@ -49795,7 +49809,7 @@
 
 	const styles$9 = {
 	  load: {
-	    fontSize: '1.5rem'
+	    fontSize: '1.3rem'
 	  },
 	  remove: {
 	    position: 'absolute',
@@ -49839,7 +49853,7 @@
 	      maxCores
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "The number of cores you use for mining. This setting has no effect on ethereum mining."
+	      helperText: "The number of cores you use for mining."
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
@@ -49898,7 +49912,68 @@
 
 	const styles$a = {
 	  load: {
-	    fontSize: '1.5rem'
+	    fontSize: '1.3rem'
+	  }
+	};
+
+	class EarningsCard extends react_1 {
+	  render() {
+	    const {
+	      classes,
+	      currency,
+	      profitPerDayInBTC,
+	      profitPerDayInUSD,
+	      miner
+	    } = this.props;
+	    return react.createElement(enhance, {
+	      helperText: react.createElement(react_5, null, "The Hash Rate indicates your mining speed.", ' ', react.createElement(LinkEnhanced, {
+	        to: `https://gpustats.com/coin/${miner.currency}`
+	      }, "Get a list of hashrates by GPU."))
+	    }, react.createElement(Typography$2, {
+	      className: classes.load,
+	      variant: "display1"
+	    }, currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`, currency === 'usd' && `USD ${profitPerDayInUSD.toFixed(2)}`), react.createElement(Typography$2, {
+	      variant: "caption"
+	    }, "Daily estimated earnings"));
+	  }
+
+	}
+
+	EarningsCard.propTypes = {
+	  classes: propTypes.object.isRequired,
+	  profitPerDayInBTC: propTypes.number.isRequired,
+	  profitPerDayInUSD: propTypes.number.isRequired,
+	  miner: propTypes.object.isRequired,
+	  currency: propTypes.string.isRequired
+	};
+
+	const mapStateToProps$7 = ({
+	  mining: {
+	    selectedMinerIdentifier
+	  },
+	  activeMiners,
+	  profitability,
+	  price,
+	  settings: {
+	    currency
+	  }
+	}) => {
+	  const hashRate = activeMiners[selectedMinerIdentifier].currentSpeed;
+	  const profitPerDayInBTC = profitability[selectedMinerIdentifier] * hashRate / 1000000000;
+	  const profitPerDayInUSD = profitPerDayInBTC * price.USD;
+	  return {
+	    miner: minersByIdentifier[selectedMinerIdentifier],
+	    profitPerDayInBTC,
+	    profitPerDayInUSD,
+	    currency
+	  };
+	};
+
+	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7))(EarningsCard);
+
+	const styles$b = {
+	  load: {
+	    fontSize: '1.3rem'
 	  },
 	  remove: {
 	    position: 'absolute',
@@ -49942,7 +50017,7 @@
 	      maxGPUs
 	    } = this.props;
 	    return react.createElement(enhance, {
-	      helperText: "The number of GPUs you use for mining. This setting has no effect on ethereum mining."
+	      helperText: "The number of GPUs you use for mining."
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
@@ -49973,7 +50048,7 @@
 	  removeGPU: propTypes.func.isRequired
 	};
 
-	const mapStateToProps$7 = ({
+	const mapStateToProps$8 = ({
 	  hardwareInfo: {
 	    Gpus: {
 	      Gpus
@@ -49999,54 +50074,7 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7, mapDispatchToProps$5))(GpusCard);
-
-	const styles$b = {
-	  load: {
-	    fontSize: '1.5rem'
-	  }
-	};
-
-	class HashRateCard extends react_1 {
-	  render() {
-	    const {
-	      classes,
-	      hashRate,
-	      miner
-	    } = this.props;
-	    return react.createElement(enhance, {
-	      helperText: react.createElement(react_5, null, "The Hash Rate indicates your mining speed.", ' ', react.createElement(LinkEnhanced, {
-	        to: `https://gpustats.com/coin/${miner.currency}`
-	      }, "Get a list of hashrates by GPU."))
-	    }, react.createElement(Typography$2, {
-	      className: classes.load,
-	      variant: "display1"
-	    }, hashRate, miner.speedUnit), react.createElement(Typography$2, {
-	      variant: "caption"
-	    }, "Hash Rate"));
-	  }
-
-	}
-
-	HashRateCard.propTypes = {
-	  classes: propTypes.object.isRequired,
-	  hashRate: propTypes.number.isRequired,
-	  miner: propTypes.object.isRequired
-	};
-
-	const mapStateToProps$8 = ({
-	  mining: {
-	    selectedMinerIdentifier
-	  },
-	  activeMiners
-	}) => {
-	  return {
-	    miner: minersByIdentifier[selectedMinerIdentifier],
-	    hashRate: activeMiners[selectedMinerIdentifier].currentSpeed
-	  };
-	};
-
-	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8))(HashRateCard);
+	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8, mapDispatchToProps$5))(GpusCard);
 
 	const styles$c = {
 	  container: {
@@ -50096,15 +50124,15 @@
 	  }
 	};
 
-	class AdvancedButton extends react_2 {
+	class LogsButton extends react_2 {
 	  render() {
 	    const {
 	      classes,
-	      openAdvancedDialog: openAdvancedDialog$$1
+	      openLogsDialog: openLogsDialog$$1
 	    } = this.props;
 	    return react.createElement(enhance$b, {
-	      onClick: openAdvancedDialog$$1,
-	      title: "Advanced"
+	      onClick: openLogsDialog$$1,
+	      title: "Logs"
 	    }, react.createElement(AssessmentIcon, {
 	      className: classes.icon
 	    }));
@@ -50112,69 +50140,20 @@
 
 	}
 
-	AdvancedButton.propTypes = {
+	LogsButton.propTypes = {
 	  classes: propTypes.object.isRequired,
-	  openAdvancedDialog: propTypes.func.isRequired
+	  openLogsDialog: propTypes.func.isRequired
 	};
 
 	const mapDispatchToProps$6 = dispatch => {
 	  return {
-	    openAdvancedDialog: bindActionCreators(openAdvancedDialog, dispatch)
+	    openLogsDialog: bindActionCreators(openLogsDialog, dispatch)
 	  };
 	};
 
-	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$6))(AdvancedButton);
+	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$6))(LogsButton);
 
 	const styles$e = {
-	  avatar: {
-	    width: 80,
-	    height: 80
-	  }
-	};
-
-	class CryptoButton extends react_2 {
-	  render() {
-	    const {
-	      classes,
-	      openCryptoDialog: openCryptoDialog$$1,
-	      miner
-	    } = this.props;
-	    return react.createElement(enhance$b, {
-	      onClick: openCryptoDialog$$1,
-	      title: "Wallet"
-	    }, react.createElement(Avatar$2, {
-	      className: classes.avatar,
-	      src: miner.logo
-	    }));
-	  }
-
-	}
-
-	CryptoButton.propTypes = {
-	  classes: propTypes.object.isRequired,
-	  openCryptoDialog: propTypes.func.isRequired,
-	  miner: propTypes.object.isRequired
-	};
-
-	const mapStateToProps$9 = ({
-	  mining: {
-	    selectedMinerIdentifier
-	  }
-	}) => {
-	  return {
-	    miner: minersByIdentifier[selectedMinerIdentifier]
-	  };
-	};
-
-	const mapDispatchToProps$7 = dispatch => {
-	  return {
-	    openCryptoDialog: bindActionCreators(openCryptoDialog, dispatch)
-	  };
-	};
-
-	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$7))(CryptoButton);
-
-	const styles$f = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -50237,7 +50216,7 @@
 	  minerIdentifier: propTypes.string.isRequired
 	};
 
-	const mapStateToProps$a = ({
+	const mapStateToProps$9 = ({
 	  mining: {
 	    selectedMinerIdentifier
 	  },
@@ -50250,16 +50229,16 @@
 	  };
 	};
 
-	const mapDispatchToProps$8 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$e = compose$1(styles_3(styles$f), connect(mapStateToProps$a, mapDispatchToProps$8))(MiningButton);
+	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$7))(MiningButton);
 
-	const styles$g = {
+	const styles$f = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -50287,15 +50266,15 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$9 = dispatch => {
+	const mapDispatchToProps$8 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SettingsButton);
+	const enhance$e = compose$1(styles_3(styles$f), connect(null, mapDispatchToProps$8))(SettingsButton);
 
-	const styles$h = {
+	const styles$g = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -50323,13 +50302,49 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$a = dispatch => {
+	const mapDispatchToProps$9 = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(SupportButton);
+	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SupportButton);
+
+	const styles$h = {
+	  icon: {
+	    width: 80,
+	    height: 80
+	  }
+	};
+
+	class WalletButton extends react_2 {
+	  render() {
+	    const {
+	      classes,
+	      openWalletDialog: openWalletDialog$$1
+	    } = this.props;
+	    return react.createElement(enhance$b, {
+	      onClick: openWalletDialog$$1,
+	      title: "Wallet"
+	    }, react.createElement(WalletIcon, {
+	      className: classes.icon
+	    }));
+	  }
+
+	}
+
+	WalletButton.propTypes = {
+	  classes: propTypes.object.isRequired,
+	  openWalletDialog: propTypes.func.isRequired
+	};
+
+	const mapDispatchToProps$a = dispatch => {
+	  return {
+	    openWalletDialog: bindActionCreators(openWalletDialog, dispatch)
+	  };
+	};
+
+	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(WalletButton);
 
 	const styles$i = {
 	  center: {
@@ -50344,7 +50359,7 @@
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: classes.center
-	    }, react.createElement(enhance$d, null), react.createElement(enhance$c, null), react.createElement(enhance$e, null), react.createElement(enhance$f, null), react.createElement(enhance$g, null));
+	    }, react.createElement(enhance$g, null), react.createElement(enhance$c, null), react.createElement(enhance$d, null), react.createElement(enhance$e, null), react.createElement(enhance$f, null));
 	  }
 
 	}
@@ -50386,14 +50401,14 @@
 	  pastNotifications: propTypes.array
 	};
 
-	const mapStateToProps$b = ({
+	const mapStateToProps$a = ({
 	  notifications
 	}) => {
 	  return { ...notifications
 	  };
 	};
 
-	const enhance$i = compose$1(styles_3(styles$j), connect(mapStateToProps$b))(Notifications);
+	const enhance$i = compose$1(styles_3(styles$j), connect(mapStateToProps$a))(Notifications);
 
 	class MiningPage extends react_2 {
 	  render() {
@@ -50409,12 +50424,12 @@
 	    }, react.createElement(enhance$8, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
-	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
-	      item: true,
-	      xs: 3
 	    }, react.createElement(enhance$a, null)), react.createElement(Grid$2, {
 	      item: true,
-	      xs: 5
+	      xs: 4
+	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
+	      item: true,
+	      xs: 4
 	    }, react.createElement(enhance$7, null))), react.createElement(enhance$i, null), react.createElement(Dialogs, null));
 	  }
 

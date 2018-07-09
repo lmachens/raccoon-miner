@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
 
-import { AdvancedButton } from './_Advanced';
-import { CryptoButton } from './_Crypto';
+import { LogsButton } from './_Logs';
 import { MiningButton } from './_Mining';
 import PropTypes from 'prop-types';
 import { SettingsButton } from './_Settings';
 import { SupportButton } from './_Support';
+import { WalletButton } from './_Wallet';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
@@ -20,8 +20,8 @@ class Actions extends PureComponent {
 
     return (
       <div className={classes.center}>
-        <CryptoButton />
-        <AdvancedButton />
+        <WalletButton />
+        <LogsButton />
         <MiningButton />
         <SettingsButton />
         <SupportButton />

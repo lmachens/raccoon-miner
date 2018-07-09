@@ -1,12 +1,9 @@
-import { ETHEREUM_MINER, ethereum } from './_ethereum';
-import { MONERO_MINER, monero } from './_monero';
+import { CRYPTO_NIGHT_V7, cryptoNightV7 } from './_cryptoNightV7';
 
-export * from './_ethereum';
-export * from './_monero';
+export * from './_cryptoNightV7';
 
-export const miners = [ethereum, monero];
+export const miners = [cryptoNightV7];
 
 export const minersByIdentifier = {
-  [ETHEREUM_MINER]: ethereum,
-  [MONERO_MINER]: monero
+  [CRYPTO_NIGHT_V7]: cryptoNightV7
 };

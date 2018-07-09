@@ -4,5 +4,7 @@ export * from './_hardwareInfo';
 export * from './_logs';
 export * from './_mining';
 export * from './_notifications';
+export * from './_price';
+export * from './_profitability';
 export * from './_settings';
 export * from './_utilities';

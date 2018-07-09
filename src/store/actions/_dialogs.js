@@ -1,9 +1,9 @@
 import {
   CLOSE_DIALOG,
-  OPEN_ADVANCED_DIALOG,
-  OPEN_CRYPTO_DIALOG,
+  OPEN_LOGS_DIALOG,
   OPEN_SETTINGS_DIALOG,
   OPEN_SUPPORT_DIALOG,
+  OPEN_WALLET_DIALOG,
   SET_SETTINGS_DIALOG_TAB,
   SET_SUPPORT_DIALOG_TAB
 } from '../types';
@@ -16,10 +16,10 @@ export const closeDialog = () => {
   };
 };
 
-export const openCryptoDialog = () => {
+export const openWalletDialog = () => {
   return dispatch => {
     dispatch({
-      type: OPEN_CRYPTO_DIALOG
+      type: OPEN_WALLET_DIALOG
     });
   };
 };
@@ -32,10 +32,10 @@ export const openSettingsDialog = () => {
   };
 };
 
-export const openAdvancedDialog = () => {
+export const openLogsDialog = () => {
   return dispatch => {
     dispatch({
-      type: OPEN_ADVANCED_DIALOG
+      type: OPEN_LOGS_DIALOG
     });
   };
 };

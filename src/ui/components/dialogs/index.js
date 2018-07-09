@@ -3,18 +3,18 @@ export * from './_Support';
 
 import React, { Fragment, PureComponent } from 'react';
 
-import { AdvancedDialog } from './_Advanced';
-import { CryptoDialog } from './_Crypto';
+import { LogsDialog } from './_Logs';
 import { SettingsDialog } from './_Settings';
 import { SupportDialog } from './_Support';
+import { WalletDialog } from './_Wallet';
 
 class Dialogs extends PureComponent {
   render() {
     return (
       <Fragment>
-        <CryptoDialog />
+        <WalletDialog />
         <SettingsDialog />
-        <AdvancedDialog />
+        <LogsDialog />
         <SupportDialog />
       </Fragment>
     );

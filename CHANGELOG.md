@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.13.0](https://github.com/lmachens/raccoon-miner/compare/v0.12.0...v0.13.0) (2018-07-09)
+
+
+### Bug Fixes
+
+* **ui:** show real balance ([#112](https://github.com/lmachens/raccoon-miner/issues/112)) ([d6fb105](https://github.com/lmachens/raccoon-miner/commit/d6fb105))
+
+
+### Features
+
+* **mining:** use nice hash instead of pools and drop ethereum support ([#111](https://github.com/lmachens/raccoon-miner/issues/111)) ([6259f20](https://github.com/lmachens/raccoon-miner/commit/6259f20))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.12.0](https://github.com/lmachens/raccoon-miner/compare/v0.11.1...v0.12.0) (2018-07-06)
 
 

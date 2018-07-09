@@ -20,6 +20,6 @@ export const cryptoNightV7 = {
   }),
   path: 'xmr-stak/xmr-stak.exe',
   args: ({ address, cores, gpus }) =>
-    `--noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 -p x --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt`,
+    `--amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt --noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true })
 };

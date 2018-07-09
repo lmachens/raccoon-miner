@@ -6,7 +6,7 @@ const parseStatsResponse = (result, minerIdentifier) => {
   if (!statistic) return {};
 
   return {
-    unpaidBalance: statistic.balance
+    unpaidBalance: parseFloat(statistic.balance)
   };
 };
 

@@ -64,7 +64,7 @@ export const mining = (
       set(newState, `miners.${data.minerIdentifier}.metrics.data`, data.metrics.data);
       break;
     case RECEIVE_WORKER_STATS:
-      set(newState, `miners.workerStats`, data.workerStats);
+      set(newState, `workerStats`, data.workerStats);
       break;
     case SET_CORES:
       set(newState, `miners.${data.minerIdentifier}.cores`, data.cores);

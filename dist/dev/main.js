@@ -1235,7 +1235,7 @@
 	    address,
 	    cores,
 	    gpus
-	  }) => `--noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 -p x --amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt`,
+	  }) => `--amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt --noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -1258,7 +1258,7 @@
 	  const statistic = result.result.stats.find(statistic => statistic.algo = algorithm);
 	  if (!statistic) return {};
 	  return {
-	    unpaidBalance: statistic.balance
+	    unpaidBalance: parseFloat(statistic.balance)
 	  };
 	};
 
@@ -3358,7 +3358,7 @@
 	      break;
 
 	    case RECEIVE_WORKER_STATS:
-	      set_1(newState, `miners.workerStats`, data.workerStats);
+	      set_1(newState, `workerStats`, data.workerStats);
 	      break;
 
 	    case SET_CORES:
@@ -33237,7 +33237,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -49359,7 +49359,7 @@
 
 	const settings = (state = {
 	  stopMiningOnGameLaunch: true,
-	  currency: 'usd'
+	  currency: 'btc'
 	}, {
 	  type,
 	  data

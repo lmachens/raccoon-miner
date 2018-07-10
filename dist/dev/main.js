@@ -1115,7 +1115,6 @@
 	const STOP_MINING = 'STOP_MINING';
 	const RECEIVE_WORKER_STATS = 'RECEIVE_WORKER_STATS';
 	const RECEIVE_MINING_METRICS = 'RECEIVE_MINING_METRICS';
-	const REQUEST_MINING_METRICS = 'REQUEST_MINING_METRICS';
 	const SUSPEND_MINING = 'SUSPEND_MINING';
 	const CONTINUE_MINING = 'CONTINUE_MINING';
 	const SET_CORES = 'SET_CORES';
@@ -1192,18 +1191,12 @@
 	  overwolf.games.onGameInfoUpdated.addListener(listener);
 	};
 
-	const SPEED_REGEX = 'SPEED_REGEX';
 	const CONNECTION_FAILED_REGEX = 'CONNECTION_FAILED_REGEX';
 	const CONNECTING = 'CONNECTING';
 	const generateParser = regex => line => {
 	  const result = {
 	    timestamp: Date.now()
 	  }; //console.info(`%c${line}`, 'color: orange');
-
-	  if (regex.SPEED_REGEX) {
-	    const parsed = line.match(regex.SPEED_REGEX);
-	    if (parsed) result.speed = parseFloat(parsed[1]);
-	  }
 
 	  if (regex.CONNECTION_FAILED_REGEX) {
 	    const parsed = line.match(regex.CONNECTION_FAILED_REGEX);
@@ -1226,7 +1219,6 @@
 	  identifier: CRYPTO_NIGHT_V7,
 	  speedUnit: 'H/s',
 	  parser: generateParser({
-	    [SPEED_REGEX]: /Totals \(ALL\):\s+(.+)\s/,
 	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
 	    [CONNECTING]: /not-connected/
 	  }),
@@ -1235,10 +1227,88 @@
 	    address,
 	    cores,
 	    gpus
-	  }) => `--amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt --noUAC -i 0 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
+	  }) => `--amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
+	};
+
+	const callOverwolfWithPromise = (method, ...params) => {
+	  return new Promise((resolve, reject) => {
+	    const handleResult = result => {
+	      if (result) return resolve(result);
+	      return reject(result);
+	    };
+
+	    console.log(method, params);
+
+	    if (params) {
+	      method(...params, handleResult);
+	    } else {
+	      method(handleResult);
+	    }
+	  });
+	};
+
+	const getOverwolfUser = async function () {
+	  const currentUser = await callOverwolfWithPromise(overwolf.profile.getCurrentUser);
+	  const manifest = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
+	  return {
+	    overwolfVersion: overwolf.version,
+	    appVersion: manifest.meta.version,
+	    channel: currentUser.channel,
+	    userId: currentUser.userId,
+	    username: currentUser.username,
+	    partnerId: currentUser.partnerId,
+	    machineId: currentUser.machineId
+	  };
+	};
+
+	const getVersion = () => {
+	  return new Promise(async resolve => {
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
+	    resolve(result.meta.version);
+	  });
+	};
+
+	let httpRequestPlugin;
+	const getHttpRequestPlugin = () => {
+	  return new Promise(async resolve => {
+	    if (httpRequestPlugin) return resolve(httpRequestPlugin);
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'http-request-plugin');
+	    httpRequestPlugin = result.object;
+	    resolve(result.object);
+	  });
+	};
+
+	let processManager = null;
+	const getProcessManagerPlugin = () => {
+	  return new Promise(async resolve => {
+	    if (processManager) return resolve(processManager);
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'process-manager-plugin');
+	    processManager = result.object;
+	    resolve(result.object);
+	  });
+	};
+
+	let simpleIoPlugin;
+	const getSimpleIoPlugin = () => {
+	  return new Promise(async resolve => {
+	    if (simpleIoPlugin) return resolve(simpleIoPlugin);
+	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'simple-io-plugin');
+	    simpleIoPlugin = result.object;
+	    resolve(result.object);
+	  });
+	};
+
+	const getMiningMetrics = () => {
+	  return new Promise(async (resolve, reject) => {
+	    const httpRequestPlugin = await getHttpRequestPlugin();
+	    httpRequestPlugin.fetch('http://localhost:50672/api.json', {}, (success, result) => {
+	      if (!success) return reject('Mining Metrics error');
+	      resolve(JSON.parse(result.body));
+	    });
+	  });
 	};
 
 	const miners = [cryptoNightV7];
@@ -1343,64 +1413,6 @@
 	  alert: false
 	});
 
-	const callOverwolfWithPromise = (method, ...params) => {
-	  return new Promise((resolve, reject) => {
-	    const handleResult = result => {
-	      if (result) return resolve(result);
-	      return reject(result);
-	    };
-
-	    console.log(method, params);
-
-	    if (params) {
-	      method(...params, handleResult);
-	    } else {
-	      method(handleResult);
-	    }
-	  });
-	};
-
-	const getOverwolfUser = async function () {
-	  const currentUser = await callOverwolfWithPromise(overwolf.profile.getCurrentUser);
-	  const manifest = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
-	  return {
-	    overwolfVersion: overwolf.version,
-	    appVersion: manifest.meta.version,
-	    channel: currentUser.channel,
-	    userId: currentUser.userId,
-	    username: currentUser.username,
-	    partnerId: currentUser.partnerId,
-	    machineId: currentUser.machineId
-	  };
-	};
-
-	const getVersion = () => {
-	  return new Promise(async resolve => {
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getManifest);
-	    resolve(result.meta.version);
-	  });
-	};
-
-	let processManager = null;
-	const getProcessManagerPlugin = () => {
-	  return new Promise(async resolve => {
-	    if (processManager) return resolve(processManager);
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'process-manager-plugin');
-	    processManager = result.object;
-	    resolve(result.object);
-	  });
-	};
-
-	let simpleIoPlugin;
-	const getSimpleIoPlugin = () => {
-	  return new Promise(async resolve => {
-	    if (simpleIoPlugin) return resolve(simpleIoPlugin);
-	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'simple-io-plugin');
-	    simpleIoPlugin = result.object;
-	    resolve(result.object);
-	  });
-	};
-
 	/**
 	 * Checks if `value` is `null` or `undefined`.
 	 *
@@ -1478,12 +1490,59 @@
 	    dispatch(trackWorkerStats());
 	  };
 	};
+	let workerStatsInterval;
 	const trackWorkerStats = () => {
 	  return dispatch => {
+	    workerStatsInterval && clearInterval(workerStatsInterval);
 	    dispatch(fetchWorkerStats());
-	    setInterval(() => {
+	    workerStatsInterval = setInterval(() => {
 	      dispatch(fetchWorkerStats());
 	    }, 60000);
+	  };
+	};
+
+	const fetchMiningMetrics = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      mining: {
+	        selectedMinerIdentifier: minerIdentifier
+	      }
+	    } = getState();
+	    getMiningMetrics().then(result => {
+	      dispatch({
+	        type: RECEIVE_MINING_METRICS,
+	        data: {
+	          metrics: result
+	        }
+	      });
+	      const speed = result.hashrate.total[0] || 0;
+	      dispatch({
+	        type: SET_MINING_SPEED,
+	        data: {
+	          minerIdentifier,
+	          speed
+	        }
+	      });
+	    }).catch(errorMsg => {
+	      dispatch({
+	        type: SET_MINING_ERROR_MESSAGE,
+	        data: {
+	          minerIdentifier,
+	          errorMsg
+	        }
+	      });
+	    });
+	  };
+	};
+
+	let miningMetricsInterval;
+	const trackMiningMetrics = () => {
+	  return dispatch => {
+	    miningMetricsInterval && clearInterval(miningMetricsInterval);
+	    dispatch(fetchMiningMetrics());
+	    miningMetricsInterval = setInterval(() => {
+	      dispatch(fetchMiningMetrics());
+	    }, 5000);
 	  };
 	};
 	const appendMiningLog = line => {
@@ -1530,7 +1589,6 @@
 	};
 
 	const handleDataByIdenfier = {};
-	let sendTextInterval = null;
 	const startMining = minerIdentifier => {
 	  return async (dispatch, getState) => {
 	    const {
@@ -1566,8 +1624,7 @@
 	      const line = error || data;
 	      const {
 	        connecting,
-	        errorMsg,
-	        speed
+	        errorMsg
 	      } = parser(line);
 
 	      if (connecting) {
@@ -1575,14 +1632,6 @@
 	          type: CONNECTING_POOL,
 	          data: {
 	            minerIdentifier
-	          }
-	        });
-	      } else if (!isNil_1(speed)) {
-	        dispatch({
-	          type: SET_MINING_SPEED,
-	          data: {
-	            minerIdentifier,
-	            speed
 	          }
 	        });
 	      } else if (!isNil_1(errorMsg)) {
@@ -1615,6 +1664,7 @@
 	          processId: data
 	        }
 	      });
+	      dispatch(trackMiningMetrics());
 	    });
 	  };
 	};
@@ -1624,6 +1674,7 @@
 	    const {
 	      activeMiners
 	    } = getState();
+	    clearInterval(miningMetricsInterval);
 	    dispatch({
 	      type: STOP_MINING,
 	      data: {
@@ -1634,11 +1685,6 @@
 	    console.info(`%cStop mining ${processId}`, 'color: blue');
 
 	    if (processId || handleDataByIdenfier[minerIdentifier]) {
-	      if (sendTextInterval) {
-	        clearInterval(sendTextInterval);
-	        sendTextInterval = null;
-	      }
-
 	      processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
 	      processManager.terminateProcess(processId);
 	      delete handleDataByIdenfier[minerIdentifier];
@@ -3311,12 +3357,6 @@
 	var set_1 = set;
 
 	const defaultMinerProps = {
-	  metrics: {
-	    fetching: false,
-	    from: Number.MAX_VALUE,
-	    to: 0,
-	    data: []
-	  },
 	  cores: 1,
 	  gpus: 1,
 	  address: developerAddress
@@ -3329,7 +3369,8 @@
 	  },
 	  workerStats: {
 	    unpaidBalance: 0
-	  }
+	  },
+	  metrics: {}
 	}, {
 	  type,
 	  data
@@ -3346,15 +3387,8 @@
 	      set_1(newState, `selectedMinerIdentifier`, data);
 	      break;
 
-	    case REQUEST_MINING_METRICS:
-	      set_1(newState, `miners.${data.minerIdentifier}.metrics.fetching`, true);
-	      set_1(newState, `miners.${data.minerIdentifier}.metrics.from`, data.from);
-	      set_1(newState, `miners.${data.minerIdentifier}.metrics.to`, data.to);
-	      break;
-
 	    case RECEIVE_MINING_METRICS:
-	      set_1(newState, `miners.${data.minerIdentifier}.metrics.fetching`, false);
-	      set_1(newState, `miners.${data.minerIdentifier}.metrics.data`, data.metrics.data);
+	      set_1(newState, `miners.metrics`, data.metrics);
 	      break;
 
 	    case RECEIVE_WORKER_STATS:
@@ -33237,7 +33271,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 

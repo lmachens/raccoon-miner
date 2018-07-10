@@ -3,7 +3,6 @@ import {
   CONTINUE_MINING,
   RECEIVE_MINING_METRICS,
   RECEIVE_WORKER_STATS,
-  REQUEST_MINING_METRICS,
   SELECT_MINER,
   SET_CORES,
   SET_GPUS,
@@ -21,12 +20,6 @@ import { developerAddress } from '../../api/nice-hash';
 import set from 'lodash/set';
 
 const defaultMinerProps = {
-  metrics: {
-    fetching: false,
-    from: Number.MAX_VALUE,
-    to: 0,
-    data: []
-  },
   cores: 1,
   gpus: 1,
   address: developerAddress
@@ -42,7 +35,8 @@ export const mining = (
     },
     workerStats: {
       unpaidBalance: 0
-    }
+    },
+    metrics: {}
   },
   { type, data }
 ) => {
@@ -54,14 +48,8 @@ export const mining = (
     case SELECT_MINER:
       set(newState, `selectedMinerIdentifier`, data);
       break;
-    case REQUEST_MINING_METRICS:
-      set(newState, `miners.${data.minerIdentifier}.metrics.fetching`, true);
-      set(newState, `miners.${data.minerIdentifier}.metrics.from`, data.from);
-      set(newState, `miners.${data.minerIdentifier}.metrics.to`, data.to);
-      break;
     case RECEIVE_MINING_METRICS:
-      set(newState, `miners.${data.minerIdentifier}.metrics.fetching`, false);
-      set(newState, `miners.${data.minerIdentifier}.metrics.data`, data.metrics.data);
+      set(newState, `miners.metrics`, data.metrics);
       break;
     case RECEIVE_WORKER_STATS:
       set(newState, `workerStats`, data.workerStats);

@@ -2,6 +2,7 @@ import {
   APPEND_MINING_LOG,
   CONNECTING_POOL,
   CONTINUE_MINING,
+  RECEIVE_MINING_METRICS,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
   SET_CORES,
@@ -16,7 +17,7 @@ import {
   SUSPEND_MINING,
   UNSET_NOTIFICATION
 } from '../types';
-import { CRYPTO_NIGHT_V7, minersByIdentifier } from '../../api/mining';
+import { CRYPTO_NIGHT_V7, getMiningMetrics, minersByIdentifier } from '../../api/mining';
 import { developerAddress, getStats, isValidAddress } from '../../api/nice-hash';
 import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
 
@@ -76,12 +77,59 @@ export const selectMiner = minerIdentifier => {
   };
 };
 
+let workerStatsInterval;
 export const trackWorkerStats = () => {
   return dispatch => {
+    workerStatsInterval && clearInterval(workerStatsInterval);
     dispatch(fetchWorkerStats());
-    setInterval(() => {
+    workerStatsInterval = setInterval(() => {
       dispatch(fetchWorkerStats());
     }, 60000);
+  };
+};
+
+const fetchMiningMetrics = () => {
+  return (dispatch, getState) => {
+    const {
+      mining: { selectedMinerIdentifier: minerIdentifier }
+    } = getState();
+    getMiningMetrics()
+      .then(result => {
+        dispatch({
+          type: RECEIVE_MINING_METRICS,
+          data: {
+            metrics: result
+          }
+        });
+        const speed = result.hashrate.total[0] || 0;
+        dispatch({
+          type: SET_MINING_SPEED,
+          data: {
+            minerIdentifier,
+            speed
+          }
+        });
+      })
+      .catch(errorMsg => {
+        dispatch({
+          type: SET_MINING_ERROR_MESSAGE,
+          data: {
+            minerIdentifier,
+            errorMsg
+          }
+        });
+      });
+  };
+};
+
+let miningMetricsInterval;
+export const trackMiningMetrics = () => {
+  return dispatch => {
+    miningMetricsInterval && clearInterval(miningMetricsInterval);
+    dispatch(fetchMiningMetrics());
+    miningMetricsInterval = setInterval(() => {
+      dispatch(fetchMiningMetrics());
+    }, 5000);
   };
 };
 
@@ -127,7 +175,6 @@ const fetchWorkerStats = () => {
 };
 
 const handleDataByIdenfier = {};
-let sendTextInterval = null;
 export const startMining = minerIdentifier => {
   return async (dispatch, getState) => {
     const {
@@ -145,21 +192,13 @@ export const startMining = minerIdentifier => {
 
     handleDataByIdenfier[minerIdentifier] = async ({ error, data }) => {
       const line = error || data;
-      const { connecting, errorMsg, speed } = parser(line);
+      const { connecting, errorMsg } = parser(line);
 
       if (connecting) {
         dispatch({
           type: CONNECTING_POOL,
           data: {
             minerIdentifier
-          }
-        });
-      } else if (!isNil(speed)) {
-        dispatch({
-          type: SET_MINING_SPEED,
-          data: {
-            minerIdentifier,
-            speed
           }
         });
       } else if (!isNil(errorMsg)) {
@@ -184,6 +223,7 @@ export const startMining = minerIdentifier => {
           processId: data
         }
       });
+      dispatch(trackMiningMetrics());
     });
   };
 };
@@ -193,6 +233,7 @@ export const stopMining = minerIdentifier => {
     const processManager = await getProcessManagerPlugin();
     const { activeMiners } = getState();
 
+    clearInterval(miningMetricsInterval);
     dispatch({
       type: STOP_MINING,
       data: { minerIdentifier }
@@ -200,10 +241,6 @@ export const stopMining = minerIdentifier => {
     const processId = activeMiners[minerIdentifier].processId;
     console.info(`%cStop mining ${processId}`, 'color: blue');
     if (processId || handleDataByIdenfier[minerIdentifier]) {
-      if (sendTextInterval) {
-        clearInterval(sendTextInterval);
-        sendTextInterval = null;
-      }
       processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
       processManager.terminateProcess(processId);
       delete handleDataByIdenfier[minerIdentifier];

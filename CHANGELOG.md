@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.14.0](https://github.com/lmachens/raccoon-miner/compare/v0.13.1...v0.14.0) (2018-07-10)
+
+
+### Features
+
+* **metrics:** use http server instead of log file parser to get metrics ([3f010b4](https://github.com/lmachens/raccoon-miner/commit/3f010b4))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.13.1](https://github.com/lmachens/raccoon-miner/compare/v0.13.0...v0.13.1) (2018-07-09)
 
 

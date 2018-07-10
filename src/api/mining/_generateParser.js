@@ -1,4 +1,3 @@
-export const SPEED_REGEX = 'SPEED_REGEX';
 export const CONNECTION_FAILED_REGEX = 'CONNECTION_FAILED_REGEX';
 export const CONNECTING = 'CONNECTING';
 
@@ -7,10 +6,6 @@ export const generateParser = regex => line => {
     timestamp: Date.now()
   };
   //console.info(`%c${line}`, 'color: orange');
-  if (regex.SPEED_REGEX) {
-    const parsed = line.match(regex.SPEED_REGEX);
-    if (parsed) result.speed = parseFloat(parsed[1]);
-  }
   if (regex.CONNECTION_FAILED_REGEX) {
     const parsed = line.match(regex.CONNECTION_FAILED_REGEX);
     if (parsed) result.errorMsg = 'Connection failed';

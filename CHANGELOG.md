@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.1](https://github.com/lmachens/raccoon-miner/compare/v0.14.0...v0.14.1) (2018-07-11)
+
+
+### Bug Fixes
+
+* **balance:** set default USD price to prevent toFixed of undefined err ([#117](https://github.com/lmachens/raccoon-miner/issues/117)) ([92103be](https://github.com/lmachens/raccoon-miner/commit/92103be))
+* **mining:** use default gpu configs ([#119](https://github.com/lmachens/raccoon-miner/issues/119)) ([ec13284](https://github.com/lmachens/raccoon-miner/commit/ec13284))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.14.0](https://github.com/lmachens/raccoon-miner/compare/v0.13.1...v0.14.0) (2018-07-10)
 
 

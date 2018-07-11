@@ -1227,7 +1227,7 @@
 	    address,
 	    cores,
 	    gpus
-	  }) => `--amd gpus/amd${gpus}.txt --cpu cpus/cpu${cores}.txt --nvidia gpus/nvidia${gpus}.txt --config config.txt --poolconf nice-hash.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
+	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? '' : '--noAMD --noNVIDIA'} --config config.txt --poolconf nice-hash.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -33271,7 +33271,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -49365,7 +49365,9 @@
 	  }
 	};
 
-	const price = (state = {}, {
+	const price = (state = {
+	  USD: 0
+	}, {
 	  type,
 	  data
 	}) => {

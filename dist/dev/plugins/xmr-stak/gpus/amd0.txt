@@ -1,3 +1,0 @@
-"gpu_threads_conf" : null,
-"platform_index" : 0,
-

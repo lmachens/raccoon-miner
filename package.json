@@ -67,7 +67,7 @@
   },
   "standard-version": {
     "scripts": {
-      "postcommit": "node tools/syncVersion && git commit -am \"chore(overwolf): manifest version bump\"",
+      "postcommit": "node tools/syncVersion && git commit -am \"chore(overwolf): manifest version bump\" && rollup -c production.rollup.config.js && rollup -c && git commit -am \"chore(bundles): create bundles\"",
       "posttag": "git push --follow-tags origin master"
     }
   },

@@ -1592,6 +1592,12 @@
 	const handleDataByIdenfier = {};
 	const startMining = minerIdentifier => {
 	  return async (dispatch, getState) => {
+	    dispatch({
+	      type: START_MINING,
+	      data: {
+	        minerIdentifier
+	      }
+	    });
 	    const {
 	      mining: {
 	        miners: miners$$1,
@@ -1611,12 +1617,6 @@
 	      args,
 	      environmentVariables
 	    } = minersByIdentifier[minerIdentifier];
-	    dispatch({
-	      type: START_MINING,
-	      data: {
-	        minerIdentifier
-	      }
-	    });
 
 	    handleDataByIdenfier[minerIdentifier] = async ({
 	      error,
@@ -33272,7 +33272,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 

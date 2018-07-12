@@ -1226,8 +1226,9 @@
 	  args: ({
 	    address,
 	    cores,
-	    gpus
-	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? '' : '--noAMD --noNVIDIA'} --config config.txt --poolconf nice-hash.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.raccoon" --currency cryptonight_v7 --rigid raccoon -p x --use-nicehash`,
+	    gpus,
+	    worker = 'raccoon'
+	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? '' : '--noAMD --noNVIDIA'} --config config.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.${worker}" --currency cryptonight_v7 -p x --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -33271,7 +33272,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 

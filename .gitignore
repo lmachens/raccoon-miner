@@ -5,5 +5,6 @@ tools/*.zip
 **/xmr-stak/amd.txt
 **/xmr-stak/cpu.txt
 **/xmr-stak/nvidia.txt
+**/xmr-stak/pools.txt
 simple-io-plugin64.dll
 process_manager64.dll

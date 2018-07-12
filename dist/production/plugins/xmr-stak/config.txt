@@ -103,7 +103,7 @@
  *
  * tls_secure_algo - Use only secure algorithms. This will make us quit with an error if we can't negotiate a secure algo.
  */
-"tls_secure_algo" : true,
+"tls_secure_algo" : false,
 
 /*
  * Daemon mode

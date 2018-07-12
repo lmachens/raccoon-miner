@@ -16,6 +16,6 @@ export const cryptoNightV7 = {
   args: ({ address, cores, gpus, worker = 'raccoon' }) =>
     `--cpu cpus/cpu${cores}.txt ${
       gpus ? '' : '--noAMD --noNVIDIA'
-    } --config config.txt --noUAC --httpd 50672 -o "${pool}" -u "${address}.${worker}" --currency cryptonight_v7 -p x --use-nicehash`,
+    } --config config.txt --noUAC --httpd 50672 --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true })
 };

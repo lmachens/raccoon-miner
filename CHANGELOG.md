@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.3](https://github.com/lmachens/raccoon-miner/compare/v0.14.2...v0.14.3) (2018-07-12)
+
+
+### Bug Fixes
+
+* **mining:** always generate xmr-stak pool config ([0f072cf](https://github.com/lmachens/raccoon-miner/commit/0f072cf))
+* **mining:** prevent start mining multiple times ([f9be7e9](https://github.com/lmachens/raccoon-miner/commit/f9be7e9))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.14.2](https://github.com/lmachens/raccoon-miner/compare/v0.14.1...v0.14.2) (2018-07-11)
 
 

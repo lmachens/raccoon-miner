@@ -60,7 +60,7 @@
     "dev": "rollup -c -w",
     "production": "rollup -c production.rollup.config.js",
     "test": "jest",
-    "release": "standard-version && node tools/release && git checkout dev && git merge master && git push",
+    "release": "git checkout master && git merge dev && standard-version && node tools/release && git checkout dev && git merge master && git push",
     "precommit": "lint-staged",
     "prepush": "jest",
     "storybook": "start-storybook -p 9001 -c .storybook"

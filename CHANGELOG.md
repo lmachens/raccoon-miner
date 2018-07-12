@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.5](https://github.com/lmachens/raccoon-miner/compare/v0.14.4...v0.14.5) (2018-07-12)
+
+
+### Bug Fixes
+
+* **balance:** set default balance to 0 to avoid js errors ([6440997](https://github.com/lmachens/raccoon-miner/commit/6440997))
+* **wallet:** fix load default address ([c40794e](https://github.com/lmachens/raccoon-miner/commit/c40794e))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.14.4](https://github.com/lmachens/raccoon-miner/compare/v0.14.3...v0.14.4) (2018-07-12)
 
 

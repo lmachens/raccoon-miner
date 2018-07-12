@@ -26,14 +26,17 @@ import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
 
 export const loadDefault = () => {
-  return dispatch => {
+  return (dispatch, getState) => {
+    const {
+      mining: { selectedMinerIdentifier: minerIdentifier }
+    } = getState();
     dispatch({
       type: SELECT_MINER,
       data: CRYPTO_NIGHT_V7
     });
     dispatch({
       type: SET_MINING_ADDRESS,
-      data: { address: developerAddress }
+      data: { address: developerAddress, minerIdentifier }
     });
     dispatch({
       type: SET_NOTIFICATION,
@@ -88,7 +91,7 @@ export const trackWorkerStats = () => {
   };
 };
 
-const fetchMiningMetrics = () => {
+export const fetchMiningMetrics = () => {
   return (dispatch, getState) => {
     const {
       mining: { selectedMinerIdentifier: minerIdentifier }

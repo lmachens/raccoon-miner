@@ -14,7 +14,7 @@ const styles = {
 
 class BalanceCard extends Component {
   render() {
-    const { classes, currency, balanceInBTC = 0, balanceInUSD = 0 } = this.props;
+    const { classes, currency, balanceInBTC, balanceInUSD } = this.props;
 
     return (
       <StatusCard
@@ -45,13 +45,13 @@ BalanceCard.propTypes = {
 
 const mapStateToProps = ({
   mining: {
-    workerStats: { unpaidBalance }
+    workerStats: { unpaidBalance = 0 }
   },
-  price,
+  price: { USD = 0 },
   settings: { currency }
 }) => {
   const balanceInBTC = unpaidBalance;
-  const balanceInUSD = balanceInBTC * price.USD;
+  const balanceInUSD = balanceInBTC * USD;
   return {
     balanceInBTC,
     balanceInUSD,

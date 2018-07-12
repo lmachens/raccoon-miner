@@ -10,13 +10,18 @@ import {
 import { DoneIcon, ErrorIcon } from '../icons';
 import React, { PureComponent } from 'react';
 import { addressHint, developerAddress, isValidAddress } from '../../../api/nice-hash';
-import { loadDefault, setMiningAddress } from '../../../store/actions';
+import { fetchMiningMetrics, loadDefault, setMiningAddress } from '../../../store/actions';
 
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 class WalletDialog extends PureComponent {
+  componentWillUnmount() {
+    const { fetchMiningMetrics } = this.props;
+    fetchMiningMetrics();
+  }
+
   handleAddressChange = event => {
     const { setMiningAddress, minerIdentifier } = this.props;
 
@@ -92,7 +97,8 @@ WalletDialog.propTypes = {
   isValidAddress: PropTypes.bool.isRequired,
   loadDefault: PropTypes.func.isRequired,
   setMiningAddress: PropTypes.func.isRequired,
-  selectedMinerIdentifier: PropTypes.string.isRequired
+  selectedMinerIdentifier: PropTypes.string.isRequired,
+  fetchMiningMetrics: PropTypes.func.isRequired
 };
 
 const mapStateToProps = ({
@@ -114,7 +120,8 @@ const mapStateToProps = ({
 const mapDispatchToProps = dispatch => {
   return {
     loadDefault: bindActionCreators(loadDefault, dispatch),
-    setMiningAddress: bindActionCreators(setMiningAddress, dispatch)
+    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
+    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch)
   };
 };
 

@@ -1441,7 +1441,12 @@
 	var isNil_1 = isNil;
 
 	const loadDefault = () => {
-	  return dispatch => {
+	  return (dispatch, getState) => {
+	    const {
+	      mining: {
+	        selectedMinerIdentifier: minerIdentifier
+	      }
+	    } = getState();
 	    dispatch({
 	      type: SELECT_MINER,
 	      data: CRYPTO_NIGHT_V7
@@ -1449,7 +1454,8 @@
 	    dispatch({
 	      type: SET_MINING_ADDRESS,
 	      data: {
-	        address: developerAddress
+	        address: developerAddress,
+	        minerIdentifier
 	      }
 	    });
 	    dispatch({
@@ -1501,7 +1507,6 @@
 	    }, 60000);
 	  };
 	};
-
 	const fetchMiningMetrics = () => {
 	  return (dispatch, getState) => {
 	    const {
@@ -1535,7 +1540,6 @@
 	    });
 	  };
 	};
-
 	let miningMetricsInterval;
 	const trackMiningMetrics = () => {
 	  return dispatch => {
@@ -33272,7 +33276,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -47095,6 +47099,13 @@
 	    });
 	  }
 
+	  componentWillUnmount() {
+	    const {
+	      fetchMiningMetrics: fetchMiningMetrics$$1
+	    } = this.props;
+	    fetchMiningMetrics$$1();
+	  }
+
 	  render() {
 	    const {
 	      open,
@@ -47150,7 +47161,8 @@
 	  isValidAddress: propTypes.bool.isRequired,
 	  loadDefault: propTypes.func.isRequired,
 	  setMiningAddress: propTypes.func.isRequired,
-	  selectedMinerIdentifier: propTypes.string.isRequired
+	  selectedMinerIdentifier: propTypes.string.isRequired,
+	  fetchMiningMetrics: propTypes.func.isRequired
 	};
 
 	const mapStateToProps$3 = ({
@@ -47179,7 +47191,8 @@
 	const mapDispatchToProps$3 = dispatch => {
 	  return {
 	    loadDefault: bindActionCreators(loadDefault, dispatch),
-	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch)
+	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
+	    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch)
 	  };
 	};
 
@@ -49825,16 +49838,18 @@
 	const mapStateToProps$5 = ({
 	  mining: {
 	    workerStats: {
-	      unpaidBalance
+	      unpaidBalance = 0
 	    }
 	  },
-	  price,
+	  price: {
+	    USD = 0
+	  },
 	  settings: {
 	    currency
 	  }
 	}) => {
 	  const balanceInBTC = unpaidBalance;
-	  const balanceInUSD = balanceInBTC * price.USD;
+	  const balanceInUSD = balanceInBTC * USD;
 	  return {
 	    balanceInBTC,
 	    balanceInUSD,

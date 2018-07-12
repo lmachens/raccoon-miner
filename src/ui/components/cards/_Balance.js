@@ -14,7 +14,7 @@ const styles = {
 
 class BalanceCard extends Component {
   render() {
-    const { classes, currency, balanceInBTC, balanceInUSD } = this.props;
+    const { classes, currency, balanceInBTC = 0, balanceInUSD = 0 } = this.props;
 
     return (
       <StatusCard

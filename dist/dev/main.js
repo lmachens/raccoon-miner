@@ -1213,7 +1213,7 @@
 
 	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
 	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
-	const pool = `stratum+tcp://cryptonightv7.${locations[0]}.nicehash.com:3363`;
+	const pool = `stratum+tcp://cryptonightv7.${locations[1]}.nicehash.com:3363`;
 	const cryptoNightV7 = {
 	  name: 'CryptoNightV7',
 	  identifier: CRYPTO_NIGHT_V7,
@@ -1228,7 +1228,7 @@
 	    cores,
 	    gpus,
 	    worker = 'raccoon'
-	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? '' : '--noAMD --noNVIDIA'} --config config.txt --noUAC --httpd 50672 --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
+	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `--amd gpus/amd${gpus}.txt --nvidia gpus/nvidia${gpus}.txt` : '--noAMD --noNVIDIA'} --config config.txt --noUAC --httpd 50672 --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -3562,7 +3562,7 @@
 
 	var defineProperty$1 = _defineProperty$2;
 
-	function _objectWithoutProperties$2(source, excluded) {
+	function _objectWithoutPropertiesLoose$1(source, excluded) {
 	  if (source == null) return {};
 	  var target = {};
 	  var sourceKeys = Object.keys(source);
@@ -3573,6 +3573,16 @@
 	    if (excluded.indexOf(key) >= 0) continue;
 	    target[key] = source[key];
 	  }
+
+	  return target;
+	}
+
+	var objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose$1;
+
+	function _objectWithoutProperties$2(source, excluded) {
+	  if (source == null) return {};
+	  var target = objectWithoutPropertiesLoose(source, excluded);
+	  var key, i;
 
 	  if (Object.getOwnPropertySymbols) {
 	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
@@ -10480,6 +10490,44 @@
 		default: deepmerge_1
 	});
 
+	/*!
+	 * isobject <https://github.com/jonschlinkert/isobject>
+	 *
+	 * Copyright (c) 2014-2017, Jon Schlinkert.
+	 * Released under the MIT License.
+	 */
+
+	var isobject = function isObject(val) {
+	  return val != null && typeof val === 'object' && Array.isArray(val) === false;
+	};
+
+	function isObjectObject(o) {
+	  return isobject(o) === true
+	    && Object.prototype.toString.call(o) === '[object Object]';
+	}
+
+	var isPlainObject$1 = function isPlainObject(o) {
+	  var ctor,prot;
+
+	  if (isObjectObject(o) === false) return false;
+
+	  // If has modified constructor
+	  ctor = o.constructor;
+	  if (typeof ctor !== 'function') return false;
+
+	  // If has modified prototype
+	  prot = ctor.prototype;
+	  if (isObjectObject(prot) === false) return false;
+
+	  // If constructor does not have an Object-specific method
+	  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+	    return false;
+	  }
+
+	  // Most likely a plain Object
+	  return true;
+	};
+
 	var createBreakpoints_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -10742,6 +10790,7 @@
 	  value: true
 	});
 	exports.convertHexToRGB = convertHexToRGB;
+	exports.rgbToHex = rgbToHex;
 	exports.decomposeColor = decomposeColor;
 	exports.recomposeColor = recomposeColor;
 	exports.getContrastRatio = getContrastRatio;
@@ -10802,6 +10851,33 @@
 	  return colors ? "rgb(".concat(colors.map(function (n) {
 	    return parseInt(n, 16);
 	  }).join(', '), ")") : '';
+	}
+	/**
+	 * Converts a color from CSS rgb format to CSS hex format.
+	 *
+	 * @param {string} color - RGB color, i.e. rgb(n, n, n)
+	 * @returns {string} A CSS rgb color string, i.e. #nnnnnn
+	 */
+
+
+	function rgbToHex(color) {
+	  // Pass hex straight through
+	  if (color.indexOf('#') === 0) {
+	    return color;
+	  }
+
+	  function intToHex(c) {
+	    var hex = c.toString(16);
+	    return hex.length === 1 ? "0".concat(hex) : hex;
+	  }
+
+	  var _decomposeColor = decomposeColor(color),
+	      values = _decomposeColor.values;
+
+	  values = values.map(function (n) {
+	    return intToHex(n);
+	  });
+	  return "#".concat(values.join(''));
 	}
 	/**
 	 * Returns an object with the type and values of a color.
@@ -10998,14 +11074,15 @@
 
 	unwrapExports(colorManipulator);
 	var colorManipulator_1 = colorManipulator.convertHexToRGB;
-	var colorManipulator_2 = colorManipulator.decomposeColor;
-	var colorManipulator_3 = colorManipulator.recomposeColor;
-	var colorManipulator_4 = colorManipulator.getContrastRatio;
-	var colorManipulator_5 = colorManipulator.getLuminance;
-	var colorManipulator_6 = colorManipulator.emphasize;
-	var colorManipulator_7 = colorManipulator.fade;
-	var colorManipulator_8 = colorManipulator.darken;
-	var colorManipulator_9 = colorManipulator.lighten;
+	var colorManipulator_2 = colorManipulator.rgbToHex;
+	var colorManipulator_3 = colorManipulator.decomposeColor;
+	var colorManipulator_4 = colorManipulator.recomposeColor;
+	var colorManipulator_5 = colorManipulator.getContrastRatio;
+	var colorManipulator_6 = colorManipulator.getLuminance;
+	var colorManipulator_7 = colorManipulator.emphasize;
+	var colorManipulator_8 = colorManipulator.fade;
+	var colorManipulator_9 = colorManipulator.darken;
+	var colorManipulator_10 = colorManipulator.lighten;
 
 	var require$$3 = ( es$1 && deepmerge_1 ) || es$1;
 
@@ -11153,7 +11230,11 @@
 	    return contrastText;
 	  }
 
-	  function augmentColor(color, mainShade, lightShade, darkShade) {
+	  function augmentColor(color) {
+	    var mainShade = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;
+	    var lightShade = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 300;
+	    var darkShade = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 700;
+
 	    if (!color.main && color[mainShade]) {
 	      color.main = color[mainShade];
 	    }
@@ -11166,9 +11247,9 @@
 	    }
 	  }
 
-	  augmentColor(primary, 500, 300, 700);
+	  augmentColor(primary);
 	  augmentColor(secondary, 'A400', 'A200', 'A700');
-	  augmentColor(error, 500, 300, 700);
+	  augmentColor(error);
 	  var types = {
 	    dark: dark,
 	    light: light
@@ -11283,7 +11364,7 @@
 	      fontSize: pxToRem(45),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
-	      lineHeight: "".concat(round(48 / 45), "em"),
+	      lineHeight: "".concat(round(51 / 45), "em"),
 	      marginLeft: '-.02em',
 	      color: palette.text.secondary
 	    }, allVariants),
@@ -11559,6 +11640,8 @@
 
 	var _deepmerge = interopRequireDefault(require$$3);
 
+	var _isPlainObject = interopRequireDefault(isPlainObject$1);
+
 	var _warning = interopRequireDefault(warning_1$1);
 
 	var _createBreakpoints = interopRequireDefault(createBreakpoints_1);
@@ -11610,7 +11693,9 @@
 	    spacing: _spacing.default,
 	    transitions: _transitions.default,
 	    zIndex: _zIndex.default
-	  }, other));
+	  }, other, {
+	    isMergeableObject: _isPlainObject.default
+	  }));
 	  (0, _warning.default)(muiTheme.shadows.length === 25, 'Material-UI: the shadows array provided to createMuiTheme should support 25 elevations.');
 	  return muiTheme;
 	}
@@ -13465,6 +13550,7 @@
 	    }
 	    var pluginModule = injectedNamesToPlugins[pluginName];
 	    if (!namesToPlugins.hasOwnProperty(pluginName) || namesToPlugins[pluginName] !== pluginModule) {
+	      !!namesToPlugins[pluginName] ? invariant(false, 'EventPluginRegistry: Cannot inject two different event plugins using the same name, `%s`.', pluginName) : void 0;
 	      namesToPlugins[pluginName] = pluginModule;
 	      isOrderingDirty = true;
 	    }
@@ -25921,7 +26007,7 @@
 	  // Rerender
 	  ReactCurrentOwner.current = workInProgress;
 	  var nextChildren = void 0;
-	  if (didCaptureError && (!enableGetDerivedStateFromCatch)) {
+	  if (didCaptureError && (!enableGetDerivedStateFromCatch || typeof ctor.getDerivedStateFromCatch !== 'function')) {
 	    // If we captured an error, but getDerivedStateFrom catch is not defined,
 	    // unmount all the children. componentDidCatch will schedule an update to
 	    // re-render a fallback. This is temporary until we migrate everyone to
@@ -26784,21 +26870,7 @@
 	  }
 	}
 
-	// This module is forked in different environments.
-	// By default, return `true` to log errors to the console.
-	// Forks can return `false` if this isn't desirable.
-	function showErrorDialog(capturedError) {
-	  return true;
-	}
-
 	function logCapturedError(capturedError) {
-	  var logError = showErrorDialog(capturedError);
-
-	  // Allow injected showErrorDialog() to prevent default console.error logging.
-	  // This enables renderers like ReactNative to better manage redbox behavior.
-	  if (logError === false) {
-	    return;
-	  }
 
 	  var error = capturedError.error;
 	  var suppressLogging = error && error.suppressReactErrorLogging;
@@ -32240,7 +32312,7 @@
 	      lineHeight: '1.4em',
 	      // Improve readability for multiline button.
 	      boxSizing: 'border-box',
-	      minWidth: 88,
+	      minWidth: 64,
 	      minHeight: 36,
 	      padding: '8px 16px',
 	      borderRadius: theme.shape.borderRadius,
@@ -32366,7 +32438,7 @@
 	    extendedFab: {
 	      borderRadius: 48 / 2,
 	      padding: '0 16px',
-	      width: 'initial',
+	      width: 'auto',
 	      minWidth: 48,
 	      height: 48
 	    },
@@ -32505,7 +32577,7 @@
 	  type: _propTypes.default.string,
 
 	  /**
-	   * The type of button.
+	   * The variant to use.
 	   */
 	  variant: _propTypes.default.oneOf(['text', 'flat', 'outlined', 'contained', 'raised', 'fab', 'extendedFab'])
 	};
@@ -33276,7 +33348,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -34876,7 +34948,7 @@
 	 * Helper component to allow attaching a ref to a
 	 * wrapped element to access the underlying DOM element.
 	 *
-	 * It's higly inspired by https://github.com/facebook/react/issues/11401#issuecomment-340543801.
+	 * It's highly inspired by https://github.com/facebook/react/issues/11401#issuecomment-340543801.
 	 * For example:
 	 * ```jsx
 	 * import React from 'react';
@@ -35019,10 +35091,8 @@
 	  return (0, _ownerDocument.default)(_reactDom.default.findDOMNode(element));
 	}
 	/**
-	 * This component shares many concepts with
-	 * [react-overlays](https://react-bootstrap.github.io/react-overlays/#portals)
-	 * But has been forked in order to fix some bugs, reduce the number of dependencies
-	 * and take the control of our destiny.
+	 * Portals provide a first-class way to render children into a DOM node
+	 * that exists outside the DOM hierarchy of the parent component.
 	 */
 
 
@@ -35050,15 +35120,21 @@
 	  (0, _createClass2.default)(Portal, [{
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
-	      this.setContainer(this.props.container);
-	      this.forceUpdate(this.props.onRendered);
+	      this.setMountNode(this.props.container); // Only rerender if needed
+
+	      if (!this.props.disablePortal) {
+	        this.forceUpdate(this.props.onRendered);
+	      }
 	    }
 	  }, {
 	    key: "componentDidUpdate",
 	    value: function componentDidUpdate(prevProps) {
-	      if (prevProps.container !== this.props.container) {
-	        this.setContainer(this.props.container);
-	        this.forceUpdate();
+	      if (prevProps.container !== this.props.container || prevProps.disablePortal !== this.props.disablePortal) {
+	        this.setMountNode(this.props.container); // Only rerender if needed
+
+	        if (!this.props.disablePortal) {
+	          this.forceUpdate(this.props.onRendered);
+	        }
 	      }
 	    }
 	  }, {
@@ -35067,8 +35143,13 @@
 	      this.mountNode = null;
 	    }
 	  }, {
-	    key: "setContainer",
-	    value: function setContainer(container) {
+	    key: "setMountNode",
+	    value: function setMountNode(container) {
+	      if (this.props.disablePortal) {
+	        this.mountNode = _reactDom.default.findDOMNode(this).parentElement;
+	        return;
+	      }
+
 	      this.mountNode = getContainer(container, getOwnerDocument(this).body);
 	    }
 	    /**
@@ -35078,7 +35159,14 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var children = this.props.children;
+	      var _props = this.props,
+	          children = _props.children,
+	          disablePortal = _props.disablePortal;
+
+	      if (disablePortal) {
+	        return children;
+	      }
+
 	      return this.mountNode ? _reactDom.default.createPortal(children, this.mountNode) : null;
 	    }
 	  }]);
@@ -35100,9 +35188,18 @@
 	  container: _propTypes.default.oneOfType([_propTypes.default.object, _propTypes.default.func]),
 
 	  /**
+	   * Disable the portal behavior.
+	   * The children stay within it's parent DOM hierarchy.
+	   */
+	  disablePortal: _propTypes.default.bool,
+
+	  /**
 	   * Callback fired once the children has been mounted into the `container`.
 	   */
 	  onRendered: _propTypes.default.func
+	};
+	Portal.defaultProps = {
+	  disablePortal: false
 	};
 	Portal.propTypes = (0, _exactProp.default)(Portal.propTypes);
 	var _default = Portal;
@@ -35740,7 +35837,7 @@
 	 * @ignore - do not document.
 	 *
 	 * Proper state managment for containers and the modals in those containers.
-	 * Simplified, but inspired by react-overlay's ModalManager class
+	 * Simplified, but inspired by react-overlay's ModalManager class.
 	 * Used by the Modal to ensure proper styling of containers.
 	 */
 
@@ -36042,7 +36139,7 @@
 	  }
 	};
 	/**
-	 * The Fade transition is used by the [Modal](/utils/modals) component.
+	 * The Fade transition is used by the [Modal](/utils/modal) component.
 	 * It uses [react-transition-group](https://github.com/reactjs/react-transition-group) internally.
 	 */
 
@@ -36366,7 +36463,6 @@
 
 	var _Backdrop = interopRequireDefault(Backdrop$1);
 
-	// @inheritedComponent Portal
 	function getContainer(container, defaultContainer) {
 	  container = typeof container === 'function' ? container() : container;
 	  return _reactDom.default.findDOMNode(container) || defaultContainer;
@@ -36399,6 +36495,10 @@
 	if (!_react.default.createContext) {
 	  throw new Error('Material-UI: react@16.3.0 or greater is required.');
 	}
+	/**
+	 * This component shares many concepts with [react-overlays](https://react-bootstrap.github.io/react-overlays/#modals).
+	 */
+
 
 	var Modal =
 	/*#__PURE__*/
@@ -36411,15 +36511,15 @@
 	    (0, _classCallCheck2.default)(this, Modal);
 	    _this = (0, _possibleConstructorReturn2.default)(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props));
 	    _this.mountNode = null;
-	    _this.modalNode = null;
-	    _this.dialogNode = null;
+	    _this.modalRef = null;
+	    _this.dialogRef = null;
 	    _this.mounted = false;
 
 	    _this.handleRendered = function () {
 	      _this.autoFocus(); // Fix a bug on Chrome where the scroll isn't initially 0.
 
 
-	      _this.modalNode.scrollTop = 0;
+	      _this.modalRef.scrollTop = 0;
 
 	      if (_this.props.onRendered) {
 	        _this.props.onRendered();
@@ -36493,8 +36593,8 @@
 
 	      var currentActiveElement = (0, _ownerDocument.default)(_this.mountNode).activeElement;
 
-	      if (_this.dialogNode && !_this.dialogNode.contains(currentActiveElement)) {
-	        _this.dialogNode.focus();
+	      if (_this.dialogRef && !_this.dialogRef.contains(currentActiveElement)) {
+	        _this.dialogRef.focus();
 	      }
 	    };
 
@@ -36545,15 +36645,15 @@
 
 	      var currentActiveElement = (0, _ownerDocument.default)(this.mountNode).activeElement;
 
-	      if (this.dialogNode && !this.dialogNode.contains(currentActiveElement)) {
+	      if (this.dialogRef && !this.dialogRef.contains(currentActiveElement)) {
 	        this.lastFocus = currentActiveElement;
 
-	        if (!this.dialogNode.hasAttribute('tabIndex')) {
+	        if (!this.dialogRef.hasAttribute('tabIndex')) {
 	          (0, _warning.default)(false, ['Material-UI: the modal content node does not accept focus.', 'For the benefit of assistive technologies, ' + 'the tabIndex of the node is being set to "-1".'].join('\n'));
-	          this.dialogNode.setAttribute('tabIndex', -1);
+	          this.dialogRef.setAttribute('tabIndex', -1);
 	        }
 
-	        this.dialogNode.focus();
+	        this.dialogRef.focus();
 	      }
 	    }
 	  }, {
@@ -36595,16 +36695,17 @@
 	          disableBackdropClick = _props.disableBackdropClick,
 	          disableEnforceFocus = _props.disableEnforceFocus,
 	          disableEscapeKeyDown = _props.disableEscapeKeyDown,
+	          disablePortal = _props.disablePortal,
 	          disableRestoreFocus = _props.disableRestoreFocus,
 	          hideBackdrop = _props.hideBackdrop,
 	          keepMounted = _props.keepMounted,
+	          manager = _props.manager,
 	          onBackdropClick = _props.onBackdropClick,
 	          onClose = _props.onClose,
 	          onEscapeKeyDown = _props.onEscapeKeyDown,
 	          onRendered = _props.onRendered,
 	          open = _props.open,
-	          manager = _props.manager,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["BackdropComponent", "BackdropProps", "children", "classes", "className", "container", "disableAutoFocus", "disableBackdropClick", "disableEnforceFocus", "disableEscapeKeyDown", "disableRestoreFocus", "hideBackdrop", "keepMounted", "onBackdropClick", "onClose", "onEscapeKeyDown", "onRendered", "open", "manager"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["BackdropComponent", "BackdropProps", "children", "classes", "className", "container", "disableAutoFocus", "disableBackdropClick", "disableEnforceFocus", "disableEscapeKeyDown", "disablePortal", "disableRestoreFocus", "hideBackdrop", "keepMounted", "manager", "onBackdropClick", "onClose", "onEscapeKeyDown", "onRendered", "open"]);
 	      var exited = this.state.exited;
 	      var hasTransition = getHasTransition(this.props);
 	      var childProps = {};
@@ -36631,10 +36732,11 @@
 	          _this2.mountNode = node ? node.getMountNode() : node;
 	        },
 	        container: container,
+	        disablePortal: disablePortal,
 	        onRendered: this.handleRendered
 	      }, _react.default.createElement("div", (0, _extends2.default)({
 	        ref: function ref(node) {
-	          _this2.modalNode = node;
+	          _this2.modalRef = node;
 	        },
 	        className: (0, _classnames.default)(classes.root, className, (0, _defineProperty2.default)({}, classes.hidden, exited))
 	      }, other), hideBackdrop ? null : _react.default.createElement(BackdropComponent, (0, _extends2.default)({
@@ -36642,7 +36744,7 @@
 	        onClick: this.handleBackdropClick
 	      }, BackdropProps)), _react.default.createElement(_RootRef.default, {
 	        rootRef: function rootRef(node) {
-	          _this2.dialogNode = node;
+	          _this2.dialogRef = node;
 	        }
 	      }, _react.default.cloneElement(children, childProps))));
 	    }
@@ -36675,7 +36777,7 @@
 	  BackdropComponent: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
-	   * Properties applied to the `Backdrop` element.
+	   * Properties applied to the [`Backdrop`](/api/backdrop) element.
 	   */
 	  BackdropProps: _propTypes.default.object,
 
@@ -36728,6 +36830,12 @@
 	   * If `true`, hitting escape will not fire any callback.
 	   */
 	  disableEscapeKeyDown: _propTypes.default.bool,
+
+	  /**
+	   * Disable the portal behavior.
+	   * The children stay within it's parent DOM hierarchy.
+	   */
+	  disablePortal: _propTypes.default.bool,
 
 	  /**
 	   * If `true`, the modal will not restore focus to previously focused element once
@@ -36789,6 +36897,7 @@
 	  disableBackdropClick: false,
 	  disableEnforceFocus: false,
 	  disableEscapeKeyDown: false,
+	  disablePortal: false,
 	  disableRestoreFocus: false,
 	  hideBackdrop: false,
 	  keepMounted: false,
@@ -36885,7 +36994,8 @@
 	  }
 	};
 	/**
-	 * The Grow transition is used by the [Popover](/utils/popovers) component.
+	 * The Grow transition is used by the [Tooltip](/demos/tooltips) and
+	 * [Popover](/utils/popover) components.
 	 * It uses [react-transition-group](https://github.com/reactjs/react-transition-group) internally.
 	 */
 
@@ -37216,8 +37326,8 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Popover.__proto__ || Object.getPrototypeOf(Popover)).call.apply(_ref, [this].concat(args))), _this.transitionEl = null, _this.handleGetOffsetTop = getOffsetTop, _this.handleGetOffsetLeft = getOffsetLeft, _this.handleResize = (0, _debounce.default)(function () {
-	      var element = _reactDom.default.findDOMNode(_this.transitionEl);
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Popover.__proto__ || Object.getPrototypeOf(Popover)).call.apply(_ref, [this].concat(args))), _this.paperRef = null, _this.handleGetOffsetTop = getOffsetTop, _this.handleGetOffsetLeft = getOffsetLeft, _this.handleResize = (0, _debounce.default)(function () {
+	      var element = _reactDom.default.findDOMNode(_this.paperRef);
 
 	      _this.setPositioningStyles(element);
 	    }, 166), _this.componentWillUnmount = function () {
@@ -37339,7 +37449,7 @@
 	      } // If an anchor element wasn't provided, just use the parent body element of this Popover
 
 
-	      var anchorElement = getAnchorEl(anchorEl) || (0, _ownerDocument.default)(_reactDom.default.findDOMNode(this.transitionEl)).body;
+	      var anchorElement = getAnchorEl(anchorEl) || (0, _ownerDocument.default)(_reactDom.default.findDOMNode(this.paperRef)).body;
 	      var anchorRect = anchorElement.getBoundingClientRect();
 	      var anchorVertical = contentAnchorOffset === 0 ? anchorOrigin.vertical : 'center';
 	      return {
@@ -37365,7 +37475,7 @@
 	        } // != the default value
 
 
-	        (0, _warning.default)(this.props.anchorOrigin.vertical === 'top', ['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` property to the popover component.', 'Only use one of the two properties.', 'Set `getContentAnchorEl` to null or left `anchorOrigin.vertical` unchanged.'].join('\n'));
+	        (0, _warning.default)(this.props.anchorOrigin.vertical === 'top', ['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` property to the popover component.', 'Only use one of the two properties.', 'Set `getContentAnchorEl` to null or leave `anchorOrigin.vertical` unchanged.'].join('\n'));
 	      }
 
 	      return contentAnchorOffset;
@@ -37439,13 +37549,13 @@
 	        onExited: onExited,
 	        onExiting: onExiting,
 	        role: role,
-	        ref: function ref(node) {
-	          _this2.transitionEl = node;
-	        },
 	        timeout: transitionDuration
 	      }, TransitionProps), _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	        className: classes.paper,
-	        elevation: elevation
+	        elevation: elevation,
+	        ref: function ref(node) {
+	          _this2.paperRef = node;
+	        }
 	      }, PaperProps), _react.default.createElement(_reactEventListener.default, {
 	        target: "window",
 	        onResize: this.handleResize
@@ -37482,8 +37592,8 @@
 	   * horizontal: [left, center, right].
 	   */
 	  anchorOrigin: _propTypes.default.shape({
-	    horizontal: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['left', 'center', 'right'])]),
-	    vertical: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['top', 'center', 'bottom'])])
+	    horizontal: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['left', 'center', 'right'])]).isRequired,
+	    vertical: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['top', 'center', 'bottom'])]).isRequired
 	  }),
 
 	  /**
@@ -37493,8 +37603,8 @@
 	   * the application's client area.
 	   */
 	  anchorPosition: _propTypes.default.shape({
-	    left: _propTypes.default.number,
-	    top: _propTypes.default.number
+	    left: _propTypes.default.number.isRequired,
+	    top: _propTypes.default.number.isRequired
 	  }),
 
 	  /*
@@ -37585,7 +37695,7 @@
 	  open: _propTypes.default.bool.isRequired,
 
 	  /**
-	   * Properties applied to the `Paper` element.
+	   * Properties applied to the [`Paper`](/api/paper) element.
 	   */
 	  PaperProps: _propTypes.default.object,
 
@@ -37603,8 +37713,8 @@
 	   * horizontal: [left, center, right, x(px)].
 	   */
 	  transformOrigin: _propTypes.default.shape({
-	    horizontal: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['left', 'center', 'right'])]),
-	    vertical: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['top', 'center', 'bottom'])])
+	    horizontal: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['left', 'center', 'right'])]).isRequired,
+	    vertical: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['top', 'center', 'bottom'])]).isRequired
 	  }),
 
 	  /**
@@ -37830,7 +37940,7 @@
 	    value: function mergeOuterLocalTheme(localTheme) {
 	      // To support composition of theme.
 	      if (typeof localTheme === 'function') {
-	        (0, _warning.default)(this.outerTheme, ['Material-UI: you are providing a theme function property ' + 'to the MuiThemeProvider component:', '<MuiThemeProvider theme={outerTheme => outerTheme} />', '', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n'));
+	        (0, _warning.default)(this.outerTheme, ['Material-UI: you are providing a theme function property ' + 'to the MuiThemeProvider component:', '<MuiThemeProvider theme={outerTheme => outerTheme} />', 'However, no outer theme is present.', 'Make sure a theme is already injected higher in the React tree ' + 'or provide a theme object.'].join('\n'));
 	        return localTheme(this.outerTheme);
 	      }
 
@@ -38597,7 +38707,7 @@
 	  open: _propTypes.default.bool.isRequired,
 
 	  /**
-	   * Properties applied to the `Paper` element.
+	   * Properties applied to the [`Paper`](/api/paper) element.
 	   */
 	  PaperProps: _propTypes.default.object,
 
@@ -39668,8 +39778,6 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _react = interopRequireDefault(react);
 
 	var _propTypes = interopRequireDefault(propTypes);
@@ -39680,12 +39788,16 @@
 
 	var styles = function styles(theme) {
 	  return {
-	    root: (0, _objectSpread2.default)({}, theme.mixins.toolbar, {
+	    root: {
 	      position: 'relative',
 	      display: 'flex',
 	      alignItems: 'center'
-	    }),
-	    gutters: theme.mixins.gutters()
+	    },
+	    gutters: theme.mixins.gutters(),
+	    regular: theme.mixins.toolbar,
+	    dense: {
+	      minHeight: 48
+	    }
 	  };
 	};
 
@@ -39696,8 +39808,9 @@
 	      classes = props.classes,
 	      classNameProp = props.className,
 	      disableGutters = props.disableGutters,
-	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableGutters"]);
-	  var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.gutters, !disableGutters), classNameProp);
+	      variant = props.variant,
+	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "disableGutters", "variant"]);
+	  var className = (0, _classnames.default)(classes.root, classes[variant], (0, _defineProperty2.default)({}, classes.gutters, !disableGutters), classNameProp);
 	  return _react.default.createElement("div", (0, _extends2.default)({
 	    className: className
 	  }, other), children);
@@ -39723,10 +39836,16 @@
 	  /**
 	   * If `true`, disables gutter padding.
 	   */
-	  disableGutters: _propTypes.default.bool
+	  disableGutters: _propTypes.default.bool,
+
+	  /**
+	   * The variant to use.
+	   */
+	  variant: _propTypes.default.oneOf(['regular', 'dense'])
 	};
 	Toolbar.defaultProps = {
-	  disableGutters: false
+	  disableGutters: false,
+	  variant: 'regular'
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -40597,7 +40716,7 @@
 	 * _.isPlainObject(Object.create(null));
 	 * // => true
 	 */
-	function isPlainObject$1(value) {
+	function isPlainObject$2(value) {
 	  if (!isObjectLike$1(value) || baseGetTag$1(value) != objectTag) {
 	    return false;
 	  }
@@ -40611,7 +40730,7 @@
 	}
 
 	function verifyPlainObject(value, displayName, methodName) {
-	  if (!isPlainObject$1(value)) {
+	  if (!isPlainObject$2(value)) {
 	    warning$5(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
 	  }
 	}
@@ -42701,29 +42820,25 @@
 	  var muiFormControl = context.muiFormControl;
 	  var disabled = disabledProp;
 
-	  if (typeof control.props.disabled !== 'undefined') {
-	    if (typeof disabled === 'undefined') {
-	      disabled = control.props.disabled;
-	    }
+	  if (typeof disabled === 'undefined' && typeof control.props.disabled !== 'undefined') {
+	    disabled = control.props.disabled;
 	  }
 
-	  if (muiFormControl) {
-	    if (typeof disabled === 'undefined') {
-	      disabled = muiFormControl.disabled;
-	    }
+	  if (typeof disabled === 'undefined' && muiFormControl) {
+	    disabled = muiFormControl.disabled;
 	  }
 
-	  var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.disabled, disabled), classNameProp);
+	  var controlProps = {
+	    disabled: disabled
+	  };
+	  ['checked', 'name', 'onChange', 'value', 'inputRef'].forEach(function (key) {
+	    if (typeof control.props[key] === 'undefined' && typeof props[key] !== 'undefined') {
+	      controlProps[key] = props[key];
+	    }
+	  });
 	  return _react.default.createElement("label", (0, _extends2.default)({
-	    className: className
-	  }, other), _react.default.cloneElement(control, {
-	    disabled: disabled,
-	    checked: typeof control.props.checked === 'undefined' ? checked : control.props.checked,
-	    name: control.props.name || name,
-	    onChange: control.props.onChange || onChange,
-	    value: control.props.value || value,
-	    inputRef: control.props.inputRef || inputRef
-	  }), _react.default.createElement(_Typography.default, {
+	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.disabled, disabled), classNameProp)
+	  }, other), _react.default.cloneElement(control, controlProps), _react.default.createElement(_Typography.default, {
 	    component: "span",
 	    className: (0, _classnames.default)(classes.label, (0, _defineProperty2.default)({}, classes.disabled, disabled))
 	  }, label));
@@ -44294,8 +44409,8 @@
 	  value: _propTypes.default.number,
 
 	  /**
-	   * The variant of progress indicator. Use indeterminate
-	   * when there is no progress value.
+	   * The variant to use.
+	   * Use indeterminate when there is no progress value.
 	   */
 	  variant: _propTypes.default.oneOf(['determinate', 'indeterminate', 'static'])
 	};
@@ -44501,7 +44616,6 @@
 	          })
 	        })
 	      }, other), _react.default.createElement(_MenuList.default, (0, _extends2.default)({
-	        role: "menu",
 	        onKeyDown: this.handleListKeyDown
 	      }, MenuListProps, {
 	        ref: function ref(node) {
@@ -44517,7 +44631,7 @@
 	  /**
 	   * The DOM element used to set the position of the menu.
 	   */
-	  anchorEl: _propTypes.default.object,
+	  anchorEl: _propTypes.default.oneOfType([_propTypes.default.object, _propTypes.default.func]),
 
 	  /**
 	   * Menu contents, normally `MenuItem`s.
@@ -44536,7 +44650,7 @@
 	  disableAutoFocusItem: _propTypes.default.bool,
 
 	  /**
-	   * Properties applied to the `MenuList` element.
+	   * Properties applied to the [`MenuList`](/api/menu-list) element.
 	   */
 	  MenuListProps: _propTypes.default.object,
 
@@ -45021,7 +45135,7 @@
 	  inputRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	  /**
-	   * Properties applied to the `Menu` element.
+	   * Properties applied to the [`Menu`](/api/menu) element.
 	   */
 	  MenuProps: _propTypes.default.object,
 
@@ -45553,7 +45667,7 @@
 	  inputProps: _propTypes.default.object,
 
 	  /**
-	   * Properties applied to the `Menu` element.
+	   * Properties applied to the [`Menu`](/api/menu) element.
 	   */
 	  MenuProps: _propTypes.default.object,
 
@@ -46521,7 +46635,7 @@
 	  error: _propTypes.default.bool,
 
 	  /**
-	   * Properties applied to the `FormHelperText` element.
+	   * Properties applied to the [`FormHelperText`](/api/form-helper-text) element.
 	   */
 	  FormHelperTextProps: _propTypes.default.object,
 
@@ -46542,7 +46656,7 @@
 	  id: _propTypes.default.string,
 
 	  /**
-	   * Properties applied to the `InputLabel` element.
+	   * Properties applied to the [`InputLabel`](/api/input-label) element.
 	   */
 	  InputLabelProps: _propTypes.default.object,
 
@@ -46626,7 +46740,7 @@
 	  select: _propTypes.default.bool,
 
 	  /**
-	   * Properties applied to the `Select` element.
+	   * Properties applied to the [`Select`](/api/select) element.
 	   */
 	  SelectProps: _propTypes.default.object,
 
@@ -48661,9 +48775,48 @@
 
 	/** `Object#toString` result references. */
 	var argsTag$2 = '[object Arguments]',
+	    arrayTag$1 = '[object Array]',
+	    boolTag$2 = '[object Boolean]',
+	    dateTag$2 = '[object Date]',
+	    errorTag$1 = '[object Error]',
 	    funcTag$2 = '[object Function]',
 	    genTag$1 = '[object GeneratorFunction]',
-	    objectTag$3 = '[object Object]';
+	    mapTag$4 = '[object Map]',
+	    numberTag$2 = '[object Number]',
+	    objectTag$3 = '[object Object]',
+	    regexpTag$2 = '[object RegExp]',
+	    setTag$4 = '[object Set]',
+	    stringTag$2 = '[object String]',
+	    symbolTag$2 = '[object Symbol]',
+	    weakMapTag$2 = '[object WeakMap]';
+
+	var arrayBufferTag$2 = '[object ArrayBuffer]',
+	    dataViewTag$3 = '[object DataView]',
+	    float32Tag$2 = '[object Float32Array]',
+	    float64Tag$2 = '[object Float64Array]',
+	    int8Tag$2 = '[object Int8Array]',
+	    int16Tag$2 = '[object Int16Array]',
+	    int32Tag$2 = '[object Int32Array]',
+	    uint8Tag$2 = '[object Uint8Array]',
+	    uint8ClampedTag$2 = '[object Uint8ClampedArray]',
+	    uint16Tag$2 = '[object Uint16Array]',
+	    uint32Tag$2 = '[object Uint32Array]';
+
+	/** Used to identify `toStringTag` values supported by `_.clone`. */
+	var cloneableTags = {};
+	cloneableTags[argsTag$2] = cloneableTags[arrayTag$1] =
+	cloneableTags[arrayBufferTag$2] = cloneableTags[dataViewTag$3] =
+	cloneableTags[boolTag$2] = cloneableTags[dateTag$2] =
+	cloneableTags[float32Tag$2] = cloneableTags[float64Tag$2] =
+	cloneableTags[int8Tag$2] = cloneableTags[int16Tag$2] =
+	cloneableTags[int32Tag$2] = cloneableTags[mapTag$4] =
+	cloneableTags[numberTag$2] = cloneableTags[objectTag$3] =
+	cloneableTags[regexpTag$2] = cloneableTags[setTag$4] =
+	cloneableTags[stringTag$2] = cloneableTags[symbolTag$2] =
+	cloneableTags[uint8Tag$2] = cloneableTags[uint8ClampedTag$2] =
+	cloneableTags[uint16Tag$2] = cloneableTags[uint32Tag$2] = true;
+	cloneableTags[errorTag$1] = cloneableTags[funcTag$2] =
+	cloneableTags[weakMapTag$2] = false;
 
 	/**
 	 * The base implementation of `_.clone` and `_.cloneDeep` which tracks
@@ -48717,7 +48870,7 @@
 	          : _copySymbols(value, _baseAssign(result, value));
 	      }
 	    } else {
-	      {
+	      if (!cloneableTags[tag]) {
 	        return object ? value : {};
 	      }
 	      result = _initCloneByTag(value, tag, isDeep);
@@ -48914,7 +49067,7 @@
 	 * _.isPlainObject(Object.create(null));
 	 * // => true
 	 */
-	function isPlainObject$2(value) {
+	function isPlainObject$3(value) {
 	  if (!isObjectLike_1(value) || _baseGetTag(value) != objectTag$4) {
 	    return false;
 	  }
@@ -48927,7 +49080,7 @@
 	    funcToString$3.call(Ctor) == objectCtorString$1;
 	}
 
-	var isPlainObject_1 = isPlainObject$2;
+	var isPlainObject_1 = isPlainObject$3;
 
 	/**
 	 * Used by `_.omit` to customize its `_.cloneDeep` use to only clone plain

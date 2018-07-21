@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.15.0](https://github.com/lmachens/raccoon-miner/compare/v0.14.5...v0.15.0) (2018-07-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.4.0 ([#124](https://github.com/lmachens/raccoon-miner/issues/124)) ([2dcad36](https://github.com/lmachens/raccoon-miner/commit/2dcad36))
+
+
+### Features
+
+* **mining:** add gpu configs ([#134](https://github.com/lmachens/raccoon-miner/issues/134)) ([af8408c](https://github.com/lmachens/raccoon-miner/commit/af8408c)), closes [#105](https://github.com/lmachens/raccoon-miner/issues/105)
+* **plugins:** update xmr-stak to 2.4.7 ([#133](https://github.com/lmachens/raccoon-miner/issues/133)) ([99978c6](https://github.com/lmachens/raccoon-miner/commit/99978c6))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.14.5](https://github.com/lmachens/raccoon-miner/compare/v0.14.4...v0.14.5) (2018-07-12)
 
 

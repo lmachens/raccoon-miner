@@ -77,7 +77,11 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhance = compose(withStyles(styles), connect(mapStateToProps, mapDispatchToProps))(
-  MiningButton
-);
+const enhance = compose(
+  withStyles(styles),
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )
+)(MiningButton);
 export { enhance as MiningButton };

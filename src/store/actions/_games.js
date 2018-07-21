@@ -1,6 +1,6 @@
 import { SET_GAME_IS_RUNNING, SET_GAME_IS_TERMINATED } from '../types';
 import { addGameInfoUpdatedListener, addGameLaunchedListener } from '../../api/games';
-import { appendMiningLog, continueMining, suspendMining } from './_mining';
+import { continueMining, suspendMining } from './_mining';
 import { setNotification, unsetNotification } from './_notifications';
 
 import { GAME_IS_RUNNING } from '../../api/notifications';

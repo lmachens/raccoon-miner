@@ -39,5 +39,8 @@ const mapStateToProps = ({ notifications }) => {
   };
 };
 
-const enhance = compose(withStyles(styles), connect(mapStateToProps))(Notifications);
+const enhance = compose(
+  withStyles(styles),
+  connect(mapStateToProps)
+)(Notifications);
 export { enhance as Notifications };

@@ -83,6 +83,12 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhanced = compose(withStyles(styles), connect(null, mapDispatchToProps))(FullScreenDialog);
+const enhanced = compose(
+  withStyles(styles),
+  connect(
+    null,
+    mapDispatchToProps
+  )
+)(FullScreenDialog);
 
 export { enhanced as FullScreenDialog };

@@ -1,6 +1,4 @@
-import { RECEIVE_PRICE, RECEIVE_PROFITABILITY } from '../types';
-
-import { getPrice } from '../../api/cryptocompare';
+import { RECEIVE_PROFITABILITY } from '../types';
 import { getProfitability } from '../../api/nice-hash';
 
 const fetchProfitability = () => {

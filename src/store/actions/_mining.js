@@ -29,10 +29,10 @@ import {
 import { CUDA_ISSUE, TEST_MODE } from '../../api/notifications';
 import { developerAddress, getStats, isValidAddress } from '../../api/nice-hash';
 import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
-import { setNotification, unsetNotification } from './_notifications';
 
 import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
+import { setNotification } from './_notifications';
 
 export const loadDefault = () => {
   return (dispatch, getState) => {

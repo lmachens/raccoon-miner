@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.1](https://github.com/lmachens/raccoon-miner/compare/v0.15.0...v0.15.1) (2018-07-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.4.1 ([#136](https://github.com/lmachens/raccoon-miner/issues/136)) ([7ae9199](https://github.com/lmachens/raccoon-miner/commit/7ae9199))
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/icons to v2 ([#137](https://github.com/lmachens/raccoon-miner/issues/137)) ([2f11f7d](https://github.com/lmachens/raccoon-miner/commit/2f11f7d))
+* **mining:** load custom config on cuda error ([#138](https://github.com/lmachens/raccoon-miner/issues/138)) ([5f7b3d2](https://github.com/lmachens/raccoon-miner/commit/5f7b3d2))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.15.0](https://github.com/lmachens/raccoon-miner/compare/v0.14.5...v0.15.0) (2018-07-21)
 
 

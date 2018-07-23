@@ -59,7 +59,8 @@
         "https://widgetbot.io",
         "https://api.nicehash.com",
         "https://sentry.io",
-        "http://localhost:50672"
+        "http://localhost:50672",
+        "http://localhost:50673",
       ]
     }
   },

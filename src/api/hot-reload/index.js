@@ -3,9 +3,7 @@ import { APP_PATH, HOT_RELOAD_FILES } from '../environment';
 import { getSimpleIoPlugin } from '../plugins';
 
 if (HOT_RELOAD_FILES) {
-  (async () => {
-    const simpleIoPlugin = await getSimpleIoPlugin();
-
+  getSimpleIoPlugin().then(simpleIoPlugin => {
     simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
       if (HOT_RELOAD_FILES.includes(fileIdentifier)) {
         setTimeout(() => {
@@ -21,5 +19,5 @@ if (HOT_RELOAD_FILES) {
     });
 
     console.info('%cHot reload is active', 'color: blue');
-  })();
+  });
 }

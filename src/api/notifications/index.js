@@ -9,3 +9,9 @@ export const GAME_IS_RUNNING = title => ({
   message: `${title} is running. Mining is suspended!`,
   alert: false
 });
+
+export const CUDA_ISSUE = {
+  _id: 'cudaIssue',
+  message: 'CUDA error -> Please ask for support',
+  alert: true
+};

@@ -17,11 +17,20 @@ import {
   SUSPEND_MINING,
   UNSET_NOTIFICATION
 } from '../types';
-import { CRYPTO_NIGHT_V7, getMiningMetrics, minersByIdentifier } from '../../api/mining';
+import {
+  CRYPTO_NIGHT_V7,
+  CUDA_ISSUE_CONFIG,
+  getMiningMetrics,
+  httpPort,
+  minersByIdentifier,
+  setHttpPort,
+  writeNvidiaConfig
+} from '../../api/mining';
+import { CUDA_ISSUE, TEST_MODE } from '../../api/notifications';
 import { developerAddress, getStats, isValidAddress } from '../../api/nice-hash';
 import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
+import { setNotification, unsetNotification } from './_notifications';
 
-import { TEST_MODE } from '../../api/notifications';
 import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
 
@@ -178,7 +187,8 @@ const fetchWorkerStats = () => {
 };
 
 const handleDataByIdenfier = {};
-export const startMining = minerIdentifier => {
+let hasCudaError = false;
+export const startMining = (minerIdentifier, callback) => {
   return async (dispatch, getState) => {
     dispatch({
       type: START_MINING,
@@ -195,7 +205,7 @@ export const startMining = minerIdentifier => {
 
     handleDataByIdenfier[minerIdentifier] = async ({ error, data }) => {
       const line = error || data;
-      const { connecting, errorMsg } = parser(line);
+      const { connecting, cudaError, errorMsg } = parser(line);
 
       if (connecting) {
         dispatch({
@@ -214,6 +224,24 @@ export const startMining = minerIdentifier => {
         });
       }
       dispatch(appendMiningLog(line));
+
+      if (cudaError) {
+        if (hasCudaError) {
+          dispatch(stopMining(minerIdentifier));
+          dispatch(setNotification(CUDA_ISSUE));
+          return;
+        }
+        hasCudaError = true;
+        dispatch(appendMiningLog('Load config to solve CUDA issue'));
+        dispatch(
+          stopMining(minerIdentifier, () => {
+            setHttpPort(httpPort === 50672 ? 50673 : 50672);
+            writeNvidiaConfig(CUDA_ISSUE_CONFIG).then(() => {
+              dispatch(startMining(minerIdentifier));
+            });
+          })
+        );
+      }
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
     const minerArgs = args({ address, cores, gpus });
@@ -227,11 +255,12 @@ export const startMining = minerIdentifier => {
         }
       });
       dispatch(trackMiningMetrics());
+      if (callback) callback();
     });
   };
 };
 
-export const stopMining = minerIdentifier => {
+export const stopMining = (minerIdentifier, callback) => {
   return async (dispatch, getState) => {
     const processManager = await getProcessManagerPlugin();
     const { activeMiners } = getState();
@@ -247,6 +276,7 @@ export const stopMining = minerIdentifier => {
       processManager.onDataReceivedEvent.removeListener(handleDataByIdenfier[minerIdentifier]);
       processManager.terminateProcess(processId);
       delete handleDataByIdenfier[minerIdentifier];
+      if (callback) callback();
     }
   };
 };

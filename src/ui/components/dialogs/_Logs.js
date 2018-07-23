@@ -11,7 +11,8 @@ const styles = {
   logs: {
     overflow: 'auto',
     display: 'flex',
-    flexDirection: 'column-reverse'
+    flexDirection: 'column-reverse',
+    userSelect: 'text'
   }
 };
 

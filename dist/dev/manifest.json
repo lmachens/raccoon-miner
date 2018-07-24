@@ -62,7 +62,15 @@
         "http://localhost:50672",
         "http://localhost:50673"
       ]
-    }
+    },
+    "launch_events": [{
+      "event": "AllGamesLaunch",
+      "event_data": {
+        "game_ids": [],
+        "wait_for_stable_framerate": 30
+      },
+      "start_minimized": true
+    }]
   },
   "version": "0.15.1"
 }

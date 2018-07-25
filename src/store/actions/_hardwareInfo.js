@@ -1,6 +1,5 @@
-import { addHardwareInfoListener, removeHardwareInfoListener } from '../../api/benchmarking';
-
 import { RECEIVE_HARDWARE_INFO } from '../types';
+import { addHardwareInfoListener } from '../../api/benchmarking';
 
 export const trackHardwareInfo = () => {
   return dispatch => {
@@ -9,7 +8,6 @@ export const trackHardwareInfo = () => {
         type: RECEIVE_HARDWARE_INFO,
         data: hardwareInfo
       });
-      removeHardwareInfoListener(hardwareInfoListener);
     };
 
     addHardwareInfoListener(hardwareInfoListener);

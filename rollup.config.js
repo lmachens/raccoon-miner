@@ -43,7 +43,8 @@ export default [
             'withStyles',
             'withTheme',
             'createGenerateClassName',
-            'jssPreset'
+            'jssPreset',
+            'createStyles'
           ],
           'node_modules/@material-ui/core/Modal/index.js': ['ModalManager'],
           'node_modules/@material-ui/core/Card/index.js': [

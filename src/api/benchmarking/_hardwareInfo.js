@@ -44,9 +44,10 @@ export const getTemperatures = hardwareInfo => {
   const mainboard = get(hardwareInfo, 'Mainboard.Temperatures');
   let max = 0;
   [...cpus, ...gpus, mainboard].forEach(child => {
-    child.forEach(temp => {
-      if (max < temp.Value) max = temp.Value;
-    });
+    child &&
+      child.forEach(temp => {
+        if (temp && max < temp.Value) max = temp.Value;
+      });
   });
   return {
     cpus,

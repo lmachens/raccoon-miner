@@ -12,3 +12,4 @@ export const SUSPEND_MINING = 'SUSPEND_MINING';
 export const CONTINUE_MINING = 'CONTINUE_MINING';
 export const SET_CORES = 'SET_CORES';
 export const SET_GPUS = 'SET_GPUS';
+export const SET_WORKER_NAME = 'SET_WORKER_NAME';

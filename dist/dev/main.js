@@ -1120,6 +1120,7 @@
 	const CONTINUE_MINING = 'CONTINUE_MINING';
 	const SET_CORES = 'SET_CORES';
 	const SET_GPUS = 'SET_GPUS';
+	const SET_WORKER_NAME = 'SET_WORKER_NAME';
 
 	const SET_NOTIFICATION = 'SET_NOTIFICATION';
 	const UNSET_NOTIFICATION = 'UNSET_NOTIFICATION';
@@ -1306,8 +1307,8 @@
 	    address,
 	    cores,
 	    gpus,
-	    worker = 'raccoon'
-	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
+	    workerName
+	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -1538,8 +1539,26 @@
 	      }
 	    });
 	    dispatch({
+	      type: SET_WORKER_NAME,
+	      data: {
+	        minerIdentifier,
+	        workerName: 'raccoon'
+	      }
+	    });
+	    dispatch({
 	      type: SET_NOTIFICATION,
 	      notification: TEST_MODE
+	    });
+	  };
+	};
+	const setWorkerName = (minerIdentifier, workerName) => {
+	  return dispatch => {
+	    dispatch({
+	      type: SET_WORKER_NAME,
+	      data: {
+	        minerIdentifier,
+	        workerName
+	      }
 	    });
 	  };
 	};
@@ -1678,9 +1697,10 @@
 	      }
 	    } = getState();
 	    const {
-	      address = 'default',
+	      address = developerAddress,
 	      cores,
-	      gpus
+	      gpus,
+	      workerName = 'raccoon'
 	    } = miners$$1[selectedMinerIdentifier];
 	    if (handleDataByIdenfier[minerIdentifier]) return;
 	    const processManager = await getProcessManagerPlugin();
@@ -1743,7 +1763,8 @@
 	    const minerArgs = args({
 	      address,
 	      cores,
-	      gpus
+	      gpus,
+	      workerName
 	    });
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data
@@ -3437,7 +3458,8 @@
 	const defaultMinerProps = {
 	  cores: 1,
 	  gpus: 1,
-	  address: developerAddress
+	  address: developerAddress,
+	  workerName: 'raccoon'
 	};
 	const mining = (state = {
 	  selectedMinerIdentifier: CRYPTO_NIGHT_V7,
@@ -3457,6 +3479,10 @@
 	  };
 
 	  switch (type) {
+	    case SET_WORKER_NAME:
+	      set_1(newState, `miners.${data.minerIdentifier}.workerName`, data.workerName);
+	      break;
+
 	    case SET_MINING_ADDRESS:
 	      set_1(newState, `miners.${data.minerIdentifier}.address`, data.address);
 	      break;
@@ -33326,8 +33352,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33352,8 +33376,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33362,7 +33384,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33513,7 +33535,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -47784,6 +47806,15 @@
 	      const address = event.target.value;
 	      setMiningAddress$$1(minerIdentifier, address);
 	    });
+
+	    _defineProperty$1(this, "handleWorkerNameChange", event => {
+	      const {
+	        setWorkerName: setWorkerName$$1,
+	        minerIdentifier
+	      } = this.props;
+	      const workerName = event.target.value;
+	      setWorkerName$$1(minerIdentifier, workerName);
+	    });
 	  }
 
 	  componentWillUnmount() {
@@ -47799,14 +47830,17 @@
 	      address,
 	      isMining,
 	      isValidAddress: isValidAddress$$1,
-	      loadDefault: loadDefault$$1
+	      loadDefault: loadDefault$$1,
+	      workerName
 	    } = this.props;
 	    return react.createElement(enhanced, {
 	      open: open,
 	      title: "Wallet"
-	    }, react.createElement(DialogContentText$2, null, "You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments. You can ", react.createElement(LinkEnhanced, {
+	    }, react.createElement(DialogContentText$2, null, "You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments. We recommend to use NiceHash for lower", ' ', react.createElement(LinkEnhanced, {
+	      to: "https://www.nicehash.com/help/fees"
+	    }, "service fees"), ".", react.createElement("br", null), react.createElement(LinkEnhanced, {
 	      onClick: loadDefault$$1
-	    }, "load the test settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
+	    }, "Load test settings"), " if you want to try out this app."), isMining && react.createElement(Typography$2, {
 	      color: "error"
 	    }, "You have to stop mining before you can change these settings!"), react.createElement(TextField$2, {
 	      disabled: isMining,
@@ -47829,12 +47863,15 @@
 	      placeholder: developerAddress,
 	      value: address
 	    }), react.createElement(TextField$2, {
-	      disabled: true,
 	      fullWidth: true,
-	      helperText: "Use a unique name if you use Raccoon Miner on multiple computers.",
+	      helperText: react.createElement(react.Fragment, null, "Set a unique name to track this computer on", ' ', react.createElement(LinkEnhanced, {
+	        to: statsUrl(address)
+	      }, "NiceHash stats page")),
 	      label: "Worker name",
 	      margin: "normal",
-	      value: "raccoon"
+	      onChange: this.handleWorkerNameChange,
+	      placeholder: "raccoon",
+	      value: workerName
 	    }));
 	  }
 
@@ -47849,7 +47886,9 @@
 	  loadDefault: propTypes.func.isRequired,
 	  setMiningAddress: propTypes.func.isRequired,
 	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  fetchMiningMetrics: propTypes.func.isRequired
+	  setWorkerName: propTypes.string.isRequired,
+	  fetchMiningMetrics: propTypes.func.isRequired,
+	  workerName: propTypes.string.isRequired
 	};
 
 	const mapStateToProps$3 = ({
@@ -47863,7 +47902,8 @@
 	  activeMiners
 	}) => {
 	  const {
-	    address
+	    address,
+	    workerName
 	  } = miners[selectedMinerIdentifier];
 	  return {
 	    open: cryptoDialogOpen,
@@ -47871,7 +47911,8 @@
 	    address,
 	    isValidAddress: isValidAddress(address),
 	    isMining: activeMiners[selectedMinerIdentifier].isMining,
-	    selectedMinerIdentifier
+	    selectedMinerIdentifier,
+	    workerName
 	  };
 	};
 
@@ -47879,7 +47920,8 @@
 	  return {
 	    loadDefault: bindActionCreators(loadDefault, dispatch),
 	    setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-	    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch)
+	    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch),
+	    setWorkerName: bindActionCreators(setWorkerName, dispatch)
 	  };
 	};
 

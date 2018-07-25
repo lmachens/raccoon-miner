@@ -32,6 +32,10 @@
           "width": 680,
           "height": 420
         },
+        "max_size": {
+          "width": 680,
+          "height": 420
+        },
         "start_position": {
           "Top": 100,
           "Left": 300

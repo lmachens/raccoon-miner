@@ -10,6 +10,7 @@ import {
   SET_MINING_ERROR_MESSAGE,
   SET_MINING_SPEED,
   SET_PROCESS_ID,
+  SET_WORKER_NAME,
   START_MINING,
   STOP_MINING,
   SUSPEND_MINING
@@ -22,7 +23,8 @@ import set from 'lodash/set';
 const defaultMinerProps = {
   cores: 1,
   gpus: 1,
-  address: developerAddress
+  address: developerAddress,
+  workerName: 'raccoon'
 };
 
 export const mining = (
@@ -42,6 +44,9 @@ export const mining = (
 ) => {
   const newState = { ...state };
   switch (type) {
+    case SET_WORKER_NAME:
+      set(newState, `miners.${data.minerIdentifier}.workerName`, data.workerName);
+      break;
     case SET_MINING_ADDRESS:
       set(newState, `miners.${data.minerIdentifier}.address`, data.address);
       break;

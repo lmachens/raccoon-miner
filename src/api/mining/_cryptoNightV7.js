@@ -22,11 +22,11 @@ export const cryptoNightV7 = {
     // SOCKET ERROR
   }),
   path: 'xmr-stak/xmr-stak.exe',
-  args: ({ address, cores, gpus, worker = 'raccoon' }) =>
+  args: ({ address, cores, gpus, workerName }) =>
     `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${
       simpleIoPlugin.LOCALAPPDATA
     }/raccoon-miner/amd.txt" --nvidia "${
       simpleIoPlugin.LOCALAPPDATA
-    }/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
+    }/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true })
 };

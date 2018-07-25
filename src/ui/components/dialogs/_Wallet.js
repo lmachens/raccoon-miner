@@ -9,8 +9,13 @@ import {
 } from '../generic';
 import { DoneIcon, ErrorIcon } from '../icons';
 import React, { PureComponent } from 'react';
-import { addressHint, developerAddress, isValidAddress } from '../../../api/nice-hash';
-import { fetchMiningMetrics, loadDefault, setMiningAddress } from '../../../store/actions';
+import { addressHint, developerAddress, isValidAddress, statsUrl } from '../../../api/nice-hash';
+import {
+  fetchMiningMetrics,
+  loadDefault,
+  setMiningAddress,
+  setWorkerName
+} from '../../../store/actions';
 
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
@@ -29,8 +34,15 @@ class WalletDialog extends PureComponent {
     setMiningAddress(minerIdentifier, address);
   };
 
+  handleWorkerNameChange = event => {
+    const { setWorkerName, minerIdentifier } = this.props;
+
+    const workerName = event.target.value;
+    setWorkerName(minerIdentifier, workerName);
+  };
+
   render() {
-    const { open, address, isMining, isValidAddress, loadDefault } = this.props;
+    const { open, address, isMining, isValidAddress, loadDefault, workerName } = this.props;
 
     return (
       <FullScreenDialog open={open} title="Wallet">
@@ -78,12 +90,18 @@ class WalletDialog extends PureComponent {
           value={address}
         />
         <TextField
-          disabled={true}
           fullWidth
-          helperText="Use a unique name if you use Raccoon Miner on multiple computers."
+          helperText={
+            <>
+              Set a unique name to track this computer on{' '}
+              <Link to={statsUrl(address)}>NiceHash stats page</Link>
+            </>
+          }
           label="Worker name"
           margin="normal"
-          value="raccoon"
+          onChange={this.handleWorkerNameChange}
+          placeholder="raccoon"
+          value={workerName}
         />
       </FullScreenDialog>
     );
@@ -99,7 +117,9 @@ WalletDialog.propTypes = {
   loadDefault: PropTypes.func.isRequired,
   setMiningAddress: PropTypes.func.isRequired,
   selectedMinerIdentifier: PropTypes.string.isRequired,
-  fetchMiningMetrics: PropTypes.func.isRequired
+  setWorkerName: PropTypes.string.isRequired,
+  fetchMiningMetrics: PropTypes.func.isRequired,
+  workerName: PropTypes.string.isRequired
 };
 
 const mapStateToProps = ({
@@ -107,14 +127,15 @@ const mapStateToProps = ({
   mining: { miners, selectedMinerIdentifier },
   activeMiners
 }) => {
-  const { address } = miners[selectedMinerIdentifier];
+  const { address, workerName } = miners[selectedMinerIdentifier];
   return {
     open: cryptoDialogOpen,
     minerIdentifier: selectedMinerIdentifier,
     address,
     isValidAddress: isValidAddress(address),
     isMining: activeMiners[selectedMinerIdentifier].isMining,
-    selectedMinerIdentifier
+    selectedMinerIdentifier,
+    workerName
   };
 };
 
@@ -122,7 +143,8 @@ const mapDispatchToProps = dispatch => {
   return {
     loadDefault: bindActionCreators(loadDefault, dispatch),
     setMiningAddress: bindActionCreators(setMiningAddress, dispatch),
-    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch)
+    fetchMiningMetrics: bindActionCreators(fetchMiningMetrics, dispatch),
+    setWorkerName: bindActionCreators(setWorkerName, dispatch)
   };
 };
 

@@ -11,6 +11,7 @@ import {
   SET_MINING_SPEED,
   SET_NOTIFICATION,
   SET_PROCESS_ID,
+  SET_WORKER_NAME,
   START_MINING,
   STOP_MINING,
   SUSPEND_MINING,
@@ -48,8 +49,21 @@ export const loadDefault = () => {
       data: { address: developerAddress, minerIdentifier }
     });
     dispatch({
+      type: SET_WORKER_NAME,
+      data: { minerIdentifier, workerName: 'raccoon' }
+    });
+    dispatch({
       type: SET_NOTIFICATION,
       notification: TEST_MODE
+    });
+  };
+};
+
+export const setWorkerName = (minerIdentifier, workerName) => {
+  return dispatch => {
+    dispatch({
+      type: SET_WORKER_NAME,
+      data: { minerIdentifier, workerName }
     });
   };
 };
@@ -186,7 +200,9 @@ export const startMining = (minerIdentifier, callback) => {
     const {
       mining: { miners, selectedMinerIdentifier }
     } = getState();
-    const { address = 'default', cores, gpus } = miners[selectedMinerIdentifier];
+    const { address = developerAddress, cores, gpus, workerName = 'raccoon' } = miners[
+      selectedMinerIdentifier
+    ];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
@@ -232,7 +248,7 @@ export const startMining = (minerIdentifier, callback) => {
       }
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, cores, gpus });
+    const minerArgs = args({ address, cores, gpus, workerName });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({

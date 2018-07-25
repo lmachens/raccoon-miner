@@ -3,7 +3,7 @@
   "type": "WebApp",
   "meta": {
     "name": "Raccoon Miner - DEV",
-    "version": "0.15.1",
+    "version": "0.16.0",
     "minimum-overwolf-version": "0.85.0.0",
     "author": "Leon Machens",
     "icon": "assets/icon.png",
@@ -67,14 +67,16 @@
         "http://localhost:50673"
       ]
     },
-    "launch_events": [{
-      "event": "AllGamesLaunch",
-      "event_data": {
-        "game_ids": [],
-        "wait_for_stable_framerate": 30
-      },
-      "start_minimized": true
-    }]
+    "launch_events": [
+      {
+        "event": "AllGamesLaunch",
+        "event_data": {
+          "game_ids": [],
+          "wait_for_stable_framerate": 30
+        },
+        "start_minimized": true
+      }
+    ]
   },
-  "version": "0.15.1"
+  "version": "0.16.0"
 }

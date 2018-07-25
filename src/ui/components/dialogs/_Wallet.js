@@ -36,8 +36,9 @@ class WalletDialog extends PureComponent {
       <FullScreenDialog open={open} title="Wallet">
         <DialogContentText>
           You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments.
-          You can <Link onClick={loadDefault}>load the test settings</Link> if you want to try out
-          this app.
+          We recommend to use NiceHash for lower{' '}
+          <Link to="https://www.nicehash.com/help/fees">service fees</Link>.<br />
+          <Link onClick={loadDefault}>Load test settings</Link> if you want to try out this app.
         </DialogContentText>
         {isMining && (
           <Typography color="error">

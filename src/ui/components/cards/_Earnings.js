@@ -1,5 +1,6 @@
 import { Link, StatusCard, Typography } from '../generic';
 import React, { Component, Fragment } from 'react';
+import { eurNumberFormatter, usdNumberFormatter } from '../../../api/utilities';
 
 import PropTypes from 'prop-types';
 import compose from 'recompose/compose';
@@ -15,7 +16,14 @@ const styles = {
 
 class EarningsCard extends Component {
   render() {
-    const { classes, currency, profitPerDayInBTC, profitPerDayInUSD, miner } = this.props;
+    const {
+      classes,
+      currency,
+      profitPerDayInBTC,
+      profitPerDayInEUR,
+      profitPerDayInUSD,
+      miner
+    } = this.props;
 
     return (
       <StatusCard
@@ -30,7 +38,8 @@ class EarningsCard extends Component {
       >
         <Typography className={classes.load} variant="display1">
           {currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`}
-          {currency === 'usd' && `$ ${profitPerDayInUSD.toFixed(2)}`}
+          {currency === 'usd' && usdNumberFormatter.format(profitPerDayInUSD)}
+          {currency === 'eur' && eurNumberFormatter.format(profitPerDayInEUR)}
         </Typography>
         <Typography variant="caption">Daily estimated earnings</Typography>
       </StatusCard>
@@ -42,6 +51,7 @@ EarningsCard.propTypes = {
   classes: PropTypes.object.isRequired,
   profitPerDayInBTC: PropTypes.number.isRequired,
   profitPerDayInUSD: PropTypes.number.isRequired,
+  profitPerDayInEUR: PropTypes.number.isRequired,
   miner: PropTypes.object.isRequired,
   currency: PropTypes.string.isRequired
 };
@@ -56,10 +66,12 @@ const mapStateToProps = ({
   const hashRate = activeMiners[selectedMinerIdentifier].currentSpeed;
   const profitPerDayInBTC = (profitability[selectedMinerIdentifier] * hashRate) / 1000000000;
   const profitPerDayInUSD = profitPerDayInBTC * price.USD;
+  const profitPerDayInEUR = profitPerDayInBTC * price.EUR;
   return {
     miner: minersByIdentifier[selectedMinerIdentifier],
     profitPerDayInBTC,
     profitPerDayInUSD,
+    profitPerDayInEUR,
     currency
   };
 };

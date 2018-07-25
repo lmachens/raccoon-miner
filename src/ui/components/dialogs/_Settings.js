@@ -95,6 +95,7 @@ class SettingsDialog extends PureComponent {
             >
               <MenuItem value={'usd'}>USD</MenuItem>
               <MenuItem value={'btc'}>BTC</MenuItem>
+              <MenuItem value={'eur'}>Euro</MenuItem>
             </Select>
           </FormControl>
         </Fragment>

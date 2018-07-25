@@ -1,10 +1,10 @@
 import React, { PureComponent } from 'react';
+import { eurNumberFormatter, usdNumberFormatter } from '../../../api/utilities';
 
 import PropTypes from 'prop-types';
 import { Typography } from '../generic';
 import compose from 'recompose/compose';
 import { connect } from 'react-redux';
-import { usdNumberFormatter } from '../../../api/utilities';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = {
@@ -27,14 +27,17 @@ const styles = {
 
 class Stats extends PureComponent {
   render() {
-    const { classes, className, price } = this.props;
+    const { classes, className, currency, price } = this.props;
 
     return (
       <div className={className}>
         <div className={classes.btc}>
           <img className={classes.btcLogo} src="/assets/btc.png" />
           <Typography variant="subheading">BTC:</Typography>
-          <Typography variant="subheading">{usdNumberFormatter.format(price.USD)}</Typography>
+          <Typography variant="subheading">
+            {currency === 'usd' && usdNumberFormatter.format(price.USD)}
+            {currency === 'eur' && eurNumberFormatter.format(price.EUR)}
+          </Typography>
         </div>
       </div>
     );

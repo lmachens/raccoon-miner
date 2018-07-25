@@ -1,5 +1,6 @@
 import { Link, StatusCard, Typography } from '../generic';
 import React, { Component } from 'react';
+import { eurNumberFormatter, usdNumberFormatter } from '../../../api/utilities';
 
 import PropTypes from 'prop-types';
 import compose from 'recompose/compose';
@@ -14,7 +15,7 @@ const styles = {
 
 class BalanceCard extends Component {
   render() {
-    const { classes, currency, balanceInBTC, balanceInUSD } = this.props;
+    const { classes, currency, balanceInBTC, balanceInEUR, balanceInUSD } = this.props;
 
     return (
       <StatusCard
@@ -28,7 +29,8 @@ class BalanceCard extends Component {
       >
         <Typography className={classes.load} variant="display1">
           {currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`}
-          {currency === 'usd' && `$ ${balanceInUSD.toFixed(2)}`}
+          {currency === 'usd' && usdNumberFormatter.format(balanceInUSD)}
+          {currency === 'eur' && eurNumberFormatter.format(balanceInEUR)}
         </Typography>
         <Typography variant="caption">Unpaid Balance</Typography>
       </StatusCard>
@@ -40,6 +42,7 @@ BalanceCard.propTypes = {
   classes: PropTypes.object.isRequired,
   balanceInBTC: PropTypes.number.isRequired,
   balanceInUSD: PropTypes.number.isRequired,
+  balanceInEUR: PropTypes.number.isRequired,
   currency: PropTypes.string.isRequired
 };
 
@@ -47,14 +50,16 @@ const mapStateToProps = ({
   mining: {
     workerStats: { unpaidBalance = 0 }
   },
-  price: { USD = 0 },
+  price: { USD = 0, EUR = 0 },
   settings: { currency }
 }) => {
   const balanceInBTC = unpaidBalance;
   const balanceInUSD = balanceInBTC * USD;
+  const balanceInEUR = balanceInBTC * EUR;
   return {
     balanceInBTC,
     balanceInUSD,
+    balanceInEUR,
     currency
   };
 };

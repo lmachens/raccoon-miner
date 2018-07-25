@@ -1261,6 +1261,12 @@
 	  minimumFractionDigits: 2,
 	  maximumFractionDigits: 2
 	});
+	const eurNumberFormatter = new Intl.NumberFormat('en-US', {
+	  style: 'currency',
+	  currency: 'EUR',
+	  minimumFractionDigits: 2,
+	  maximumFractionDigits: 2
+	});
 
 	let httpRequestPlugin;
 	const getHttpRequestPlugin = () => {
@@ -33359,8 +33365,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33385,8 +33389,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33395,7 +33397,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33546,7 +33548,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -47450,7 +47452,9 @@
 	        value: 'usd'
 	      }, "USD"), react.createElement(MenuItem$2, {
 	        value: 'btc'
-	      }, "BTC"))));
+	      }, "BTC"), react.createElement(MenuItem$2, {
+	        value: 'eur'
+	      }, "Euro"))));
 	    } else if (tab === SETTINGS_DIALOG_MINING) {
 	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "Mining configurations"), react.createElement(FormControlLabel$2, {
 	        control: react.createElement(Switch$2, {
@@ -50656,6 +50660,7 @@
 	      classes,
 	      currency,
 	      balanceInBTC,
+	      balanceInEUR,
 	      balanceInUSD
 	    } = this.props;
 	    return react.createElement(enhance, {
@@ -50665,7 +50670,7 @@
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`, currency === 'usd' && `$ ${balanceInUSD.toFixed(2)}`), react.createElement(Typography$2, {
+	    }, currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`, currency === 'usd' && usdNumberFormatter.format(balanceInUSD), currency === 'eur' && eurNumberFormatter.format(balanceInEUR)), react.createElement(Typography$2, {
 	      variant: "caption"
 	    }, "Unpaid Balance"));
 	  }
@@ -50676,6 +50681,7 @@
 	  classes: propTypes.object.isRequired,
 	  balanceInBTC: propTypes.number.isRequired,
 	  balanceInUSD: propTypes.number.isRequired,
+	  balanceInEUR: propTypes.number.isRequired,
 	  currency: propTypes.string.isRequired
 	};
 
@@ -50686,7 +50692,8 @@
 	    }
 	  },
 	  price: {
-	    USD = 0
+	    USD = 0,
+	    EUR = 0
 	  },
 	  settings: {
 	    currency
@@ -50694,9 +50701,11 @@
 	}) => {
 	  const balanceInBTC = unpaidBalance;
 	  const balanceInUSD = balanceInBTC * USD;
+	  const balanceInEUR = balanceInBTC * EUR;
 	  return {
 	    balanceInBTC,
 	    balanceInUSD,
+	    balanceInEUR,
 	    currency
 	  };
 	};
@@ -50818,6 +50827,7 @@
 	      classes,
 	      currency,
 	      profitPerDayInBTC,
+	      profitPerDayInEUR,
 	      profitPerDayInUSD,
 	      miner
 	    } = this.props;
@@ -50828,7 +50838,7 @@
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`, currency === 'usd' && `$ ${profitPerDayInUSD.toFixed(2)}`), react.createElement(Typography$2, {
+	    }, currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`, currency === 'usd' && usdNumberFormatter.format(profitPerDayInUSD), currency === 'eur' && eurNumberFormatter.format(profitPerDayInEUR)), react.createElement(Typography$2, {
 	      variant: "caption"
 	    }, "Daily estimated earnings"));
 	  }
@@ -50839,6 +50849,7 @@
 	  classes: propTypes.object.isRequired,
 	  profitPerDayInBTC: propTypes.number.isRequired,
 	  profitPerDayInUSD: propTypes.number.isRequired,
+	  profitPerDayInEUR: propTypes.number.isRequired,
 	  miner: propTypes.object.isRequired,
 	  currency: propTypes.string.isRequired
 	};
@@ -50857,10 +50868,12 @@
 	  const hashRate = activeMiners[selectedMinerIdentifier].currentSpeed;
 	  const profitPerDayInBTC = profitability[selectedMinerIdentifier] * hashRate / 1000000000;
 	  const profitPerDayInUSD = profitPerDayInBTC * price.USD;
+	  const profitPerDayInEUR = profitPerDayInBTC * price.EUR;
 	  return {
 	    miner: minersByIdentifier[selectedMinerIdentifier],
 	    profitPerDayInBTC,
 	    profitPerDayInUSD,
+	    profitPerDayInEUR,
 	    currency
 	  };
 	};
@@ -51329,6 +51342,7 @@
 	    const {
 	      classes,
 	      className,
+	      currency,
 	      price
 	    } = this.props;
 	    return react.createElement("div", {
@@ -51342,7 +51356,7 @@
 	      variant: "subheading"
 	    }, "BTC:"), react.createElement(Typography$2, {
 	      variant: "subheading"
-	    }, usdNumberFormatter.format(price.USD))));
+	    }, currency === 'usd' && usdNumberFormatter.format(price.USD), currency === 'eur' && eurNumberFormatter.format(price.EUR))));
 	  }
 
 	}

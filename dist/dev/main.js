@@ -68314,7 +68314,7 @@
 	      variant: "subheading"
 	    }, "BTC:"), react.createElement(Typography$2, {
 	      variant: "subheading"
-	    }, currency === 'usd' && usdNumberFormatter.format(price.USD), currency === 'eur' && eurNumberFormatter.format(price.EUR))), react.createElement("div", {
+	    }, (currency === 'usd' || currency === 'btc') && usdNumberFormatter.format(price.USD), currency === 'eur' && eurNumberFormatter.format(price.EUR))), react.createElement("div", {
 	      className: classes.temperature
 	    }, react.createElement(FanIcon, null), react.createElement(Typography$2, {
 	      variant: "subheading"

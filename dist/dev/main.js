@@ -1103,7 +1103,8 @@
 
 	const RECEIVE_HARDWARE_INFO = 'RECEIVE_HARDWARE_INFO';
 
-	const APPEND_MINING_LOG = 'APPEND_MINING_LOG';
+	const RESET_LOGS = 'RESET_LOGS';
+	const WRITE_LOGS = 'WRITE_LOGS';
 
 	const CONNECTING_POOL = 'CONNECTING_POOL';
 	const SET_MINING_ADDRESS = 'SET_MINING_ADDRESS';
@@ -1217,43 +1218,12 @@
 	  return result;
 	};
 
-	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
-	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
-	const pool = `stratum+tcp://cryptonightv7.${locations[1]}.nicehash.com:3363`;
-	let httpPort = 50672;
-	const setHttpPort = newHttpPort => {
-	  httpPort = newHttpPort;
-	};
-	const cryptoNightV7 = {
-	  name: 'CryptoNightV7',
-	  identifier: CRYPTO_NIGHT_V7,
-	  speedUnit: 'H/s',
-	  parser: generateParser({
-	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
-	    [CONNECTING]: /not-connected/,
-	    [CUDA_ERROR]: /\[CUDA\] Error/ // SOCKET ERROR
-
-	  }),
-	  path: 'xmr-stak/xmr-stak.exe',
-	  args: ({
-	    address,
-	    cores,
-	    gpus,
-	    worker = 'raccoon'
-	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --nvidia %localappdata%/raccoon-miner/amd.txt --nvidia %localappdata%/raccoon-miner/nvidia.txt --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
-	  environmentVariables: () => JSON.stringify({
-	    XMRSTAK_NOWAIT: true
-	  })
-	};
-
 	const callOverwolfWithPromise = (method, ...params) => {
 	  return new Promise((resolve, reject) => {
 	    const handleResult = result => {
 	      if (result) return resolve(result);
 	      return reject(result);
 	    };
-
-	    console.log(method, params);
 
 	    if (params) {
 	      method(...params, handleResult);
@@ -1305,13 +1275,42 @@
 	};
 
 	let simpleIoPlugin;
-	const getSimpleIoPlugin = () => {
+	const prepareSimpleIoPlugin = () => {
 	  return new Promise(async resolve => {
-	    if (simpleIoPlugin) return resolve(simpleIoPlugin);
+	    if (simpleIoPlugin) return resolve();
 	    const result = await callOverwolfWithPromise(overwolf.extensions.current.getExtraObject, 'simple-io-plugin');
 	    simpleIoPlugin = result.object;
-	    resolve(result.object);
+	    resolve();
 	  });
+	};
+
+	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
+	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
+	const pool = `stratum+tcp://cryptonightv7.${locations[1]}.nicehash.com:3363`;
+	let httpPort = 50672;
+	const setHttpPort = newHttpPort => {
+	  httpPort = newHttpPort;
+	};
+	const cryptoNightV7 = {
+	  name: 'CryptoNightV7',
+	  identifier: CRYPTO_NIGHT_V7,
+	  speedUnit: 'H/s',
+	  parser: generateParser({
+	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
+	    [CONNECTING]: /not-connected/,
+	    [CUDA_ERROR]: /\[CUDA\] Error/ // SOCKET ERROR
+
+	  }),
+	  path: 'xmr-stak/xmr-stak.exe',
+	  args: ({
+	    address,
+	    cores,
+	    gpus,
+	    worker = 'raccoon'
+	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${worker}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
+	  environmentVariables: () => JSON.stringify({
+	    XMRSTAK_NOWAIT: true
+	  })
 	};
 
 	const getMiningMetrics = () => {
@@ -1325,14 +1324,14 @@
 	};
 
 	const CUDA_ISSUE_CONFIG = `
-"gpu_threads_conf" : [\n
-  { "index" : 0,\n
-    "threads" : 15, "blocks" : 60,\n
-    "bfactor" : 10, "bsleep" :  100,\n
-    "affine_to_cpu" : false, "sync_mode" : 3,\n
-  },\n
-  \n
-],\n
+"gpu_threads_conf" : [\n\r
+  { "index" : 0,\n\r
+    "threads" : 15, "blocks" : 60,\n\r
+    "bfactor" : 10, "bsleep" :  100,\n\r
+    "affine_to_cpu" : false, "sync_mode" : 3,\n\r
+  },\n\r
+  \n\r
+],\n\r
 `;
 
 	const writeConfig = ({
@@ -1340,11 +1339,9 @@
 	  content
 	}) => {
 	  return new Promise(async resolve => {
-	    getSimpleIoPlugin().then(simpleIoPlugin => {
-	      simpleIoPlugin.writeLocalAppDataFile(fileName, content, (status, message) => {
-	        console.log(status, message, fileName, content);
-	        resolve(status);
-	      });
+	    simpleIoPlugin.writeLocalAppDataFile(fileName, content, (status, message) => {
+	      console.log(status, message, fileName, content);
+	      resolve(status);
 	    });
 	  });
 	};
@@ -1504,6 +1501,24 @@
 	  };
 	};
 
+	const writeLogs = logs => {
+	  return dispatch => {
+	    dispatch({
+	      type: WRITE_LOGS,
+	      data: {
+	        logs
+	      }
+	    });
+	  };
+	};
+	const resetLogs = () => {
+	  return dispatch => {
+	    dispatch({
+	      type: RESET_LOGS
+	    });
+	  };
+	};
+
 	const loadDefault = () => {
 	  return (dispatch, getState) => {
 	    const {
@@ -1614,17 +1629,6 @@
 	    }, 5000);
 	  };
 	};
-	const appendMiningLog = line => {
-	  return dispatch => {
-	    dispatch({
-	      type: APPEND_MINING_LOG,
-	      data: {
-	        timestamp: Date.now(),
-	        line
-	      }
-	    });
-	  };
-	};
 
 	const fetchWorkerStats = () => {
 	  return (dispatch, getState) => {
@@ -1715,7 +1719,7 @@
 	        });
 	      }
 
-	      dispatch(appendMiningLog(line));
+	      dispatch(writeLogs(line));
 
 	      if (cudaError) {
 	        if (hasCudaError) {
@@ -1725,7 +1729,7 @@
 	        }
 
 	        hasCudaError = true;
-	        dispatch(appendMiningLog('Load config to solve CUDA issue'));
+	        dispatch(writeLogs('Load config to solve CUDA issue'));
 	        dispatch(stopMining(minerIdentifier, () => {
 	          setHttpPort(httpPort === 50672 ? 50673 : 50672);
 	          writeNvidiaConfig(CUDA_ISSUE_CONFIG).then(() => {
@@ -1795,7 +1799,7 @@
 	    } = activeMiners[selectedMinerIdentifier];
 
 	    if (isMining && !isSuspended) {
-	      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
+	      dispatch(writeLogs(`${gameTitle} is running. Mining is suspended!`));
 	      dispatch(stopMining(selectedMinerIdentifier));
 	      dispatch({
 	        type: SUSPEND_MINING,
@@ -1820,7 +1824,7 @@
 	    } = activeMiners[selectedMinerIdentifier];
 
 	    if (!isMining && isSuspended) {
-	      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
+	      dispatch(writeLogs(`${gameTitle} is terminated. Continue mining!`));
 	      dispatch(startMining(selectedMinerIdentifier));
 	      dispatch({
 	        type: CONTINUE_MINING,
@@ -33322,8 +33326,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33348,8 +33350,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33358,7 +33358,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33509,7 +33509,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -47674,16 +47674,62 @@
 	  logs: {
 	    overflow: 'auto',
 	    display: 'flex',
-	    flexDirection: 'column-reverse'
+	    flexDirection: 'column',
+	    userSelect: 'text'
 	  }
 	};
+
+	class Logs extends react_2 {
+	  componentDidMount() {
+	    this.lastItem.scrollIntoView({
+	      behavior: 'smooth'
+	    });
+	  }
+
+	  componentDidUpdate() {
+	    this.lastItem.scrollIntoView({
+	      behavior: 'smooth'
+	    });
+	  }
+
+	  render() {
+	    const {
+	      classes,
+	      logs
+	    } = this.props;
+	    if (logs.length === 0) return 'No logs available';
+	    return react.createElement("code", {
+	      className: classes.logs
+	    }, logs.split('\n').map((text, line) => react.createElement("span", {
+	      key: line
+	    }, text)), react.createElement("span", {
+	      ref: value => {
+	        this.lastItem = value;
+	      }
+	    }));
+	  }
+
+	}
+
+	Logs.propTypes = {
+	  classes: propTypes.object.isRequired,
+	  logs: propTypes.string
+	};
+
+	const logsMapStateToProps = ({
+	  logs
+	}) => {
+	  return {
+	    logs
+	  };
+	};
+
+	const LogsEnhanced = compose$1(styles_3(styles$5), connect(logsMapStateToProps))(Logs);
 
 	class LogsDialog extends react_2 {
 	  render() {
 	    const {
-	      classes,
 	      open,
-	      logs,
 	      statsLink
 	    } = this.props;
 	    return react.createElement(enhanced, {
@@ -47691,22 +47737,14 @@
 	      title: "Logs (under construction)"
 	    }, react.createElement(DialogContentText$2, null, "Here you can see the mining logs. To get more details from the mining pool, click on", ' ', react.createElement(LinkEnhanced, {
 	      to: statsLink
-	    }, "Open Pool Stats"), "."), react.createElement("code", {
-	      className: classes.logs
-	    }, logs.length === 0 && 'No logs available', logs.map(({
-	      line
-	    }, index) => react.createElement("div", {
-	      key: index
-	    }, line))));
+	    }, "NiceHash Stats"), "."), open && react.createElement(LogsEnhanced, null));
 	  }
 
 	}
 
 	LogsDialog.propTypes = {
-	  classes: propTypes.object.isRequired,
 	  open: propTypes.bool.isRequired,
-	  statsLink: propTypes.string.isRequired,
-	  logs: propTypes.array.isRequired
+	  statsLink: propTypes.string.isRequired
 	};
 
 	const mapStateToProps$2 = ({
@@ -47716,9 +47754,6 @@
 	  mining: {
 	    miners,
 	    selectedMinerIdentifier
-	  },
-	  logs: {
-	    mining: miningLogs
 	  }
 	}) => {
 	  const {
@@ -47727,12 +47762,11 @@
 	  const statsLink = statsUrl(address);
 	  return {
 	    statsLink,
-	    open: logsDialogOpen,
-	    logs: miningLogs
+	    open: logsDialogOpen
 	  };
 	};
 
-	const enhance$3 = compose$1(styles_3(styles$5), connect(mapStateToProps$2))(LogsDialog);
+	const enhance$3 = connect(mapStateToProps$2)(LogsDialog);
 
 	class WalletDialog extends react_2 {
 	  constructor(...args) {
@@ -49989,24 +50023,19 @@
 	  }
 	};
 
-	const logs = (state = {
-	  mining: []
-	}, {
+	const logs = (state = '', {
 	  type,
 	  data
 	}) => {
 	  switch (type) {
-	    case APPEND_MINING_LOG:
-	      {
-	        const mining = [data, ...state.mining.slice(0, 100)];
-	        return { ...state,
-	          mining
-	        };
-	      }
+	    case RESET_LOGS:
+	      return 'Started Raccoon Miner';
 
-	    default:
-	      return state;
+	    case WRITE_LOGS:
+	      return state.concat('\n', data.logs);
 	  }
+
+	  return state;
 	};
 
 	/**
@@ -50294,6 +50323,24 @@
 	  store$1.dispatch(trackPrice());
 	});
 
+	const initializeHotReload = () => {
+	  if (HOT_RELOAD_FILES) {
+	    simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
+	      if (HOT_RELOAD_FILES.includes(fileIdentifier)) {
+	        setTimeout(() => {
+	          location.reload();
+	        }, 1000);
+	      }
+	    });
+	    const skipToEndOfFile = true;
+	    HOT_RELOAD_FILES.forEach(fileName => {
+	      const path = `${APP_PATH}/${fileName}`;
+	      simpleIoPlugin.listenOnFile(fileName, path, skipToEndOfFile, () => {});
+	    });
+	    console.info('%cHot reload is active', 'color: blue');
+	  }
+	};
+
 	const styles$6 = {
 	  children: {
 	    overflow: 'auto',
@@ -50312,26 +50359,59 @@
 	  }
 	};
 
-	const AppLayout = ({
-	  classes,
-	  children,
-	  version
-	}) => react.createElement(react_5, null, react.createElement(AppBar$2, {
-	  color: "inherit",
-	  position: "sticky"
-	}, react.createElement(Toolbar$2, null, react.createElement("img", {
-	  className: classes.textLogo,
-	  src: "assets/text_logo.png"
-	}), react.createElement(Typography$2, {
-	  className: classes.version,
-	  variant: "subheading"
-	}, "v", version))), react.createElement("div", {
-	  className: classes.children
-	}, children));
+	class AppLayout extends react_2 {
+	  constructor(...args) {
+	    super(...args);
+
+	    _defineProperty$1(this, "state", {
+	      initialized: false
+	    });
+	  }
+
+	  componentDidMount() {
+	    const {
+	      resetLogs: resetLogs$$1
+	    } = this.props;
+	    resetLogs$$1();
+	    prepareSimpleIoPlugin().then(() => {
+	      initializeHotReload();
+	      this.setState({
+	        initialized: true
+	      });
+	    });
+	  }
+
+	  componentWillUnmount() {}
+
+	  render() {
+	    const {
+	      classes,
+	      children,
+	      version
+	    } = this.props;
+	    const {
+	      initialized
+	    } = this.state;
+	    return react.createElement(react_5, null, react.createElement(AppBar$2, {
+	      color: "inherit",
+	      position: "sticky"
+	    }, react.createElement(Toolbar$2, null, react.createElement("img", {
+	      className: classes.textLogo,
+	      src: "assets/text_logo.png"
+	    }), react.createElement(Typography$2, {
+	      className: classes.version,
+	      variant: "subheading"
+	    }, "v", version))), react.createElement("div", {
+	      className: classes.children
+	    }, initialized && children));
+	  }
+
+	}
 
 	AppLayout.propTypes = {
 	  classes: propTypes.object.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired,
+	  resetLogs: propTypes.func.isRequired,
 	  version: propTypes.string.isRequired
 	};
 
@@ -50345,7 +50425,13 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$6), connect(mapStateToProps$4))(AppLayout);
+	const mapDispatchToProps$4 = dispatch => {
+	  return {
+	    resetLogs: bindActionCreators(resetLogs, dispatch)
+	  };
+	};
+
+	const enhance$5 = compose$1(styles_3(styles$6), connect(mapStateToProps$4, mapDispatchToProps$4))(AppLayout);
 
 	const styles$7 = {
 	  wrapper: {
@@ -50641,14 +50727,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$4 = dispatch => {
+	const mapDispatchToProps$5 = dispatch => {
 	  return {
 	    addCore: bindActionCreators(addCore, dispatch),
 	    removeCore: bindActionCreators(removeCore, dispatch)
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6, mapDispatchToProps$4))(CpusCard);
+	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6, mapDispatchToProps$5))(CpusCard);
 
 	const styles$a = {
 	  load: {
@@ -50807,14 +50893,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$5 = dispatch => {
+	const mapDispatchToProps$6 = dispatch => {
 	  return {
 	    addGPU: bindActionCreators(addGPU, dispatch),
 	    removeGPU: bindActionCreators(removeGPU, dispatch)
 	  };
 	};
 
-	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8, mapDispatchToProps$5))(GpusCard);
+	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8, mapDispatchToProps$6))(GpusCard);
 
 	const styles$c = {
 	  container: {
@@ -50885,13 +50971,13 @@
 	  openLogsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$6 = dispatch => {
+	const mapDispatchToProps$7 = dispatch => {
 	  return {
 	    openLogsDialog: bindActionCreators(openLogsDialog, dispatch)
 	  };
 	};
 
-	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$6))(LogsButton);
+	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$7))(LogsButton);
 
 	const styles$e = {
 	  avatar: {
@@ -50969,14 +51055,14 @@
 	  };
 	};
 
-	const mapDispatchToProps$7 = dispatch => {
+	const mapDispatchToProps$8 = dispatch => {
 	  return {
 	    startMining: bindActionCreators(startMining, dispatch),
 	    stopMining: bindActionCreators(stopMining, dispatch)
 	  };
 	};
 
-	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$7))(MiningButton);
+	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$8))(MiningButton);
 
 	const styles$f = {
 	  icon: {
@@ -51006,13 +51092,13 @@
 	  openSettingsDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$8 = dispatch => {
+	const mapDispatchToProps$9 = dispatch => {
 	  return {
 	    openSettingsDialog: bindActionCreators(openSettingsDialog, dispatch)
 	  };
 	};
 
-	const enhance$e = compose$1(styles_3(styles$f), connect(null, mapDispatchToProps$8))(SettingsButton);
+	const enhance$e = compose$1(styles_3(styles$f), connect(null, mapDispatchToProps$9))(SettingsButton);
 
 	const styles$g = {
 	  icon: {
@@ -51042,13 +51128,13 @@
 	  openSupportDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$9 = dispatch => {
+	const mapDispatchToProps$a = dispatch => {
 	  return {
 	    openSupportDialog: bindActionCreators(openSupportDialog, dispatch)
 	  };
 	};
 
-	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SupportButton);
+	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$a))(SupportButton);
 
 	const styles$h = {
 	  icon: {
@@ -51078,13 +51164,13 @@
 	  openWalletDialog: propTypes.func.isRequired
 	};
 
-	const mapDispatchToProps$a = dispatch => {
+	const mapDispatchToProps$b = dispatch => {
 	  return {
 	    openWalletDialog: bindActionCreators(openWalletDialog, dispatch)
 	  };
 	};
 
-	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(WalletButton);
+	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$b))(WalletButton);
 
 	const styles$i = {
 	  center: {
@@ -52329,24 +52415,6 @@
 	  theme: light
 	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(MiningPage, null)))));
 	reactDom.render(App, document.getElementById('root'));
-
-	if (HOT_RELOAD_FILES) {
-	  getSimpleIoPlugin().then(simpleIoPlugin => {
-	    simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
-	      if (HOT_RELOAD_FILES.includes(fileIdentifier)) {
-	        setTimeout(() => {
-	          location.reload();
-	        }, 1000);
-	      }
-	    });
-	    const skipToEndOfFile = true;
-	    HOT_RELOAD_FILES.forEach(fileName => {
-	      const path = `${APP_PATH}/${fileName}`;
-	      simpleIoPlugin.listenOnFile(fileName, path, skipToEndOfFile, () => {});
-	    });
-	    console.info('%cHot reload is active', 'color: blue');
-	  });
-	}
 
 }());
 //# sourceMappingURL=main.js.map

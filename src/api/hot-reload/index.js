@@ -1,9 +1,9 @@
 import { APP_PATH, HOT_RELOAD_FILES } from '../environment';
 
-import { getSimpleIoPlugin } from '../plugins';
+import { simpleIoPlugin } from '../plugins';
 
-if (HOT_RELOAD_FILES) {
-  getSimpleIoPlugin().then(simpleIoPlugin => {
+export const initializeHotReload = () => {
+  if (HOT_RELOAD_FILES) {
     simpleIoPlugin.onFileListenerChanged.addListener(fileIdentifier => {
       if (HOT_RELOAD_FILES.includes(fileIdentifier)) {
         setTimeout(() => {
@@ -19,5 +19,5 @@ if (HOT_RELOAD_FILES) {
     });
 
     console.info('%cHot reload is active', 'color: blue');
-  });
-}
+  }
+};

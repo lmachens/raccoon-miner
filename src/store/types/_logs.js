@@ -1,1 +1,2 @@
-export const APPEND_MINING_LOG = 'APPEND_MINING_LOG';
+export const RESET_LOGS = 'RESET_LOGS';
+export const WRITE_LOGS = 'WRITE_LOGS';

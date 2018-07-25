@@ -1,5 +1,4 @@
 import {
-  APPEND_MINING_LOG,
   CONNECTING_POOL,
   CONTINUE_MINING,
   RECEIVE_MINING_METRICS,
@@ -33,6 +32,7 @@ import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
 import { getProcessManagerPlugin } from '../../api/plugins';
 import isNil from 'lodash/isNil';
 import { setNotification } from './_notifications';
+import { writeLogs } from './_logs';
 
 export const loadDefault = () => {
   return (dispatch, getState) => {
@@ -145,18 +145,6 @@ export const trackMiningMetrics = () => {
   };
 };
 
-export const appendMiningLog = line => {
-  return dispatch => {
-    dispatch({
-      type: APPEND_MINING_LOG,
-      data: {
-        timestamp: Date.now(),
-        line
-      }
-    });
-  };
-};
-
 const fetchWorkerStats = () => {
   return (dispatch, getState) => {
     const {
@@ -223,7 +211,7 @@ export const startMining = (minerIdentifier, callback) => {
           }
         });
       }
-      dispatch(appendMiningLog(line));
+      dispatch(writeLogs(line));
 
       if (cudaError) {
         if (hasCudaError) {
@@ -232,7 +220,7 @@ export const startMining = (minerIdentifier, callback) => {
           return;
         }
         hasCudaError = true;
-        dispatch(appendMiningLog('Load config to solve CUDA issue'));
+        dispatch(writeLogs('Load config to solve CUDA issue'));
         dispatch(
           stopMining(minerIdentifier, () => {
             setHttpPort(httpPort === 50672 ? 50673 : 50672);
@@ -289,7 +277,7 @@ export const suspendMining = gameTitle => {
     } = getState();
     const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (isMining && !isSuspended) {
-      dispatch(appendMiningLog(`${gameTitle} is running. Mining is suspended!`));
+      dispatch(writeLogs(`${gameTitle} is running. Mining is suspended!`));
       dispatch(stopMining(selectedMinerIdentifier));
       dispatch({
         type: SUSPEND_MINING,
@@ -307,7 +295,7 @@ export const continueMining = gameTitle => {
     } = getState();
     const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (!isMining && isSuspended) {
-      dispatch(appendMiningLog(`${gameTitle} is terminated. Continue mining!`));
+      dispatch(writeLogs(`${gameTitle} is terminated. Continue mining!`));
       dispatch(startMining(selectedMinerIdentifier));
       dispatch({
         type: CONTINUE_MINING,

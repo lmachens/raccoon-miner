@@ -1,17 +1,11 @@
-import { APPEND_MINING_LOG } from '../types';
+import { RESET_LOGS, WRITE_LOGS } from '../types';
 
-export const logs = (
-  state = {
-    mining: []
-  },
-  { type, data }
-) => {
+export const logs = (state = '', { type, data }) => {
   switch (type) {
-    case APPEND_MINING_LOG: {
-      const mining = [data, ...state.mining.slice(0, 100)];
-      return { ...state, mining };
-    }
-    default:
-      return state;
+    case RESET_LOGS:
+      return 'Started Raccoon Miner';
+    case WRITE_LOGS:
+      return state.concat('\n', data.logs);
   }
+  return state;
 };

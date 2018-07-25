@@ -11,53 +11,85 @@ const styles = {
   logs: {
     overflow: 'auto',
     display: 'flex',
-    flexDirection: 'column-reverse',
+    flexDirection: 'column',
     userSelect: 'text'
   }
 };
 
+class Logs extends PureComponent {
+  componentDidMount() {
+    this.lastItem.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  componentDidUpdate() {
+    this.lastItem.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  render() {
+    const { classes, logs } = this.props;
+
+    if (logs.length === 0) return 'No logs available';
+    return (
+      <code className={classes.logs}>
+        {logs.split('\n').map((text, line) => <span key={line}>{text}</span>)}
+        <span
+          ref={value => {
+            this.lastItem = value;
+          }}
+        />
+      </code>
+    );
+  }
+}
+
+Logs.propTypes = {
+  classes: PropTypes.object.isRequired,
+  logs: PropTypes.string
+};
+
+const logsMapStateToProps = ({ logs }) => {
+  return {
+    logs
+  };
+};
+
+const LogsEnhanced = compose(
+  withStyles(styles),
+  connect(logsMapStateToProps)
+)(Logs);
+
 class LogsDialog extends PureComponent {
   render() {
-    const { classes, open, logs, statsLink } = this.props;
+    const { open, statsLink } = this.props;
 
     return (
       <FullScreenDialog open={open} title="Logs (under construction)">
         <DialogContentText>
           Here you can see the mining logs. To get more details from the mining pool, click on{' '}
-          <Link to={statsLink}>Open Pool Stats</Link>.
+          <Link to={statsLink}>NiceHash Stats</Link>.
         </DialogContentText>
-        <code className={classes.logs}>
-          {logs.length === 0 && 'No logs available'}
-          {logs.map(({ line }, index) => <div key={index}>{line}</div>)}
-        </code>
+        {open && <LogsEnhanced />}
       </FullScreenDialog>
     );
   }
 }
 
 LogsDialog.propTypes = {
-  classes: PropTypes.object.isRequired,
   open: PropTypes.bool.isRequired,
-  statsLink: PropTypes.string.isRequired,
-  logs: PropTypes.array.isRequired
+  statsLink: PropTypes.string.isRequired
 };
 
 const mapStateToProps = ({
   dialogs: { logsDialogOpen },
-  mining: { miners, selectedMinerIdentifier },
-  logs: { mining: miningLogs }
+  mining: { miners, selectedMinerIdentifier }
 }) => {
   const { address } = miners[selectedMinerIdentifier];
   const statsLink = statsUrl(address);
   return {
     statsLink,
-    open: logsDialogOpen,
-    logs: miningLogs
+    open: logsDialogOpen
   };
 };
 
-const enhance = compose(
-  withStyles(styles),
-  connect(mapStateToProps)
-)(LogsDialog);
+const enhance = connect(mapStateToProps)(LogsDialog);
 export { enhance as LogsDialog };

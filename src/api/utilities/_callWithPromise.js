@@ -5,7 +5,6 @@ export const callOverwolfWithPromise = (method, ...params) => {
       return reject(result);
     };
 
-    console.log(method, params);
     if (params) {
       method(...params, handleResult);
     } else {

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.18.2](https://github.com/lmachens/raccoon-miner/compare/v0.18.1...v0.18.2) (2018-07-25)
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.18.1](https://github.com/lmachens/raccoon-miner/compare/v0.18.0...v0.18.1) (2018-07-25)
 
 

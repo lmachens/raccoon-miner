@@ -1255,6 +1255,13 @@
 	  });
 	};
 
+	const usdNumberFormatter = new Intl.NumberFormat('en-US', {
+	  style: 'currency',
+	  currency: 'USD',
+	  minimumFractionDigits: 2,
+	  maximumFractionDigits: 2
+	});
+
 	let httpRequestPlugin;
 	const getHttpRequestPlugin = () => {
 	  return new Promise(async resolve => {
@@ -47794,6 +47801,14 @@
 
 	const enhance$3 = connect(mapStateToProps$2)(LogsDialog);
 
+	const styles$6 = {
+	  niceHashLogo: {
+	    height: 20,
+	    width: 20,
+	    verticalAlign: 'text-bottom'
+	  }
+	};
+
 	class WalletDialog extends react_2 {
 	  constructor(...args) {
 	    super(...args);
@@ -47827,6 +47842,7 @@
 	  render() {
 	    const {
 	      open,
+	      classes,
 	      address,
 	      isMining,
 	      isValidAddress: isValidAddress$$1,
@@ -47836,7 +47852,10 @@
 	    return react.createElement(enhanced, {
 	      open: open,
 	      title: "Wallet"
-	    }, react.createElement(DialogContentText$2, null, "You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments. We recommend to use NiceHash for lower", ' ', react.createElement(LinkEnhanced, {
+	    }, react.createElement(DialogContentText$2, null, "You have to tell the raccoon your Bitcoin address or", ' ', react.createElement("img", {
+	      className: classes.niceHashLogo,
+	      src: "/assets/nice-hash.png"
+	    }), " NiceHash account to receive payments. We recommend to use NiceHash for lower", ' ', react.createElement(LinkEnhanced, {
 	      to: "https://www.nicehash.com/help/fees"
 	    }, "service fees"), ".", react.createElement("br", null), react.createElement(LinkEnhanced, {
 	      onClick: loadDefault$$1
@@ -47880,13 +47899,14 @@
 	WalletDialog.propTypes = {
 	  open: propTypes.bool.isRequired,
 	  address: propTypes.string.isRequired,
+	  classes: propTypes.object.isRequired,
 	  minerIdentifier: propTypes.string.isRequired,
 	  isMining: propTypes.bool.isRequired,
 	  isValidAddress: propTypes.bool.isRequired,
 	  loadDefault: propTypes.func.isRequired,
 	  setMiningAddress: propTypes.func.isRequired,
 	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  setWorkerName: propTypes.string.isRequired,
+	  setWorkerName: propTypes.func.isRequired,
 	  fetchMiningMetrics: propTypes.func.isRequired,
 	  workerName: propTypes.string.isRequired
 	};
@@ -47925,7 +47945,7 @@
 	  };
 	};
 
-	const enhance$4 = connect(mapStateToProps$3, mapDispatchToProps$3)(WalletDialog);
+	const enhance$4 = compose$1(styles_3(styles$6), connect(mapStateToProps$3, mapDispatchToProps$3))(WalletDialog);
 
 	class Dialogs extends react_2 {
 	  render() {
@@ -50387,7 +50407,7 @@
 	  }
 	};
 
-	const styles$6 = {
+	const styles$7 = {
 	  children: {
 	    overflow: 'auto',
 	    height: 'calc(100% - 64px)'
@@ -50477,9 +50497,9 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$6), connect(mapStateToProps$4, mapDispatchToProps$4))(AppLayout);
+	const enhance$5 = compose$1(styles_3(styles$7), connect(mapStateToProps$4, mapDispatchToProps$4))(AppLayout);
 
-	const styles$7 = {
+	const styles$8 = {
 	  wrapper: {
 	    margin: 20,
 	    textAlign: 'center'
@@ -50497,7 +50517,7 @@
 	  classes: propTypes.object.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired
 	};
-	const enhance$6 = styles_3(styles$7)(PageLayout);
+	const enhance$6 = styles_3(styles$8)(PageLayout);
 
 	var CssBaseline_1 = createCommonjsModule(function (module, exports) {
 
@@ -50620,7 +50640,7 @@
 
 	var CssBaseline$2 = unwrapExports(CssBaseline$1);
 
-	const styles$8 = {
+	const styles$9 = {
 	  load: {
 	    fontSize: '1.3rem'
 	  }
@@ -50641,7 +50661,7 @@
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`, currency === 'usd' && `USD ${balanceInUSD.toFixed(2)}`), react.createElement(Typography$2, {
+	    }, currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`, currency === 'usd' && `$ ${balanceInUSD.toFixed(2)}`), react.createElement(Typography$2, {
 	      variant: "caption"
 	    }, "Unpaid Balance"));
 	  }
@@ -50677,9 +50697,9 @@
 	  };
 	};
 
-	const enhance$7 = compose$1(styles_3(styles$8), connect(mapStateToProps$5))(BalanceCard);
+	const enhance$7 = compose$1(styles_3(styles$9), connect(mapStateToProps$5))(BalanceCard);
 
-	const styles$9 = {
+	const styles$a = {
 	  load: {
 	    fontSize: '1.3rem'
 	  },
@@ -50780,9 +50800,9 @@
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$9), connect(mapStateToProps$6, mapDispatchToProps$5))(CpusCard);
+	const enhance$8 = compose$1(styles_3(styles$a), connect(mapStateToProps$6, mapDispatchToProps$5))(CpusCard);
 
-	const styles$a = {
+	const styles$b = {
 	  load: {
 	    fontSize: '1.3rem'
 	  }
@@ -50804,7 +50824,7 @@
 	    }, react.createElement(Typography$2, {
 	      className: classes.load,
 	      variant: "display1"
-	    }, currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`, currency === 'usd' && `USD ${profitPerDayInUSD.toFixed(2)}`), react.createElement(Typography$2, {
+	    }, currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`, currency === 'usd' && `$ ${profitPerDayInUSD.toFixed(2)}`), react.createElement(Typography$2, {
 	      variant: "caption"
 	    }, "Daily estimated earnings"));
 	  }
@@ -50841,9 +50861,9 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$a), connect(mapStateToProps$7))(EarningsCard);
+	const enhance$9 = compose$1(styles_3(styles$b), connect(mapStateToProps$7))(EarningsCard);
 
-	const styles$b = {
+	const styles$c = {
 	  load: {
 	    fontSize: '1.3rem'
 	  },
@@ -50946,9 +50966,9 @@
 	  };
 	};
 
-	const enhance$a = compose$1(styles_3(styles$b), connect(mapStateToProps$8, mapDispatchToProps$6))(GpusCard);
+	const enhance$a = compose$1(styles_3(styles$c), connect(mapStateToProps$8, mapDispatchToProps$6))(GpusCard);
 
-	const styles$c = {
+	const styles$d = {
 	  container: {
 	    margin: 4,
 	    display: 'inline-block'
@@ -50987,9 +51007,9 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$b = styles_3(styles$c)(ActionButton);
+	const enhance$b = styles_3(styles$d)(ActionButton);
 
-	const styles$d = {
+	const styles$e = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -51023,9 +51043,9 @@
 	  };
 	};
 
-	const enhance$c = compose$1(styles_3(styles$d), connect(null, mapDispatchToProps$7))(LogsButton);
+	const enhance$c = compose$1(styles_3(styles$e), connect(null, mapDispatchToProps$7))(LogsButton);
 
-	const styles$e = {
+	const styles$f = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -51108,9 +51128,9 @@
 	  };
 	};
 
-	const enhance$d = compose$1(styles_3(styles$e), connect(mapStateToProps$9, mapDispatchToProps$8))(MiningButton);
+	const enhance$d = compose$1(styles_3(styles$f), connect(mapStateToProps$9, mapDispatchToProps$8))(MiningButton);
 
-	const styles$f = {
+	const styles$g = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -51144,9 +51164,9 @@
 	  };
 	};
 
-	const enhance$e = compose$1(styles_3(styles$f), connect(null, mapDispatchToProps$9))(SettingsButton);
+	const enhance$e = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SettingsButton);
 
-	const styles$g = {
+	const styles$h = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -51180,9 +51200,9 @@
 	  };
 	};
 
-	const enhance$f = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$a))(SupportButton);
+	const enhance$f = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(SupportButton);
 
-	const styles$h = {
+	const styles$i = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -51216,9 +51236,9 @@
 	  };
 	};
 
-	const enhance$g = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$b))(WalletButton);
+	const enhance$g = compose$1(styles_3(styles$i), connect(null, mapDispatchToProps$b))(WalletButton);
 
-	const styles$i = {
+	const styles$j = {
 	  center: {
 	    textAlign: 'center'
 	  }
@@ -51239,9 +51259,9 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$h = styles_3(styles$i)(Actions);
+	const enhance$h = styles_3(styles$j)(Actions);
 
-	const styles$j = {
+	const styles$k = {
 	  container: {
 	    margin: 16
 	  }
@@ -51280,10 +51300,84 @@
 	  };
 	};
 
-	const enhance$i = compose$1(styles_3(styles$j), connect(mapStateToProps$a))(Notifications);
+	const enhance$i = compose$1(styles_3(styles$k), connect(mapStateToProps$a))(Notifications);
+
+	const styles$l = {
+	  btc: {
+	    display: 'inline-flex',
+	    alignItems: 'center',
+	    '& > *': {
+	      marginLeft: 2
+	    }
+	  },
+	  btcLogo: {
+	    width: 25,
+	    height: 25
+	  },
+	  niceHashLogo: {
+	    width: 25,
+	    height: 25
+	  }
+	};
+
+	class Stats extends react_2 {
+	  render() {
+	    const {
+	      classes,
+	      className,
+	      price
+	    } = this.props;
+	    return react.createElement("div", {
+	      className: className
+	    }, react.createElement("div", {
+	      className: classes.btc
+	    }, react.createElement("img", {
+	      className: classes.btcLogo,
+	      src: "/assets/btc.png"
+	    }), react.createElement(Typography$2, {
+	      variant: "subheading"
+	    }, "BTC:"), react.createElement(Typography$2, {
+	      variant: "subheading"
+	    }, usdNumberFormatter.format(price.USD))));
+	  }
+
+	}
+
+	Stats.propTypes = {
+	  className: propTypes.string,
+	  classes: propTypes.object.isRequired,
+	  currency: propTypes.string.isRequired,
+	  price: propTypes.object
+	};
+
+	const mapStateToProps$b = ({
+	  price,
+	  settings: {
+	    currency
+	  }
+	}) => {
+	  return {
+	    currency,
+	    price
+	  };
+	};
+
+	const enhance$j = compose$1(styles_3(styles$l), connect(mapStateToProps$b))(Stats);
+
+	const styles$m = {
+	  stats: {
+	    position: 'absolute',
+	    bottom: 2,
+	    left: 0,
+	    width: '100%'
+	  }
+	};
 
 	class MiningPage extends react_2 {
 	  render() {
+	    const {
+	      classes
+	    } = this.props;
 	    return react.createElement(enhance$6, null, react.createElement(Grid$2, {
 	      container: true,
 	      spacing: 16
@@ -51302,10 +51396,17 @@
 	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 4
-	    }, react.createElement(enhance$7, null))), react.createElement(enhance$i, null), react.createElement(Dialogs, null));
+	    }, react.createElement(enhance$7, null))), react.createElement(enhance$i, null), react.createElement(enhance$j, {
+	      className: classes.stats
+	    }), react.createElement(Dialogs, null));
 	  }
 
 	}
+
+	MiningPage.propTypes = {
+	  classes: propTypes.object.isRequired
+	};
+	const enhanced$1 = styles_3(styles$m)(MiningPage);
 
 	var _createClass$2 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -52459,7 +52560,7 @@
 	  persistor: persistor
 	}, react.createElement(styles_1, {
 	  theme: light
-	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(MiningPage, null)))));
+	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(enhanced$1, null)))));
 	reactDom.render(App, document.getElementById('root'));
 
 }());

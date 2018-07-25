@@ -19,7 +19,17 @@ import {
 
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
+import compose from 'recompose/compose';
 import { connect } from 'react-redux';
+import { withStyles } from '@material-ui/core/styles';
+
+const styles = {
+  niceHashLogo: {
+    height: 20,
+    width: 20,
+    verticalAlign: 'text-bottom'
+  }
+};
 
 class WalletDialog extends PureComponent {
   componentWillUnmount() {
@@ -42,13 +52,22 @@ class WalletDialog extends PureComponent {
   };
 
   render() {
-    const { open, address, isMining, isValidAddress, loadDefault, workerName } = this.props;
+    const {
+      open,
+      classes,
+      address,
+      isMining,
+      isValidAddress,
+      loadDefault,
+      workerName
+    } = this.props;
 
     return (
       <FullScreenDialog open={open} title="Wallet">
         <DialogContentText>
-          You have to tell the raccoon your Bitcoin address or NiceHash account to receive payments.
-          We recommend to use NiceHash for lower{' '}
+          You have to tell the raccoon your Bitcoin address or{' '}
+          <img className={classes.niceHashLogo} src="/assets/nice-hash.png" /> NiceHash account to
+          receive payments. We recommend to use NiceHash for lower{' '}
           <Link to="https://www.nicehash.com/help/fees">service fees</Link>.<br />
           <Link onClick={loadDefault}>Load test settings</Link> if you want to try out this app.
         </DialogContentText>
@@ -111,13 +130,14 @@ class WalletDialog extends PureComponent {
 WalletDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   address: PropTypes.string.isRequired,
+  classes: PropTypes.object.isRequired,
   minerIdentifier: PropTypes.string.isRequired,
   isMining: PropTypes.bool.isRequired,
   isValidAddress: PropTypes.bool.isRequired,
   loadDefault: PropTypes.func.isRequired,
   setMiningAddress: PropTypes.func.isRequired,
   selectedMinerIdentifier: PropTypes.string.isRequired,
-  setWorkerName: PropTypes.string.isRequired,
+  setWorkerName: PropTypes.func.isRequired,
   fetchMiningMetrics: PropTypes.func.isRequired,
   workerName: PropTypes.string.isRequired
 };
@@ -148,8 +168,11 @@ const mapDispatchToProps = dispatch => {
   };
 };
 
-const enhance = connect(
-  mapStateToProps,
-  mapDispatchToProps
+const enhance = compose(
+  withStyles(styles),
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )
 )(WalletDialog);
 export { enhance as WalletDialog };

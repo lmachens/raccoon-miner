@@ -28,7 +28,7 @@ class BalanceCard extends Component {
       >
         <Typography className={classes.load} variant="display1">
           {currency === 'btc' && `${balanceInBTC.toFixed(8)} BTC`}
-          {currency === 'usd' && `USD ${balanceInUSD.toFixed(2)}`}
+          {currency === 'usd' && `$ ${balanceInUSD.toFixed(2)}`}
         </Typography>
         <Typography variant="caption">Unpaid Balance</Typography>
       </StatusCard>

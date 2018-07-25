@@ -30,7 +30,7 @@ class EarningsCard extends Component {
       >
         <Typography className={classes.load} variant="display1">
           {currency === 'btc' && `${profitPerDayInBTC.toFixed(8)} BTC`}
-          {currency === 'usd' && `USD ${profitPerDayInUSD.toFixed(2)}`}
+          {currency === 'usd' && `$ ${profitPerDayInUSD.toFixed(2)}`}
         </Typography>
         <Typography variant="caption">Daily estimated earnings</Typography>
       </StatusCard>

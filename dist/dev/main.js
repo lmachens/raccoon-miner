@@ -33437,8 +33437,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33463,8 +33461,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33473,7 +33469,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33624,7 +33620,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -54269,6 +54265,7 @@
 	Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
 	Popper.placements = placements;
 	Popper.Defaults = Defaults;
+	//# sourceMappingURL=popper.js.map
 
 	var popper = /*#__PURE__*/Object.freeze({
 		default: Popper
@@ -68268,29 +68265,39 @@
 	const enhance$i = compose$1(styles_3(styles$k), connect(mapStateToProps$a))(Notifications);
 
 	const styles$l = {
+	  marginLeft: {
+	    marginLeft: 4
+	  },
 	  btc: {
 	    display: 'inline-flex',
-	    alignItems: 'center',
-	    '& > *': {
-	      marginLeft: 2
-	    }
+	    alignItems: 'center'
 	  },
 	  btcLogo: {
 	    width: 25,
-	    height: 25
+	    height: 25,
+	    marginBottom: 2
 	  },
 	  niceHashLogo: {
 	    width: 25,
-	    height: 25
+	    height: 25,
+	    marginBottom: 2
+	  },
+	  fanIcon: {
+	    marginBottom: 2
+	  },
+	  hashRate: {
+	    display: 'inline-flex',
+	    alignItems: 'center',
+	    position: 'absolute',
+	    left: 20,
+	    bottom: 0
 	  },
 	  temperature: {
 	    display: 'inline-flex',
+	    alignItems: 'center',
 	    position: 'absolute',
 	    right: 20,
-	    bottom: 0,
-	    '& > *': {
-	      marginLeft: 2
-	    }
+	    bottom: 0
 	  }
 	};
 
@@ -68300,23 +68307,37 @@
 	      classes,
 	      className,
 	      currency,
+	      hashRate,
 	      price,
 	      temperatures
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: className
 	    }, react.createElement("div", {
+	      className: classes.hashRate
+	    }, react.createElement("img", {
+	      className: classes.niceHashLogo,
+	      src: "/assets/nice-hash.png"
+	    }), react.createElement(Typography$2, {
+	      className: classes.marginLeft,
+	      variant: "subheading"
+	    }, hashRate, " H/s")), react.createElement("div", {
 	      className: classes.btc
 	    }, react.createElement("img", {
 	      className: classes.btcLogo,
 	      src: "/assets/btc.png"
 	    }), react.createElement(Typography$2, {
+	      className: classes.marginLeft,
 	      variant: "subheading"
 	    }, "BTC:"), react.createElement(Typography$2, {
+	      className: classes.marginLeft,
 	      variant: "subheading"
 	    }, (currency === 'usd' || currency === 'btc') && usdNumberFormatter.format(price.USD), currency === 'eur' && eurNumberFormatter.format(price.EUR))), react.createElement("div", {
 	      className: classes.temperature
-	    }, react.createElement(FanIcon, null), react.createElement(Typography$2, {
+	    }, react.createElement(FanIcon, {
+	      className: classes.fanIcon
+	    }), react.createElement(Typography$2, {
+	      className: classes.marginLeft,
 	      variant: "subheading"
 	    }, temperatures && temperatures.max, "\xB0C")));
 	  }
@@ -68327,11 +68348,16 @@
 	  className: propTypes.string,
 	  classes: propTypes.object.isRequired,
 	  currency: propTypes.string.isRequired,
+	  hashRate: propTypes.number,
 	  price: propTypes.object,
 	  temperatures: propTypes.object
 	};
 
 	const mapStateToProps$b = ({
+	  mining: {
+	    selectedMinerIdentifier
+	  },
+	  activeMiners,
 	  hardwareInfo,
 	  price,
 	  settings: {
@@ -68339,10 +68365,12 @@
 	  }
 	}) => {
 	  const temperatures = getTemperatures(hardwareInfo);
+	  const hashRate = activeMiners[selectedMinerIdentifier].currentSpeed;
 	  return {
 	    currency,
 	    price,
-	    temperatures
+	    temperatures,
+	    hashRate
 	  };
 	};
 

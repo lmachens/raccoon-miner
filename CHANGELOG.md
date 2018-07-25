@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.16.0](https://github.com/lmachens/raccoon-miner/compare/v0.15.1...v0.16.0) (2018-07-25)
+
+
+### Bug Fixes
+
+* **manifest:** add launch event ([d5e6097](https://github.com/lmachens/raccoon-miner/commit/d5e6097))
+
+
+### Features
+
+* **logs:** extend logging for better reports ([#139](https://github.com/lmachens/raccoon-miner/issues/139)) ([e1529a5](https://github.com/lmachens/raccoon-miner/commit/e1529a5))
+* **ui:** add custom bitcoin course ([df5fcf4](https://github.com/lmachens/raccoon-miner/commit/df5fcf4))
+* **ui:** add link to wallet service fees ([ed595d5](https://github.com/lmachens/raccoon-miner/commit/ed595d5))
+* **ui:** make logs selectable ([8eebefd](https://github.com/lmachens/raccoon-miner/commit/8eebefd))
+* **wallet:** make worker name configurable ([3806e8a](https://github.com/lmachens/raccoon-miner/commit/3806e8a))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.15.1](https://github.com/lmachens/raccoon-miner/compare/v0.15.0...v0.15.1) (2018-07-23)
 
 

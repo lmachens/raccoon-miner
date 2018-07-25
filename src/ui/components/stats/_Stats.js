@@ -46,7 +46,7 @@ class Stats extends PureComponent {
           <img className={classes.btcLogo} src="/assets/btc.png" />
           <Typography variant="subheading">BTC:</Typography>
           <Typography variant="subheading">
-            {currency === 'usd' && usdNumberFormatter.format(price.USD)}
+            {(currency === 'usd' || currency === 'btc') && usdNumberFormatter.format(price.USD)}
             {currency === 'eur' && eurNumberFormatter.format(price.EUR)}
           </Typography>
         </div>

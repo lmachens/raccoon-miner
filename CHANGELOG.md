@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.18.1](https://github.com/lmachens/raccoon-miner/compare/v0.18.0...v0.18.1) (2018-07-25)
+
+
+### Bug Fixes
+
+* **ui:** show btc in dollar by default ([4ed939b](https://github.com/lmachens/raccoon-miner/commit/4ed939b))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.18.0](https://github.com/lmachens/raccoon-miner/compare/v0.16.0...v0.18.0) (2018-07-25)
 
 

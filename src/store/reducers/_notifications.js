@@ -1,11 +1,10 @@
 import { SET_NOTIFICATION, UNSET_NOTIFICATION } from '../types';
 
-import { TEST_MODE } from '../../api/notifications';
 import get from 'lodash/get';
 
 export const notifications = (
   state = {
-    currentNotification: TEST_MODE,
+    currentNotification: null,
     pastNotifications: []
   },
   { type, notification }

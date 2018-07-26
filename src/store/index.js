@@ -1,6 +1,6 @@
 import { applyMiddleware, createStore } from 'redux';
-import { createMigrate, persistReducer, persistStore } from 'redux-persist';
 import {
+  checkTestMode,
   fetchOverwolfUser,
   fetchVersion,
   trackGameInfo,
@@ -9,6 +9,7 @@ import {
   trackProfitability,
   trackWorkerStats
 } from './actions';
+import { createMigrate, persistReducer, persistStore } from 'redux-persist';
 
 import { RAVEN_URL } from '../api/environment';
 import createRavenMiddleware from 'raven-for-redux';
@@ -44,4 +45,5 @@ export const persistor = persistStore(store, null, () => {
   store.dispatch(trackWorkerStats());
   store.dispatch(trackProfitability());
   store.dispatch(trackPrice());
+  store.dispatch(checkTestMode());
 });

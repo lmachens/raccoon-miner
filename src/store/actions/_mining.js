@@ -59,6 +59,21 @@ export const loadDefault = () => {
   };
 };
 
+export const checkTestMode = () => {
+  return (dispatch, getState) => {
+    const {
+      mining: { miners, selectedMinerIdentifier: minerIdentifier }
+    } = getState();
+    const { address } = miners[minerIdentifier];
+    if (address === developerAddress) {
+      dispatch({
+        type: SET_NOTIFICATION,
+        notification: TEST_MODE
+      });
+    }
+  };
+};
+
 export const setWorkerName = (minerIdentifier, workerName) => {
   return dispatch => {
     dispatch({
@@ -77,7 +92,7 @@ export const setMiningAddress = (minerIdentifier, address) => {
 
     const validAddress = isValidAddress(address);
 
-    if (validAddress) fetchWorkerStats(minerIdentifier);
+    if (validAddress) dispatch(fetchWorkerStats(minerIdentifier));
     else {
       dispatch({
         type: RECEIVE_WORKER_STATS,
@@ -177,6 +192,15 @@ const fetchWorkerStats = () => {
         });
       })
       .catch(errorMsg => {
+        dispatch({
+          type: RECEIVE_WORKER_STATS,
+          data: {
+            minerIdentifier,
+            workerStats: {
+              unpaidBalance: 0
+            }
+          }
+        });
         dispatch({
           type: SET_MINING_ERROR_MESSAGE,
           data: {

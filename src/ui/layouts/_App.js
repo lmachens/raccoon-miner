@@ -9,6 +9,7 @@ import { initializeHotReload } from '../../api/hot-reload';
 import { prepareSimpleIoPlugin } from '../../api/plugins';
 import { resetLogs } from '../../store/actions';
 import { withStyles } from '@material-ui/core/styles';
+import { writeReadme } from '../../api/mining';
 
 const styles = {
   children: {
@@ -37,6 +38,7 @@ class AppLayout extends PureComponent {
     const { resetLogs } = this.props;
     resetLogs();
     prepareSimpleIoPlugin().then(() => {
+      writeReadme();
       initializeHotReload();
       this.setState({ initialized: true });
     });

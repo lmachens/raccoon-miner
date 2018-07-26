@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.19.1](https://github.com/lmachens/raccoon-miner/compare/v0.19.0...v0.19.1) (2018-07-26)
+
+
+### Bug Fixes
+
+* **config:** write file on app start to make sure raccoon-miner folder exists ([0a5e1b6](https://github.com/lmachens/raccoon-miner/commit/0a5e1b6))
+* **manifest:** use correct minimum-overwolf-version ([7be26b5](https://github.com/lmachens/raccoon-miner/commit/7be26b5))
+* **ui:** read correct balance and hide test mode message ([b6c8def](https://github.com/lmachens/raccoon-miner/commit/b6c8def))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.19.0](https://github.com/lmachens/raccoon-miner/compare/v0.18.2...v0.19.0) (2018-07-25)
 
 

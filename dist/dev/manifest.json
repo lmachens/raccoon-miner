@@ -74,7 +74,7 @@
           "game_ids": [],
           "wait_for_stable_framerate": 30
         },
-        "start_minimized": true
+        "start_minimized": false
       }
     ]
   },

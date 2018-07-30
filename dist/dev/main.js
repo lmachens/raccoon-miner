@@ -32615,6 +32615,8 @@
 
 	    /* Styles applied to the span element that wraps the children. */
 	    label: {
+	      width: '100%',
+	      // assure the correct width for iOS Safari
 	      display: 'inherit',
 	      alignItems: 'inherit',
 	      justifyContent: 'inherit'
@@ -32689,7 +32691,7 @@
 	      }
 	    },
 
-	    /* Styles applied to the root element if `variant="[contained | fab|"` and `color="primary"`. */
+	    /* Styles applied to the root element if `variant="[contained | fab]"` and `color="primary"`. */
 	    containedPrimary: {
 	      color: theme.palette.primary.contrastText,
 	      backgroundColor: theme.palette.primary.main,
@@ -36082,14 +36084,14 @@
 	  /* Styles applied to the root element. */
 	  root: {
 	    zIndex: -1,
-	    width: '100%',
-	    height: '100%',
 	    position: 'fixed',
+	    right: 0,
+	    bottom: 0,
 	    top: 0,
 	    left: 0,
+	    backgroundColor: 'rgba(0, 0, 0, 0.5)',
 	    // Remove grey highlight
-	    WebkitTapHighlightColor: 'transparent',
-	    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+	    WebkitTapHighlightColor: 'transparent'
 	  },
 
 	  /* Styles applied to the root element if `invisible={true}`. */
@@ -36709,7 +36711,9 @@
 	  selected: _propTypes.default.bool,
 
 	  /**
-	   * If `true`, the BottomNavigationAction will show its label.
+	   * If `true`, the `BottomNavigationAction` will show its label.
+	   * By default, only the selected `BottomNavigationAction`
+	   * inside `BottomNavigation` will show its label.
 	   */
 	  showLabel: _propTypes.default.bool,
 
@@ -37122,6 +37126,11 @@
 	      color: theme.palette.secondary.main
 	    },
 
+	    /* Styles applied to the root element if `color="textPrimary"`. */
+	    colorTextPrimary: {
+	      color: theme.palette.text.primary
+	    },
+
 	    /* Styles applied to the root element if `color="textSecondary"`. */
 	    colorTextSecondary: {
 	      color: theme.palette.text.secondary
@@ -37142,14 +37151,14 @@
 	  var align = props.align,
 	      classes = props.classes,
 	      classNameProp = props.className,
-	      componentProp = props.component,
 	      color = props.color,
+	      componentProp = props.component,
 	      gutterBottom = props.gutterBottom,
 	      headlineMapping = props.headlineMapping,
 	      noWrap = props.noWrap,
 	      paragraph = props.paragraph,
 	      variant = props.variant,
-	      other = (0, _objectWithoutProperties2.default)(props, ["align", "classes", "className", "component", "color", "gutterBottom", "headlineMapping", "noWrap", "paragraph", "variant"]);
+	      other = (0, _objectWithoutProperties2.default)(props, ["align", "classes", "className", "color", "component", "gutterBottom", "headlineMapping", "noWrap", "paragraph", "variant"]);
 	  var className = (0, _classnames.default)(classes.root, classes[variant], (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["color".concat((0, helpers.capitalize)(color))], color !== 'default'), (0, _defineProperty2.default)(_classNames, classes.noWrap, noWrap), (0, _defineProperty2.default)(_classNames, classes.gutterBottom, gutterBottom), (0, _defineProperty2.default)(_classNames, classes.paragraph, paragraph), (0, _defineProperty2.default)(_classNames, classes["align".concat((0, helpers.capitalize)(align))], align !== 'inherit'), _classNames), classNameProp);
 	  var Component = componentProp || (paragraph ? 'p' : headlineMapping[variant]) || 'span';
 	  return _react.default.createElement(Component, (0, _extends2.default)({
@@ -37182,7 +37191,7 @@
 	  /**
 	   * The color of the component. It supports those theme colors that make sense for this component.
 	   */
-	  color: _propTypes.default.oneOf(['inherit', 'primary', 'textSecondary', 'secondary', 'error', 'default']),
+	  color: _propTypes.default.oneOf(['default', 'error', 'inherit', 'primary', 'secondary', 'textPrimary', 'textSecondary']),
 
 	  /**
 	   * The component used for the root node.
@@ -37280,6 +37289,8 @@
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
+	var _defineProperty2 = interopRequireDefault(defineProperty$1);
+
 	var _react = interopRequireDefault(react);
 
 	var _propTypes = interopRequireDefault(propTypes);
@@ -37307,12 +37318,14 @@
 	    },
 
 	    /* Styles applied to the action element. */
-	    action: {
+	    action: (0, _defineProperty2.default)({
 	      flex: '0 0 auto',
 	      alignSelf: 'flex-start',
 	      marginTop: -8,
-	      marginRight: -16
-	    },
+	      marginRight: -12
+	    }, theme.breakpoints.up('sm'), {
+	      marginRight: -20
+	    }),
 
 	    /* Styles applied to the content wrapper element. */
 	    content: {
@@ -39975,6 +39988,13 @@
 
 	var _exactProp = interopRequireDefault(exactProp_1);
 
+	function setRef(ref, value) {
+	  if (typeof ref === 'function') {
+	    ref(value);
+	  } else if (ref) {
+	    ref.current = value;
+	  }
+	}
 	/**
 	 * Helper component to allow attaching a ref to a
 	 * wrapped element to access the underlying DOM element.
@@ -40005,6 +40025,8 @@
 	 * }
 	 * ```
 	 */
+
+
 	var RootRef =
 	/*#__PURE__*/
 	function (_React$Component) {
@@ -40018,26 +40040,20 @@
 	  (0, _createClass2.default)(RootRef, [{
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
-	      var rootRef = this.props.rootRef;
-
-	      var node = _reactDom.default.findDOMNode(this);
-
-	      if (typeof rootRef === 'function') {
-	        rootRef(node);
-	      } else if (rootRef) {
-	        rootRef.current = node;
+	      setRef(this.props.rootRef, _reactDom.default.findDOMNode(this));
+	    }
+	  }, {
+	    key: "componentDidUpdate",
+	    value: function componentDidUpdate(prevProps) {
+	      if (prevProps.rootRef !== this.props.rootRef) {
+	        setRef(prevProps.rootRef, null);
+	        setRef(this.props.rootRef, _reactDom.default.findDOMNode(this));
 	      }
 	    }
 	  }, {
 	    key: "componentWillUnmount",
 	    value: function componentWillUnmount() {
-	      var rootRef = this.props.rootRef;
-
-	      if (typeof rootRef === 'function') {
-	        rootRef(null);
-	      } else if (rootRef) {
-	        rootRef.current = null;
-	      }
+	      setRef(this.props.rootRef, null);
 	    }
 	  }, {
 	    key: "render",
@@ -45337,6 +45353,11 @@
 	      }
 	    },
 
+	    /* Styles applied to the root element if `labelPlacement="start"`. */
+	    labelPlacementStart: {
+	      flexDirection: 'row-reverse'
+	    },
+
 	    /* Styles applied to the root element if `disabled={true}`. */
 	    disabled: {},
 
@@ -45357,6 +45378,8 @@
 	exports.styles = styles;
 
 	function FormControlLabel(props, context) {
+	  var _classNames;
+
 	  var checked = props.checked,
 	      classes = props.classes,
 	      classNameProp = props.className,
@@ -45364,10 +45387,11 @@
 	      disabledProp = props.disabled,
 	      inputRef = props.inputRef,
 	      label = props.label,
+	      labelPlacement = props.labelPlacement,
 	      name = props.name,
 	      onChange = props.onChange,
 	      value = props.value,
-	      other = (0, _objectWithoutProperties2.default)(props, ["checked", "classes", "className", "control", "disabled", "inputRef", "label", "name", "onChange", "value"]);
+	      other = (0, _objectWithoutProperties2.default)(props, ["checked", "classes", "className", "control", "disabled", "inputRef", "label", "labelPlacement", "name", "onChange", "value"]);
 	  var muiFormControl = context.muiFormControl;
 	  var disabled = disabledProp;
 
@@ -45388,7 +45412,7 @@
 	    }
 	  });
 	  return _react.default.createElement("label", (0, _extends2.default)({
-	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.disabled, disabled), classNameProp)
+	    className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.labelPlacementStart, labelPlacement === 'start'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), _classNames), classNameProp)
 	  }, other), _react.default.cloneElement(control, controlProps), _react.default.createElement(_Typography.default, {
 	    component: "span",
 	    className: (0, _classnames.default)(classes.label, (0, _defineProperty2.default)({}, classes.disabled, disabled))
@@ -45432,6 +45456,11 @@
 	   */
 	  label: _propTypes.default.node,
 
+	  /**
+	   * The position of the label.
+	   */
+	  labelPlacement: _propTypes.default.oneOf(['end', 'start']),
+
 	  /*
 	   * @ignore
 	   */
@@ -45450,6 +45479,9 @@
 	   * The value of the component.
 	   */
 	  value: _propTypes.default.string
+	};
+	FormControlLabel.defaultProps = {
+	  labelPlacement: 'end'
 	};
 	FormControlLabel.contextTypes = {
 	  muiFormControl: _propTypes.default.object
@@ -48739,7 +48771,7 @@
 	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.colorPrimary, color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.colorSecondary, color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.buffer, variant === 'buffer'), (0, _defineProperty2.default)(_classNames, classes.query, variant === 'query'), _classNames), classNameProp);
 	  var dashedClass = (0, _classnames.default)(classes.dashed, (_classNames2 = {}, (0, _defineProperty2.default)(_classNames2, classes.dashedColorPrimary, color === 'primary'), (0, _defineProperty2.default)(_classNames2, classes.dashedColorSecondary, color === 'secondary'), _classNames2));
 	  var bar1ClassName = (0, _classnames.default)(classes.bar, (_classNames3 = {}, (0, _defineProperty2.default)(_classNames3, classes.barColorPrimary, color === 'primary'), (0, _defineProperty2.default)(_classNames3, classes.barColorSecondary, color === 'secondary'), (0, _defineProperty2.default)(_classNames3, classes.bar1Indeterminate, variant === 'indeterminate' || variant === 'query'), (0, _defineProperty2.default)(_classNames3, classes.bar1Determinate, variant === 'determinate'), (0, _defineProperty2.default)(_classNames3, classes.bar1Buffer, variant === 'buffer'), _classNames3));
-	  var bar2ClassName = (0, _classnames.default)(classes.bar, (_classNames4 = {}, (0, _defineProperty2.default)(_classNames4, classes.barColorPrimary, color === 'primary' && variant !== 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.colorPrimary, color === 'primary' && variant === 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.barColorSecondary, color === 'secondary' && variant !== 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.colorSecondary, color === 'secondary' && variant === 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.bar2Indeterminate, variant === 'indeterminate' || variant === 'query'), (0, _defineProperty2.default)(_classNames4, classes.bar1Determinate, variant === 'determinate'), (0, _defineProperty2.default)(_classNames4, classes.bar2Buffer, variant === 'buffer'), _classNames4));
+	  var bar2ClassName = (0, _classnames.default)(classes.bar, (_classNames4 = {}, (0, _defineProperty2.default)(_classNames4, classes.barColorPrimary, color === 'primary' && variant !== 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.colorPrimary, color === 'primary' && variant === 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.barColorSecondary, color === 'secondary' && variant !== 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.colorSecondary, color === 'secondary' && variant === 'buffer'), (0, _defineProperty2.default)(_classNames4, classes.bar2Indeterminate, variant === 'indeterminate' || variant === 'query'), (0, _defineProperty2.default)(_classNames4, classes.bar2Determinate, variant === 'determinate'), (0, _defineProperty2.default)(_classNames4, classes.bar2Buffer, variant === 'buffer'), _classNames4));
 	  var rootProps = {};
 	  var inlineStyles = {
 	    bar1: {},
@@ -49096,7 +49128,7 @@
 	      paddingBottom: 8
 	    },
 
-	    /* Styles applied to the inner `component` element if `dense={true}`. */
+	    /* Styles applied to the inner `component` element if `disabled={true}`. */
 	    disabled: {
 	      opacity: 0.5
 	    },
@@ -49265,7 +49297,7 @@
 	  dense: _propTypes.default.bool,
 
 	  /**
-	   * @ignore
+	   * If `true`, the list item will be disabled.
 	   */
 	  disabled: _propTypes.default.bool,
 
@@ -51800,6 +51832,116 @@
 	});
 
 	unwrapExports(NativeSelect$1);
+
+	var NoSsr_1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = void 0;
+
+	var _classCallCheck2 = interopRequireDefault(classCallCheck);
+
+	var _createClass2 = interopRequireDefault(createClass);
+
+	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _inherits2 = interopRequireDefault(inherits);
+
+	var _react = interopRequireDefault(react);
+
+	var _propTypes = interopRequireDefault(propTypes);
+
+	var _exactProp = interopRequireDefault(exactProp_1);
+
+	var Fallback = function Fallback() {
+	  return null;
+	};
+	/**
+	 * NoSsr purposely removes components from the subject of Server Side Rendering (SSR).
+	 *
+	 * This component can be useful in a variety of situations:
+	 * - Escape hatch for broken dependencies not supporting SSR.
+	 * - Improve the time-to-first paint on the client by only rendering above the fold.
+	 * - Reduce the rendering time on the server.
+	 * - Under too heavy server load, you can turn on service degradation.
+	 */
+
+
+	var NoSsr =
+	/*#__PURE__*/
+	function (_React$Component) {
+	  (0, _inherits2.default)(NoSsr, _React$Component);
+
+	  function NoSsr() {
+	    var _ref;
+
+	    var _temp, _this;
+
+	    (0, _classCallCheck2.default)(this, NoSsr);
+
+	    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+	      args[_key] = arguments[_key];
+	    }
+
+	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = NoSsr.__proto__ || Object.getPrototypeOf(NoSsr)).call.apply(_ref, [this].concat(args))), _this.state = {
+	      mounted: false
+	    }, _temp));
+	  }
+
+	  (0, _createClass2.default)(NoSsr, [{
+	    key: "componentDidMount",
+	    value: function componentDidMount() {
+	      this.setState({
+	        mounted: true
+	      }); // eslint-disable-line react/no-did-mount-set-state
+	    }
+	  }, {
+	    key: "render",
+	    value: function render() {
+	      var _props = this.props,
+	          children = _props.children,
+	          fallback = _props.fallback;
+	      return this.state.mounted ? children : fallback;
+	    }
+	  }]);
+	  return NoSsr;
+	}(_react.default.Component);
+
+	NoSsr.propTypes = {
+	  children: _propTypes.default.node.isRequired,
+	  fallback: _propTypes.default.node
+	};
+	NoSsr.propTypes = (0, _exactProp.default)(NoSsr.propTypes);
+	NoSsr.defaultProps = {
+	  fallback: _react.default.createElement(Fallback, null)
+	};
+	var _default = NoSsr;
+	exports.default = _default;
+	});
+
+	unwrapExports(NoSsr_1);
+
+	var NoSsr$1 = createCommonjsModule(function (module, exports) {
+
+
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Object.defineProperty(exports, "default", {
+	  enumerable: true,
+	  get: function get() {
+	    return _NoSsr.default;
+	  }
+	});
+
+	var _NoSsr = interopRequireDefault(NoSsr_1);
+	});
+
+	unwrapExports(NoSsr$1);
 
 	/**!
 	 * @fileOverview Kickass library to create and place poppers near their reference elements.
@@ -54503,12 +54645,13 @@
 	          container = _props.container,
 	          disablePortal = _props.disablePortal,
 	          keepMounted = _props.keepMounted,
+	          modifiers = _props.modifiers,
 	          open = _props.open,
 	          placementProps = _props.placement,
 	          popperOptions = _props.popperOptions,
 	          theme = _props.theme,
 	          transition = _props.transition,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["anchorEl", "children", "container", "disablePortal", "keepMounted", "open", "placement", "popperOptions", "theme", "transition"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["anchorEl", "children", "container", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "theme", "transition"]);
 	      var _state = this.state,
 	          exited = _state.exited,
 	          placement = _state.placement;
@@ -56275,8 +56418,8 @@
 	   * The anchor of the `Snackbar`.
 	   */
 	  anchorOrigin: _propTypes.default.shape({
-	    horizontal: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['left', 'center', 'right'])]).isRequired,
-	    vertical: _propTypes.default.oneOfType([_propTypes.default.number, _propTypes.default.oneOf(['top', 'center', 'bottom'])]).isRequired
+	    horizontal: _propTypes.default.oneOf(['left', 'center', 'right']).isRequired,
+	    vertical: _propTypes.default.oneOf(['top', 'center', 'bottom']).isRequired
 	  }),
 
 	  /**
@@ -57844,21 +57987,21 @@
 	      position: 'fixed',
 	      top: 0,
 	      left: 0,
-	      height: '100vh',
+	      bottom: 0,
 	      zIndex: theme.zIndex.drawer - 1
 	    },
-	    discoveryAnchorLeft: {
+	    anchorLeft: {
 	      right: 'auto'
 	    },
-	    discoveryAnchorRight: {
+	    anchorRight: {
 	      left: 'auto',
 	      right: 0
 	    },
-	    discoveryAnchorTop: {
+	    anchorTop: {
 	      bottom: 'auto',
 	      right: 0
 	    },
-	    discoveryAnchorBottom: {
+	    anchorBottom: {
 	      top: 'auto',
 	      bottom: 0,
 	      right: 0
@@ -57875,11 +58018,11 @@
 	function SwipeArea(props) {
 	  var anchor = props.anchor,
 	      classes = props.classes,
-	      swipeAreaWidth = props.swipeAreaWidth,
-	      other = (0, _objectWithoutProperties2.default)(props, ["anchor", "classes", "swipeAreaWidth"]);
+	      width = props.width,
+	      other = (0, _objectWithoutProperties2.default)(props, ["anchor", "classes", "width"]);
 	  return _react.default.createElement("div", (0, _extends2.default)({
-	    className: (0, _classnames.default)(classes.root, classes["discoveryAnchor".concat((0, helpers.capitalize)(anchor))]),
-	    style: (0, _defineProperty2.default)({}, (0, Drawer_1.isHorizontal)(props) ? 'width' : 'height', swipeAreaWidth)
+	    className: (0, _classnames.default)(classes.root, classes["anchor".concat((0, helpers.capitalize)(anchor))]),
+	    style: (0, _defineProperty2.default)({}, (0, Drawer_1.isHorizontal)(props) ? 'width' : 'height', width)
 	  }, other));
 	}
 
@@ -57898,7 +58041,7 @@
 	   * The width of the left most (or right most) area in pixels where the
 	   * drawer can be swiped open from.
 	   */
-	  swipeAreaWidth: _propTypes.default.number.isRequired
+	  width: _propTypes.default.number.isRequired
 	};
 
 	var _default = (0, _withStyles.default)(styles)(SwipeArea);
@@ -57950,6 +58093,8 @@
 	var _withTheme = interopRequireDefault(withTheme_1);
 
 
+
+	var _NoSsr = interopRequireDefault(NoSsr$1);
 
 	var _SwipeArea = interopRequireDefault(SwipeArea_1);
 
@@ -58247,6 +58392,7 @@
 	    key: "render",
 	    value: function render() {
 	      var _props = this.props,
+	          anchor = _props.anchor,
 	          disableBackdropTransition = _props.disableBackdropTransition,
 	          disableDiscovery = _props.disableDiscovery,
 	          disableSwipeToOpen = _props.disableSwipeToOpen,
@@ -58260,7 +58406,7 @@
 	          PaperProps = _props$PaperProps === void 0 ? {} : _props$PaperProps,
 	          swipeAreaWidth = _props.swipeAreaWidth,
 	          variant = _props.variant,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["disableBackdropTransition", "disableDiscovery", "disableSwipeToOpen", "ModalProps", "onOpen", "open", "PaperProps", "swipeAreaWidth", "variant"]);
+	          other = (0, _objectWithoutProperties2.default)(_props, ["anchor", "disableBackdropTransition", "disableDiscovery", "disableSwipeToOpen", "ModalProps", "onOpen", "open", "PaperProps", "swipeAreaWidth", "variant"]);
 	      var maybeSwiping = this.state.maybeSwiping;
 	      return _react.default.createElement(_react.default.Fragment, null, _react.default.createElement(_Drawer.default, (0, _extends2.default)({
 	        open: variant === 'temporary' && maybeSwiping ? true : open,
@@ -58275,11 +58421,12 @@
 	            pointerEvents: variant === 'temporary' && !open ? 'none' : ''
 	          }, PaperProps.style),
 	          ref: this.handlePaperRef
-	        })
-	      }, other)), !disableDiscovery && !disableSwipeToOpen && variant === 'temporary' && _react.default.createElement(_SwipeArea.default, {
-	        anchor: other.anchor,
-	        swipeAreaWidth: swipeAreaWidth
-	      }));
+	        }),
+	        anchor: anchor
+	      }, other)), !disableDiscovery && !disableSwipeToOpen && variant === 'temporary' && _react.default.createElement(_NoSsr.default, null, _react.default.createElement(_SwipeArea.default, {
+	        anchor: anchor,
+	        width: swipeAreaWidth
+	      })));
 	    }
 	  }], [{
 	    key: "getDerivedStateFromProps",
@@ -60582,108 +60729,69 @@
 	var main_3 = main.getNormalizedScrollLeft;
 	var main_4 = main.setNormalizedScrollLeft;
 
-	var win;
+	var animate_1 = createCommonjsModule(function (module, exports) {
 
-	if (typeof window !== "undefined") {
-	    win = window;
-	} else if (typeof commonjsGlobal !== "undefined") {
-	    win = commonjsGlobal;
-	} else if (typeof self !== "undefined"){
-	    win = self;
-	} else {
-	    win = {};
-	}
-
-	var window_1 = win;
-
-	var rafl = createCommonjsModule(function (module, exports) {
-	/**
-	 * `requestAnimationFrame()`
-	 */
-
-	var request = window_1.requestAnimationFrame
-	  || window_1.webkitRequestAnimationFrame
-	  || window_1.mozRequestAnimationFrame
-	  || fallback;
-
-	var prev = +new Date;
-	function fallback (fn) {
-	  var curr = +new Date;
-	  var ms = Math.max(0, 16 - (curr - prev));
-	  var req = setTimeout(fn, ms);
-	  return prev = curr, req
-	}
-
-	/**
-	 * `cancelAnimationFrame()`
-	 */
-
-	var cancel = window_1.cancelAnimationFrame
-	  || window_1.webkitCancelAnimationFrame
-	  || window_1.mozCancelAnimationFrame
-	  || clearTimeout;
-
-	if (Function.prototype.bind) {
-	  request = request.bind(window_1);
-	  cancel = cancel.bind(window_1);
-	}
-
-	exports = module.exports = request;
-	exports.cancel = cancel;
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
 	});
-	var rafl_1 = rafl.cancel;
+	exports.default = void 0;
 
-	var E_NOSCROLL = new Error('Element already at target scroll position');
-	var E_CANCELLED = new Error('Scroll cancelled');
-	var min$2 = Math.min;
+	function easeInOutSin(time) {
+	  return (1 + Math.sin(Math.PI * time - Math.PI / 2)) / 2;
+	}
 
-	var scroll = {
-	  left: make('scrollLeft'),
-	  top: make('scrollTop')
-	};
+	function animate(prop, element, to) {
+	  var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+	  var cb = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : function () {};
+	  var _options$ease = options.ease,
+	      ease = _options$ease === void 0 ? easeInOutSin : _options$ease,
+	      _options$duration = options.duration,
+	      duration = _options$duration === void 0 ? 300 : _options$duration;
+	  var start = null;
+	  var from = element[prop];
+	  var cancelled = false;
 
-	function make (prop) {
-	  return function scroll (el, to, opts, cb) {
-	    opts = opts || {};
+	  var cancel = function cancel() {
+	    cancelled = true;
+	  };
 
-	    if (typeof opts == 'function') cb = opts, opts = {};
-	    if (typeof cb != 'function') cb = noop;
-
-	    var start = +new Date;
-	    var from = el[prop];
-	    var ease = opts.ease || inOutSine;
-	    var duration = !isNaN(opts.duration) ? +opts.duration : 350;
-	    var cancelled = false;
-
-	    return from === to ?
-	      cb(E_NOSCROLL, el[prop]) :
-	      rafl(animate), cancel
-
-	    function cancel () {
-	      cancelled = true;
+	  var step = function step(timestamp) {
+	    if (cancelled) {
+	      cb(new Error('Animation cancelled'));
+	      return;
 	    }
 
-	    function animate (timestamp) {
-	      if (cancelled) return cb(E_CANCELLED, el[prop])
+	    if (start === null) {
+	      start = timestamp;
+	    }
 
-	      var now = +new Date;
-	      var time = min$2(1, ((now - start) / duration));
-	      var eased = ease(time);
+	    var time = Math.min(1, (timestamp - start) / duration);
+	    element[prop] = ease(time) * (to - from) + from;
 
-	      el[prop] = (eased * (to - from)) + from;
-
-	      time < 1 ? rafl(animate) : rafl(function () {
-	        cb(null, el[prop]);
+	    if (time >= 1) {
+	      requestAnimationFrame(function () {
+	        cb(null);
 	      });
+	      return;
 	    }
+
+	    requestAnimationFrame(step);
+	  };
+
+	  if (from === to) {
+	    cb(new Error('Element already at target position'));
+	    return cancel;
 	  }
+
+	  requestAnimationFrame(step);
+	  return cancel;
 	}
 
-	function inOutSine (n) {
-	  return 0.5 * (1 - Math.cos(Math.PI * n))
-	}
+	var _default = animate;
+	exports.default = _default;
+	});
 
-	function noop () {}
+	unwrapExports(animate_1);
 
 	var ScrollbarSize_1 = createCommonjsModule(function (module, exports) {
 
@@ -61047,7 +61155,7 @@
 
 
 
-	var _scroll = interopRequireDefault(scroll);
+	var _animate = interopRequireDefault(animate_1);
 
 	var _ScrollbarSize = interopRequireDefault(ScrollbarSize_1);
 
@@ -61059,8 +61167,6 @@
 
 	/* eslint-disable no-restricted-globals */
 	// < 1kb payload overhead when lodash/debounce is > 3kb.
-	// TODO: should we fork it?
-	// https://github.com/michaelrhodes/scroll/issues/10
 	var styles = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
@@ -61224,7 +61330,7 @@
 
 	      var invert = theme.direction === 'rtl' && (0, main.detectScrollType)() === 'reverse' ? -1 : 1;
 
-	      _scroll.default.left(_this.tabsRef, invert * nextScrollLeft);
+	      _this.scroll(invert * nextScrollLeft);
 	    }, _this.scrollSelectedIntoView = function () {
 	      var _this$props2 = _this.props,
 	          theme = _this$props2.theme,
@@ -61242,13 +61348,15 @@
 	        // left side of button is out of view
 	        var nextScrollLeft = tabsMeta.scrollLeft + (tabMeta.left - tabsMeta.left);
 
-	        _scroll.default.left(_this.tabsRef, nextScrollLeft);
+	        _this.scroll(nextScrollLeft);
 	      } else if (tabMeta.right > tabsMeta.right) {
 	        // right side of button is out of view
 	        var _nextScrollLeft = tabsMeta.scrollLeft + (tabMeta.right - tabsMeta.right);
 
-	        _scroll.default.left(_this.tabsRef, _nextScrollLeft);
+	        _this.scroll(_nextScrollLeft);
 	      }
+	    }, _this.scroll = function (value) {
+	      (0, _animate.default)('scrollLeft', _this.tabsRef, value);
 	    }, _this.updateScrollButtonState = function () {
 	      var _this$props3 = _this.props,
 	          scrollable = _this$props3.scrollable,
@@ -61321,13 +61429,13 @@
 
 	      if (tabMeta && tabsMeta) {
 	        var correction = theme.direction === 'rtl' ? tabsMeta.scrollLeftNormalized + tabsMeta.clientWidth - tabsMeta.scrollWidth : tabsMeta.scrollLeft;
-	        left = tabMeta.left - tabsMeta.left + correction;
+	        left = Math.round(tabMeta.left - tabsMeta.left + correction);
 	      }
 
 	      var indicatorStyle = {
 	        left: left,
 	        // May be wrong until the font is loaded.
-	        width: tabMeta ? tabMeta.width : 0
+	        width: tabMeta ? Math.round(tabMeta.width) : 0
 	      };
 
 	      if ((indicatorStyle.left !== this.state.indicatorStyle.left || indicatorStyle.width !== this.state.indicatorStyle.width) && !isNaN(indicatorStyle.left) && !isNaN(indicatorStyle.width)) {
@@ -62363,6 +62471,10 @@
 	      focus: false
 	    };
 
+	    _this.onRootRef = function (ref) {
+	      _this.childrenRef = ref;
+	    };
+
 	    _this.handleEnter = function (event) {
 	      var _this$props = _this.props,
 	          children = _this$props.children,
@@ -62415,7 +62527,7 @@
 	      }
 
 	      if (_this.props.onOpen) {
-	        _this.props.onOpen(event, true);
+	        _this.props.onOpen(event);
 	      }
 	    };
 
@@ -62466,7 +62578,7 @@
 	      }
 
 	      if (_this.props.onClose) {
-	        _this.props.onClose(event, false);
+	        _this.props.onClose(event);
 	      }
 
 	      clearTimeout(_this.closeTimer);
@@ -62592,9 +62704,7 @@
 
 	      (0, _warning.default)(!children.props.title, ['Material-UI: you have provided a `title` property to the child of <Tooltip />.', "Remove this title property `".concat(children.props.title, "` or the Tooltip component.")].join('\n'));
 	      return _react.default.createElement(_react.default.Fragment, null, _react.default.createElement(_RootRef.default, {
-	        rootRef: function rootRef(ref) {
-	          _this2.childrenRef = ref;
-	        }
+	        rootRef: this.onRootRef
 	      }, _react.default.cloneElement(children, childrenProps)), _react.default.createElement(_Popper.default, (0, _extends2.default)({
 	        className: classes.popper,
 	        placement: placement,
@@ -63026,7 +63136,7 @@
 
 	unwrapExports(Zoom$1);
 
-	/** @license Material-UI v1.4.1
+	/** @license Material-UI v1.4.2
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
@@ -63520,7 +63630,7 @@
 
 	var hotReloadingVersion = 0;
 	var dummyState = {};
-	function noop$1() {}
+	function noop() {}
 	function makeSelectorStateful(sourceSelector, store) {
 	  // wrap the selector in an object that tracks its results between runs.
 	  var selector = {
@@ -63660,9 +63770,9 @@
 	      Connect.prototype.componentWillUnmount = function componentWillUnmount() {
 	        if (this.subscription) this.subscription.tryUnsubscribe();
 	        this.subscription = null;
-	        this.notifyNestedSubs = noop$1;
+	        this.notifyNestedSubs = noop;
 	        this.store = null;
-	        this.selector.run = noop$1;
+	        this.selector.run = noop;
 	        this.selector.shouldComponentUpdate = false;
 	      };
 

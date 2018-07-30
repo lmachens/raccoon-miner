@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.19.2](https://github.com/lmachens/raccoon-miner/compare/v0.19.1...v0.19.2) (2018-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency [@material-ui](https://github.com/material-ui)/core to v1.4.2 ([#144](https://github.com/lmachens/raccoon-miner/issues/144)) ([ec1a097](https://github.com/lmachens/raccoon-miner/commit/ec1a097))
+* **deps:** update dependency recompose to v0.28.0 ([#145](https://github.com/lmachens/raccoon-miner/issues/145)) ([5356944](https://github.com/lmachens/raccoon-miner/commit/5356944))
+* **manifest:** don't start minimized ([212197f](https://github.com/lmachens/raccoon-miner/commit/212197f))
+* **mining:** remove suspend message if the user continue mining ([854d580](https://github.com/lmachens/raccoon-miner/commit/854d580))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.19.1](https://github.com/lmachens/raccoon-miner/compare/v0.19.0...v0.19.1) (2018-07-26)
 
 

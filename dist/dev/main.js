@@ -2485,6 +2485,7 @@
 	      }
 	    });
 	    const {
+	      activeMiners,
 	      mining: {
 	        miners: miners$$1,
 	        selectedMinerIdentifier
@@ -2504,6 +2505,20 @@
 	      args,
 	      environmentVariables
 	    } = minersByIdentifier[minerIdentifier];
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (!isMining && isSuspended) {
+	      dispatch(writeLogs(`Continue mining by user action!`));
+	      dispatch({
+	        type: CONTINUE_MINING,
+	        data: {
+	          minerIdentifier: selectedMinerIdentifier
+	        }
+	      });
+	    }
 
 	    handleDataByIdenfier[minerIdentifier] = async ({
 	      error,

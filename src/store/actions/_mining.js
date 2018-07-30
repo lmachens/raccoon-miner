@@ -222,6 +222,7 @@ export const startMining = (minerIdentifier, callback) => {
     });
 
     const {
+      activeMiners,
       mining: { miners, selectedMinerIdentifier }
     } = getState();
     const { address = developerAddress, cores, gpus, workerName = 'raccoon' } = miners[
@@ -231,6 +232,15 @@ export const startMining = (minerIdentifier, callback) => {
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
 
+    const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
+    if (!isMining && isSuspended) {
+      dispatch(writeLogs(`Continue mining by user action!`));
+      dispatch({
+        type: CONTINUE_MINING,
+        data: { minerIdentifier: selectedMinerIdentifier }
+      });
+    }
+    
     handleDataByIdenfier[minerIdentifier] = async ({ error, data }) => {
       const line = error || data;
       const { connecting, cudaError, errorMsg } = parser(line);

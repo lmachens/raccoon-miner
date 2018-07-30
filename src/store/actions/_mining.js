@@ -240,7 +240,7 @@ export const startMining = (minerIdentifier, callback) => {
         data: { minerIdentifier: selectedMinerIdentifier }
       });
     }
-    
+
     handleDataByIdenfier[minerIdentifier] = async ({ error, data }) => {
       const line = error || data;
       const { connecting, cudaError, errorMsg } = parser(line);

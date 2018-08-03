@@ -1,5 +1,5 @@
 {
-  "manifest_version": "1",
+  "manifest_version": 1,
   "type": "WebApp",
   "meta": {
     "name": "Raccoon Miner - DEV",

@@ -46,7 +46,7 @@ class SettingsDialog extends PureComponent {
   };
 
   render() {
-    const { open, tab, settings, selectedMinerIdentifier } = this.props;
+    const { open, tab, settings, selectedMinerIdentifier, profitability } = this.props;
 
     const menuItems = [
       <MenuItem
@@ -125,6 +125,7 @@ class SettingsDialog extends PureComponent {
             control={
               <Switch
                 checked={settings.stopMiningOnGameLaunch}
+                color="primary"
                 onChange={this.handleSwitchChange('stopMiningOnGameLaunch')}
                 value="stopMiningOnGameLaunch"
               />
@@ -142,7 +143,9 @@ class SettingsDialog extends PureComponent {
             >
               {miners.map(miner => (
                 <MenuItem key={miner.identifier} value={miner.identifier}>
-                  {miner.name}
+                  {miner.name}{' '}
+                  {profitability[miner.identifier] > 0 &&
+                    `(${(profitability[miner.identifier] / 1000).toFixed(4)} BTC/MH/day)`}
                 </MenuItem>
               ))}
             </Select>
@@ -166,19 +169,22 @@ SettingsDialog.propTypes = {
   settings: PropTypes.object.isRequired,
   setSettings: PropTypes.func.isRequired,
   selectedMinerIdentifier: PropTypes.string.isRequired,
-  selectMiner: PropTypes.func.isRequired
+  selectMiner: PropTypes.func.isRequired,
+  profitability: PropTypes.object
 };
 
 const mapStateToProps = ({
   dialogs: { settingsDialogOpen, settingsDialogTab },
   settings,
-  mining: { selectedMinerIdentifier }
+  mining: { selectedMinerIdentifier },
+  profitability
 }) => {
   return {
     open: settingsDialogOpen,
     tab: settingsDialogTab,
     settings,
-    selectedMinerIdentifier
+    selectedMinerIdentifier,
+    profitability
   };
 };
 

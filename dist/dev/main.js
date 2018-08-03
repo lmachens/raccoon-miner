@@ -64936,7 +64936,8 @@
 	      open,
 	      tab,
 	      settings,
-	      selectedMinerIdentifier
+	      selectedMinerIdentifier,
+	      profitability
 	    } = this.props;
 	    const menuItems = [react.createElement(MenuItem$2, {
 	      button: true,
@@ -65011,6 +65012,7 @@
 	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "Mining configurations"), react.createElement(FormControlLabel$2, {
 	        control: react.createElement(Switch$2, {
 	          checked: settings.stopMiningOnGameLaunch,
+	          color: "primary",
 	          onChange: this.handleSwitchChange('stopMiningOnGameLaunch'),
 	          value: "stopMiningOnGameLaunch"
 	        }),
@@ -65028,7 +65030,7 @@
 	      }, miners.map(miner => react.createElement(MenuItem$2, {
 	        key: miner.identifier,
 	        value: miner.identifier
-	      }, miner.name)))));
+	      }, miner.name, ' ', profitability[miner.identifier] > 0 && `(${(profitability[miner.identifier] / 1000).toFixed(4)} BTC/MH/day)`)))));
 	    }
 
 	    return react.createElement(enhanced, {
@@ -65047,7 +65049,8 @@
 	  settings: propTypes.object.isRequired,
 	  setSettings: propTypes.func.isRequired,
 	  selectedMinerIdentifier: propTypes.string.isRequired,
-	  selectMiner: propTypes.func.isRequired
+	  selectMiner: propTypes.func.isRequired,
+	  profitability: propTypes.object
 	};
 
 	const mapStateToProps = ({
@@ -65058,13 +65061,15 @@
 	  settings,
 	  mining: {
 	    selectedMinerIdentifier
-	  }
+	  },
+	  profitability
 	}) => {
 	  return {
 	    open: settingsDialogOpen,
 	    tab: settingsDialogTab,
 	    settings,
-	    selectedMinerIdentifier
+	    selectedMinerIdentifier,
+	    profitability
 	  };
 	};
 

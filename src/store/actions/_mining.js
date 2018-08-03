@@ -223,7 +223,8 @@ export const startMining = (minerIdentifier, callback) => {
 
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier }
+      mining: { miners, selectedMinerIdentifier },
+      settings: { region }
     } = getState();
     const { address = developerAddress, cores, gpus, workerName = 'raccoon' } = miners[
       selectedMinerIdentifier
@@ -282,7 +283,7 @@ export const startMining = (minerIdentifier, callback) => {
       }
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, cores, gpus, workerName });
+    const minerArgs = args({ address, cores, gpus, region, workerName });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
       console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
       dispatch({

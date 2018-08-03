@@ -2,6 +2,7 @@ import { SET_SETTINGS } from '../types';
 
 export const settings = (
   state = {
+    region: 'usa',
     stopMiningOnGameLaunch: true,
     currency: 'btc'
   },

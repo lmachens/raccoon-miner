@@ -85,7 +85,10 @@ const defaultActiveMinersProps = {
 
 export const activeMiners = (
   state = {
-    [CRYPTO_NIGHT_V7]: { ...defaultActiveMinersProps }
+    [CRYPTO_NIGHT_V7]: { ...defaultActiveMinersProps },
+    [CRYPTO_NIGHT_HEAVY]: {
+      ...defaultActiveMinersProps
+    }
   },
   { type, data }
 ) => {

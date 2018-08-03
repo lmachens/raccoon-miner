@@ -835,8 +835,34 @@
 	  });
 	};
 
+	const CRYPTO_NIGHT_HEAVY = 'CRYPTO_NIGHT_HEAVY';
+	const cryptoNightHeavy = {
+	  name: 'CryptoNightHeavy',
+	  identifier: CRYPTO_NIGHT_HEAVY,
+	  speedUnit: 'H/s',
+	  parser: generateParser({
+	    [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
+	    [CONNECTING]: /not-connected/,
+	    [CUDA_ERROR]: /\[CUDA\] Error/ // SOCKET ERROR
+
+	  }),
+	  path: 'xmr-stak/xmr-stak.exe',
+	  args: ({
+	    address,
+	    cores,
+	    gpus,
+	    region = 'usa',
+	    workerName
+	  }) => {
+	    const pool = `stratum+tcp://cryptonightv7.${region}.nicehash.com:3363`;
+	    return `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_heavy --pass x --rigid "" --use-nicehash`;
+	  },
+	  environmentVariables: () => JSON.stringify({
+	    XMRSTAK_NOWAIT: true
+	  })
+	};
+
 	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
-	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
 	const cryptoNightV7 = {
 	  name: 'CryptoNightV7',
 	  identifier: CRYPTO_NIGHT_V7,
@@ -852,10 +878,10 @@
 	    address,
 	    cores,
 	    gpus,
-	    location = locations[1],
+	    region = 'usa',
 	    workerName
 	  }) => {
-	    const pool = `stratum+tcp://cryptonightv7.${location}.nicehash.com:3363`;
+	    const pool = `stratum+tcp://cryptonightv7.${region}.nicehash.com:3363`;
 	    return `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`;
 	  },
 	  environmentVariables: () => JSON.stringify({
@@ -907,11 +933,10 @@
 	  });
 	};
 
-	const CRYPTO_NIGHT_HEAVY = 'CRYPTO_NIGHT_HEAVY';
-
-	const miners = [cryptoNightV7];
+	const miners = [cryptoNightV7, cryptoNightHeavy];
 	const minersByIdentifier = {
-	  [CRYPTO_NIGHT_V7]: cryptoNightV7
+	  [CRYPTO_NIGHT_V7]: cryptoNightV7,
+	  [CRYPTO_NIGHT_HEAVY]: cryptoNightHeavy
 	};
 
 	const TEST_MODE = {
@@ -2497,6 +2522,9 @@
 	      mining: {
 	        miners: miners$$1,
 	        selectedMinerIdentifier
+	      },
+	      settings: {
+	        region
 	      }
 	    } = getState();
 	    const {
@@ -2581,6 +2609,7 @@
 	      address,
 	      cores,
 	      gpus,
+	      region,
 	      workerName
 	    });
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
@@ -3430,7 +3459,7 @@
 	const TRACKING_ID = false;
 
 	const migrations = {
-	  4: () => {
+	  5: () => {
 	    return null;
 	  }
 	};
@@ -3667,6 +3696,8 @@
 	};
 	const activeMiners = (state = {
 	  [CRYPTO_NIGHT_V7]: { ...defaultActiveMinersProps
+	  },
+	  [CRYPTO_NIGHT_HEAVY]: { ...defaultActiveMinersProps
 	  }
 	}, {
 	  type,
@@ -33499,8 +33530,6 @@
 	var KEYS = 'keys';
 	var VALUES = 'values';
 
-	var returnThis = function () { return this; };
-
 	var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
 	  _iterCreate(Constructor, NAME, next);
 	  var getMethod = function (kind) {
@@ -33525,8 +33554,6 @@
 	    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
 	      // Set @@toStringTag to native iterators
 	      _setToStringTag(IteratorPrototype, TAG, true);
-	      // fix for some old engines
-	      if (!_library && !_has(IteratorPrototype, ITERATOR)) _hide(IteratorPrototype, ITERATOR, returnThis);
 	    }
 	  }
 	  // fix Array#{values, @@iterator}.name in V8 / FF
@@ -33535,7 +33562,7 @@
 	    $default = function values() { return $native.call(this); };
 	  }
 	  // Define iterator
-	  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+	  if ((FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
 	    _hide(proto, ITERATOR, $default);
 	  }
 	  if (DEFAULT) {
@@ -33686,7 +33713,7 @@
 
 	var defineProperty$3 = _objectDp.f;
 	var _wksDefine = function (name) {
-	  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+	  var $Symbol = _core.Symbol || (_core.Symbol = {});
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty$3($Symbol, name, { value: _wksExt.f(name) });
 	};
 
@@ -54677,6 +54704,7 @@
 	Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
 	Popper.placements = placements;
 	Popper.Defaults = Defaults;
+	//# sourceMappingURL=popper.js.map
 
 	var popper = /*#__PURE__*/Object.freeze({
 		default: Popper
@@ -64931,6 +64959,28 @@
 	      content = react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "General configurations"), react.createElement(FormControl$2, {
 	        margin: "normal"
 	      }, react.createElement(InputLabel$2, {
+	        htmlFor: "region"
+	      }, "Region"), react.createElement(Select$2, {
+	        inputProps: {
+	          id: 'region'
+	        },
+	        onChange: this.handleSelectChange('region'),
+	        value: settings.region
+	      }, react.createElement(MenuItem$2, {
+	        value: 'br'
+	      }, "BR"), react.createElement(MenuItem$2, {
+	        value: 'eu'
+	      }, "EU"), react.createElement(MenuItem$2, {
+	        value: 'hk'
+	      }, "HK"), react.createElement(MenuItem$2, {
+	        value: 'in'
+	      }, "IN"), react.createElement(MenuItem$2, {
+	        value: 'jp'
+	      }, "JP"), react.createElement(MenuItem$2, {
+	        value: 'usa'
+	      }, "USA"))), react.createElement(FormControl$2, {
+	        margin: "normal"
+	      }, react.createElement(InputLabel$2, {
 	        htmlFor: "language"
 	      }, "Language"), react.createElement(Select$2, {
 	        disabled: true,
@@ -64970,7 +65020,6 @@
 	      }, react.createElement(InputLabel$2, {
 	        htmlFor: "crypto-select"
 	      }, "Selected Miner"), react.createElement(Select$2, {
-	        disabled: true,
 	        inputProps: {
 	          id: 'crypto-select'
 	        },
@@ -67647,6 +67696,7 @@
 	};
 
 	const settings = (state = {
+	  region: 'usa',
 	  stopMiningOnGameLaunch: true,
 	  currency: 'btc'
 	}, {
@@ -67821,7 +67871,7 @@
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
-	  version: 4,
+	  version: 5,
 	  blacklist: ['activeMiners', 'games', 'notifications'],
 	  migrate: createMigrate(migrations, {
 	    debug: true

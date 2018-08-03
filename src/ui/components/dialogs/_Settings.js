@@ -73,6 +73,23 @@ class SettingsDialog extends PureComponent {
         <Fragment>
           <DialogContentText>General configurations</DialogContentText>
           <FormControl margin="normal">
+            <InputLabel htmlFor="region">Region</InputLabel>
+            <Select
+              inputProps={{
+                id: 'region'
+              }}
+              onChange={this.handleSelectChange('region')}
+              value={settings.region}
+            >
+              <MenuItem value={'br'}>BR</MenuItem>
+              <MenuItem value={'eu'}>EU</MenuItem>
+              <MenuItem value={'hk'}>HK</MenuItem>
+              <MenuItem value={'in'}>IN</MenuItem>
+              <MenuItem value={'jp'}>JP</MenuItem>
+              <MenuItem value={'usa'}>USA</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl margin="normal">
             <InputLabel htmlFor="language">Language</InputLabel>
             <Select
               disabled
@@ -117,7 +134,6 @@ class SettingsDialog extends PureComponent {
           <FormControl margin="normal">
             <InputLabel htmlFor="crypto-select">Selected Miner</InputLabel>
             <Select
-              disabled={true}
               inputProps={{
                 id: 'crypto-select'
               }}

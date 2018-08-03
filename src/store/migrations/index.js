@@ -1,5 +1,5 @@
 const migrations = {
-  4: () => {
+  5: () => {
     return null;
   }
 };

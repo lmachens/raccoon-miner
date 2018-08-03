@@ -64939,6 +64939,7 @@
 	  render() {
 	    const {
 	      open,
+	      isMining,
 	      tab,
 	      settings,
 	      selectedMinerIdentifier,
@@ -65027,6 +65028,7 @@
 	      }, react.createElement(InputLabel$2, {
 	        htmlFor: "crypto-select"
 	      }, "Selected Miner"), react.createElement(Select$2, {
+	        disabled: isMining,
 	        inputProps: {
 	          id: 'crypto-select'
 	        },
@@ -65053,6 +65055,7 @@
 	  setSettingsDialogTab: propTypes.func.isRequired,
 	  settings: propTypes.object.isRequired,
 	  setSettings: propTypes.func.isRequired,
+	  isMining: propTypes.bool.isRequired,
 	  selectedMinerIdentifier: propTypes.string.isRequired,
 	  selectMiner: propTypes.func.isRequired,
 	  profitability: propTypes.object
@@ -65067,11 +65070,13 @@
 	  mining: {
 	    selectedMinerIdentifier
 	  },
+	  activeMiners,
 	  profitability
 	}) => {
 	  return {
 	    open: settingsDialogOpen,
 	    tab: settingsDialogTab,
+	    isMining: activeMiners[selectedMinerIdentifier].isMining,
 	    settings,
 	    selectedMinerIdentifier,
 	    profitability

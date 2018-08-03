@@ -46,7 +46,7 @@ class SettingsDialog extends PureComponent {
   };
 
   render() {
-    const { open, tab, settings, selectedMinerIdentifier, profitability } = this.props;
+    const { open, isMining, tab, settings, selectedMinerIdentifier, profitability } = this.props;
 
     const menuItems = [
       <MenuItem
@@ -135,6 +135,7 @@ class SettingsDialog extends PureComponent {
           <FormControl margin="normal">
             <InputLabel htmlFor="crypto-select">Selected Miner</InputLabel>
             <Select
+              disabled={isMining}
               inputProps={{
                 id: 'crypto-select'
               }}
@@ -168,6 +169,7 @@ SettingsDialog.propTypes = {
   setSettingsDialogTab: PropTypes.func.isRequired,
   settings: PropTypes.object.isRequired,
   setSettings: PropTypes.func.isRequired,
+  isMining: PropTypes.bool.isRequired,
   selectedMinerIdentifier: PropTypes.string.isRequired,
   selectMiner: PropTypes.func.isRequired,
   profitability: PropTypes.object
@@ -177,11 +179,13 @@ const mapStateToProps = ({
   dialogs: { settingsDialogOpen, settingsDialogTab },
   settings,
   mining: { selectedMinerIdentifier },
+  activeMiners,
   profitability
 }) => {
   return {
     open: settingsDialogOpen,
     tab: settingsDialogTab,
+    isMining: activeMiners[selectedMinerIdentifier].isMining,
     settings,
     selectedMinerIdentifier,
     profitability

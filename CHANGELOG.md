@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.20.0](https://github.com/lmachens/raccoon-miner/compare/v0.19.2...v0.20.0) (2018-08-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency recompose to v0.28.1 ([#148](https://github.com/lmachens/raccoon-miner/issues/148)) ([12b836b](https://github.com/lmachens/raccoon-miner/commit/12b836b))
+* **deps:** update react monorepo to v16.4.2 ([#147](https://github.com/lmachens/raccoon-miner/issues/147)) ([9cb982f](https://github.com/lmachens/raccoon-miner/commit/9cb982f))
+* **hardware:** select max cores and gpus on first load ([f493b44](https://github.com/lmachens/raccoon-miner/commit/f493b44))
+* **mining:** do not allow to change miner when mining ([2a0c1f4](https://github.com/lmachens/raccoon-miner/commit/2a0c1f4))
+* **overwolf:** fix manifest_version ([f02f697](https://github.com/lmachens/raccoon-miner/commit/f02f697))
+
+
+### Features
+
+* **miners:** add CryptoNightHeavy ([b899936](https://github.com/lmachens/raccoon-miner/commit/b899936))
+* **mining:** add selectable region ([2e3f982](https://github.com/lmachens/raccoon-miner/commit/2e3f982))
+* **ui:** add about section in support dialog ([bd7067e](https://github.com/lmachens/raccoon-miner/commit/bd7067e))
+* **ui:** show profitability in selected miner ([d9bc40d](https://github.com/lmachens/raccoon-miner/commit/d9bc40d))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [0.19.2](https://github.com/lmachens/raccoon-miner/compare/v0.19.1...v0.19.2) (2018-07-30)
 
 

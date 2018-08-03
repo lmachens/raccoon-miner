@@ -15,8 +15,8 @@ import {
   STOP_MINING,
   SUSPEND_MINING
 } from '../types';
+import { CRYPTO_NIGHT_HEAVY, CRYPTO_NIGHT_V7 } from '../../api/mining';
 
-import { CRYPTO_NIGHT_V7 } from '../../api/mining';
 import { developerAddress } from '../../api/nice-hash';
 import set from 'lodash/set';
 
@@ -32,6 +32,9 @@ export const mining = (
     selectedMinerIdentifier: CRYPTO_NIGHT_V7,
     miners: {
       [CRYPTO_NIGHT_V7]: {
+        ...defaultMinerProps
+      },
+      [CRYPTO_NIGHT_HEAVY]: {
         ...defaultMinerProps
       }
     },

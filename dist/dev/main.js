@@ -751,6 +751,11 @@
 	  return result;
 	};
 
+	let httpPort = 50672;
+	const setHttpPort = newHttpPort => {
+	  httpPort = newHttpPort;
+	};
+
 	const callOverwolfWithPromise = (method, ...params) => {
 	  return new Promise((resolve, reject) => {
 	    const handleResult = result => {
@@ -832,11 +837,6 @@
 
 	const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
 	const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
-	const pool = `stratum+tcp://cryptonightv7.${locations[1]}.nicehash.com:3363`;
-	let httpPort = 50672;
-	const setHttpPort = newHttpPort => {
-	  httpPort = newHttpPort;
-	};
 	const cryptoNightV7 = {
 	  name: 'CryptoNightV7',
 	  identifier: CRYPTO_NIGHT_V7,
@@ -852,8 +852,12 @@
 	    address,
 	    cores,
 	    gpus,
+	    location = locations[1],
 	    workerName
-	  }) => `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`,
+	  }) => {
+	    const pool = `stratum+tcp://cryptonightv7.${location}.nicehash.com:3363`;
+	    return `--cpu cpus/cpu${cores}.txt ${gpus ? `` : '--noAMD --noNVIDIA'} --amd "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/amd.txt" --nvidia "${simpleIoPlugin.LOCALAPPDATA}/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`;
+	  },
 	  environmentVariables: () => JSON.stringify({
 	    XMRSTAK_NOWAIT: true
 	  })
@@ -903,6 +907,8 @@
 	  });
 	};
 
+	const CRYPTO_NIGHT_HEAVY = 'CRYPTO_NIGHT_HEAVY';
+
 	const miners = [cryptoNightV7];
 	const minersByIdentifier = {
 	  [CRYPTO_NIGHT_V7]: cryptoNightV7
@@ -925,10 +931,12 @@
 	};
 
 	const ALGORITHMS = {
-	  [CRYPTO_NIGHT_V7]: 30
+	  [CRYPTO_NIGHT_V7]: 30,
+	  [CRYPTO_NIGHT_HEAVY]: 31
 	};
 	const ALGORITHMS_BY_ID = {
-	  30: CRYPTO_NIGHT_V7
+	  30: CRYPTO_NIGHT_V7,
+	  31: CRYPTO_NIGHT_HEAVY
 	};
 
 	const parseStatsResponse = (result, minerIdentifier) => {
@@ -3599,6 +3607,8 @@
 	  selectedMinerIdentifier: CRYPTO_NIGHT_V7,
 	  miners: {
 	    [CRYPTO_NIGHT_V7]: { ...defaultMinerProps
+	    },
+	    [CRYPTO_NIGHT_HEAVY]: { ...defaultMinerProps
 	    }
 	  },
 	  workerStats: {
@@ -4186,7 +4196,7 @@
 
 	// TODO: this is special because it gets imported during build.
 
-	var ReactVersion = '16.4.1';
+	var ReactVersion = '16.4.2';
 
 	// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 	// nor polyfill, then a plain number is used for performance.
@@ -15980,14 +15990,15 @@
 	var ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 	var VALID_ATTRIBUTE_NAME_REGEX = new RegExp('^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
+	var hasOwnProperty = Object.prototype.hasOwnProperty;
 	var illegalAttributeNameCache = {};
 	var validatedAttributeNameCache = {};
 
 	function isAttributeNameSafe(attributeName) {
-	  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+	  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
 	    return true;
 	  }
-	  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+	  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
 	    return false;
 	  }
 	  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
@@ -20313,7 +20324,7 @@
 	var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
 	var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
 
 	function getStackAddendum() {
 	  var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -20321,7 +20332,7 @@
 	}
 
 	function validateProperty(tagName, name) {
-	  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+	  if (hasOwnProperty$1.call(warnedProperties, name) && warnedProperties[name]) {
 	    return true;
 	  }
 
@@ -29644,7 +29655,7 @@
 
 	// TODO: this is special because it gets imported during build.
 
-	var ReactVersion = '16.4.1';
+	var ReactVersion = '16.4.2';
 
 	// TODO: This type is shared between the reconciler and ReactDOM, but will
 	// eventually be lifted out to the renderer.
@@ -34185,6 +34196,49 @@
 
 	unwrapExports(setDisplayName_1);
 
+	var getDisplayName_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var getDisplayName = function getDisplayName(Component) {
+	  if (typeof Component === 'string') {
+	    return Component;
+	  }
+
+	  if (!Component) {
+	    return undefined;
+	  }
+
+	  return Component.displayName || Component.name || 'Component';
+	};
+
+	exports.default = getDisplayName;
+	});
+
+	unwrapExports(getDisplayName_1$1);
+
+	var wrapDisplayName_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+
+
+	var _getDisplayName2 = _interopRequireDefault(getDisplayName_1$1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var wrapDisplayName = function wrapDisplayName(BaseComponent, hocName) {
+	  return hocName + '(' + (0, _getDisplayName2.default)(BaseComponent) + ')';
+	};
+
+	exports.default = wrapDisplayName;
+	});
+
+	unwrapExports(wrapDisplayName_1$1);
+
 	var shouldUpdate_1 = createCommonjsModule(function (module, exports) {
 
 	Object.defineProperty(exports, "__esModule", {
@@ -34211,7 +34265,7 @@
 
 
 
-	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
+	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1$1);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -34287,7 +34341,7 @@
 
 
 
-	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
+	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1$1);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -38138,6 +38192,169 @@
 	unwrapExports(SwitchBase_1);
 	var SwitchBase_2 = SwitchBase_1.styles;
 
+	var setStatic_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var setStatic = function setStatic(key, value) {
+	  return function (BaseComponent) {
+	    /* eslint-disable no-param-reassign */
+	    BaseComponent[key] = value;
+	    /* eslint-enable no-param-reassign */
+	    return BaseComponent;
+	  };
+	};
+
+	exports.default = setStatic;
+	});
+
+	unwrapExports(setStatic_1$1);
+
+	var setDisplayName_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+
+
+	var _setStatic2 = _interopRequireDefault(setStatic_1$1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var setDisplayName = function setDisplayName(displayName) {
+	  return (0, _setStatic2.default)('displayName', displayName);
+	};
+
+	exports.default = setDisplayName;
+	});
+
+	unwrapExports(setDisplayName_1$1);
+
+	var shouldUpdate_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+
+
+	var _classCallCheck3 = _interopRequireDefault(classCallCheck$1);
+
+
+
+	var _possibleConstructorReturn3 = _interopRequireDefault(possibleConstructorReturn$1);
+
+
+
+	var _inherits3 = _interopRequireDefault(inherits$1);
+
+
+
+
+
+	var _setDisplayName2 = _interopRequireDefault(setDisplayName_1$1);
+
+
+
+	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var shouldUpdate = function shouldUpdate(test) {
+	  return function (BaseComponent) {
+	    var factory = (0, react.createFactory)(BaseComponent);
+
+	    var ShouldUpdate = function (_Component) {
+	      (0, _inherits3.default)(ShouldUpdate, _Component);
+
+	      function ShouldUpdate() {
+	        (0, _classCallCheck3.default)(this, ShouldUpdate);
+	        return (0, _possibleConstructorReturn3.default)(this, _Component.apply(this, arguments));
+	      }
+
+	      ShouldUpdate.prototype.shouldComponentUpdate = function shouldComponentUpdate(nextProps) {
+	        return test(this.props, nextProps);
+	      };
+
+	      ShouldUpdate.prototype.render = function render() {
+	        return factory(this.props);
+	      };
+
+	      return ShouldUpdate;
+	    }(react.Component);
+
+	    {
+	      return (0, _setDisplayName2.default)((0, _wrapDisplayName2.default)(BaseComponent, 'shouldUpdate'))(ShouldUpdate);
+	    }
+	    return ShouldUpdate;
+	  };
+	};
+
+	exports.default = shouldUpdate;
+	});
+
+	unwrapExports(shouldUpdate_1$1);
+
+	var shallowEqual$3 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+
+
+	var _shallowEqual2 = _interopRequireDefault(shallowEqual_1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = _shallowEqual2.default;
+	});
+
+	unwrapExports(shallowEqual$3);
+
+	var pure_1$1 = createCommonjsModule(function (module, exports) {
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+
+
+	var _shouldUpdate2 = _interopRequireDefault(shouldUpdate_1$1);
+
+
+
+	var _shallowEqual2 = _interopRequireDefault(shallowEqual$3);
+
+
+
+	var _setDisplayName2 = _interopRequireDefault(setDisplayName_1$1);
+
+
+
+	var _wrapDisplayName2 = _interopRequireDefault(wrapDisplayName_1);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var pure = function pure(BaseComponent) {
+	  var hoc = (0, _shouldUpdate2.default)(function (props, nextProps) {
+	    return !(0, _shallowEqual2.default)(props, nextProps);
+	  });
+
+	  {
+	    return (0, _setDisplayName2.default)((0, _wrapDisplayName2.default)(BaseComponent, 'pure'))(hoc(BaseComponent));
+	  }
+
+	  return hoc(BaseComponent);
+	};
+
+	exports.default = pure;
+	});
+
+	unwrapExports(pure_1$1);
+
 	var CheckBoxOutlineBlank_1 = createCommonjsModule(function (module, exports) {
 
 
@@ -38149,7 +38366,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -38183,7 +38400,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -38217,7 +38434,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -38456,7 +38673,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -51611,7 +51828,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -54819,7 +55036,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -54853,7 +55070,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -56795,7 +57012,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -56829,7 +57046,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -59729,7 +59946,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -59763,7 +59980,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -60451,7 +60668,7 @@
 
 	var _react = interopRequireDefault(react);
 
-	var _pure = interopRequireDefault(pure_1);
+	var _pure = interopRequireDefault(pure_1$1);
 
 	var _SvgIcon = interopRequireDefault(SvgIcon$1);
 
@@ -63285,21 +63502,24 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.default = void 0;
+
 	var compose = function compose() {
-	  for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
+	  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
 	    funcs[_key] = arguments[_key];
 	  }
 
 	  return funcs.reduce(function (a, b) {
 	    return function () {
-	      return a(b.apply(undefined, arguments));
+	      return a(b.apply(void 0, arguments));
 	    };
 	  }, function (arg) {
 	    return arg;
 	  });
 	};
 
-	exports.default = compose;
+	var _default = compose;
+	exports.default = _default;
 	});
 
 	var compose$1 = unwrapExports(compose_1);
@@ -63911,7 +64131,7 @@
 	  }
 	}
 
-	function shallowEqual$3(objA, objB) {
+	function shallowEqual$5(objA, objB) {
 	  if (is$2(objA, objB)) return true;
 
 	  if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
@@ -64453,11 +64673,11 @@
 	        _ref2$areStatesEqual = _ref2.areStatesEqual,
 	        areStatesEqual = _ref2$areStatesEqual === undefined ? strictEqual : _ref2$areStatesEqual,
 	        _ref2$areOwnPropsEqua = _ref2.areOwnPropsEqual,
-	        areOwnPropsEqual = _ref2$areOwnPropsEqua === undefined ? shallowEqual$3 : _ref2$areOwnPropsEqua,
+	        areOwnPropsEqual = _ref2$areOwnPropsEqua === undefined ? shallowEqual$5 : _ref2$areOwnPropsEqua,
 	        _ref2$areStatePropsEq = _ref2.areStatePropsEqual,
-	        areStatePropsEqual = _ref2$areStatePropsEq === undefined ? shallowEqual$3 : _ref2$areStatePropsEq,
+	        areStatePropsEqual = _ref2$areStatePropsEq === undefined ? shallowEqual$5 : _ref2$areStatePropsEq,
 	        _ref2$areMergedPropsE = _ref2.areMergedPropsEqual,
-	        areMergedPropsEqual = _ref2$areMergedPropsE === undefined ? shallowEqual$3 : _ref2$areMergedPropsE,
+	        areMergedPropsEqual = _ref2$areMergedPropsE === undefined ? shallowEqual$5 : _ref2$areMergedPropsE,
 	        extraOptions = _objectWithoutProperties$5(_ref2, ['pure', 'areStatesEqual', 'areOwnPropsEqual', 'areStatePropsEqual', 'areMergedPropsEqual']);
 
 	    var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps');

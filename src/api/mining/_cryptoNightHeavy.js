@@ -3,12 +3,12 @@ import { CONNECTING, CONNECTION_FAILED_REGEX, CUDA_ERROR, generateParser } from 
 import { httpPort } from './_xmrStak';
 import { simpleIoPlugin } from '../plugins';
 
-export const CRYPTO_NIGHT_V7 = 'CRYPTO_NIGHT_V7';
+export const CRYPTO_NIGHT_HEAVY = 'CRYPTO_NIGHT_HEAVY';
 const locations = ['eu', 'usa', 'hk', 'jp', 'in', 'br'];
 
-export const cryptoNightV7 = {
-  name: 'CryptoNightV7',
-  identifier: CRYPTO_NIGHT_V7,
+export const cryptoNightHeavy = {
+  name: 'CryptoNightHeavy',
+  identifier: CRYPTO_NIGHT_HEAVY,
   speedUnit: 'H/s',
   parser: generateParser({
     [CONNECTION_FAILED_REGEX]: /Could not resolve host/,
@@ -23,7 +23,7 @@ export const cryptoNightV7 = {
       simpleIoPlugin.LOCALAPPDATA
     }/raccoon-miner/amd.txt" --nvidia "${
       simpleIoPlugin.LOCALAPPDATA
-    }/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_v7 --pass x --rigid "" --use-nicehash`;
+    }/raccoon-miner/nvidia.txt" --config config.txt --noUAC --httpd ${httpPort} --url "${pool}" --user "${address}.${workerName}" --currency cryptonight_heavy --pass x --rigid "" --use-nicehash`;
   },
   environmentVariables: () => JSON.stringify({ XMRSTAK_NOWAIT: true })
 };

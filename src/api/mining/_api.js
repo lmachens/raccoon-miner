@@ -1,5 +1,5 @@
 import { getHttpRequestPlugin } from '../plugins';
-import { httpPort } from './_cryptoNightV7';
+import { httpPort } from './_xmrStak';
 
 export const getMiningMetrics = () => {
   return new Promise(async (resolve, reject) => {

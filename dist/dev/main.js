@@ -65088,6 +65088,34 @@
 
 	const enhance$1 = connect(mapStateToProps, mapDispatchToProps$1)(SettingsDialog);
 
+	const styles$5 = {
+	  logo: {
+	    width: 240,
+	    float: 'right',
+	    marginLeft: 4
+	  }
+	};
+
+	class About extends react_2 {
+	  render() {
+	    const {
+	      classes
+	    } = this.props;
+	    return react.createElement("div", null, react.createElement("img", {
+	      className: classes.logo,
+	      src: 'assets/logo.png'
+	    }), react.createElement(Typography$2, null, "Raccoon Miner is an open source project developed by Leon Machens. You can find the source code on ", react.createElement(LinkEnhanced, {
+	      to: "https://github.com/lmachens/raccoon-miner"
+	    }, "GitHub"), ".", react.createElement("br", null), "Feel free to contribute!"));
+	  }
+
+	}
+
+	About.propTypes = {
+	  classes: propTypes.object.isRequired
+	};
+	const enhance$2 = styles_3(styles$5)(About);
+
 	const Discord = () => react.createElement("embed", {
 	  height: "100%",
 	  src: "https://widgetbot.io/embed/424865108230144013/424865855180898304/1103/?lang=en",
@@ -65184,6 +65212,7 @@
 	  question: "How do you make profit?"
 	}));
 
+	const SUPPORT_DIALOG_ABOUT = 'SUPPORT_DIALOG_ABOUT';
 	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
 	const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
 	const SUPPORT_DIALOG_FEEDBACK = 'SUPPORT_DIALOG_FEEDBACK';
@@ -65226,6 +65255,13 @@
 	      selected: tab === SUPPORT_DIALOG_FEEDBACK
 	    }, react.createElement(ListItemText$2, {
 	      primary: "Feedback"
+	    })), react.createElement(MenuItem$2, {
+	      button: true,
+	      key: SUPPORT_DIALOG_ABOUT,
+	      onClick: this.handleTabClick(SUPPORT_DIALOG_ABOUT),
+	      selected: tab === SUPPORT_DIALOG_ABOUT
+	    }, react.createElement(ListItemText$2, {
+	      primary: "About"
 	    }))];
 	    let content;
 
@@ -65235,6 +65271,8 @@
 	      content = react.createElement(FAQ, null);
 	    } else if (tab === SUPPORT_DIALOG_FEEDBACK) {
 	      content = react.createElement(Feedback, null);
+	    } else if (tab === SUPPORT_DIALOG_ABOUT) {
+	      content = react.createElement(enhance$2, null);
 	    }
 
 	    return react.createElement(enhanced, {
@@ -65270,9 +65308,9 @@
 	  };
 	};
 
-	const enhance$2 = connect(mapStateToProps$1, mapDispatchToProps$2)(SupportDialog);
+	const enhance$3 = connect(mapStateToProps$1, mapDispatchToProps$2)(SupportDialog);
 
-	const styles$5 = {
+	const styles$6 = {
 	  logs: {
 	    overflow: 'auto',
 	    display: 'flex',
@@ -65326,7 +65364,7 @@
 	  };
 	};
 
-	const LogsEnhanced = compose$1(styles_3(styles$5), connect(logsMapStateToProps))(Logs);
+	const LogsEnhanced = compose$1(styles_3(styles$6), connect(logsMapStateToProps))(Logs);
 
 	class LogsDialog extends react_2 {
 	  render() {
@@ -65368,9 +65406,9 @@
 	  };
 	};
 
-	const enhance$3 = connect(mapStateToProps$2)(LogsDialog);
+	const enhance$4 = connect(mapStateToProps$2)(LogsDialog);
 
-	const styles$6 = {
+	const styles$7 = {
 	  niceHashLogo: {
 	    height: 20,
 	    width: 20,
@@ -65514,11 +65552,11 @@
 	  };
 	};
 
-	const enhance$4 = compose$1(styles_3(styles$6), connect(mapStateToProps$3, mapDispatchToProps$3))(WalletDialog);
+	const enhance$5 = compose$1(styles_3(styles$7), connect(mapStateToProps$3, mapDispatchToProps$3))(WalletDialog);
 
 	class Dialogs extends react_2 {
 	  render() {
-	    return react.createElement(react_5, null, react.createElement(enhance$4, null), react.createElement(enhance$1, null), react.createElement(enhance$3, null), react.createElement(enhance$2, null));
+	    return react.createElement(react_5, null, react.createElement(enhance$5, null), react.createElement(enhance$1, null), react.createElement(enhance$4, null), react.createElement(enhance$3, null));
 	  }
 
 	}
@@ -67924,7 +67962,7 @@
 	  }
 	};
 
-	const styles$7 = {
+	const styles$8 = {
 	  children: {
 	    overflow: 'auto',
 	    height: 'calc(100% - 64px)'
@@ -68015,9 +68053,9 @@
 	  };
 	};
 
-	const enhance$5 = compose$1(styles_3(styles$7), connect(mapStateToProps$4, mapDispatchToProps$4))(AppLayout);
+	const enhance$6 = compose$1(styles_3(styles$8), connect(mapStateToProps$4, mapDispatchToProps$4))(AppLayout);
 
-	const styles$8 = {
+	const styles$9 = {
 	  wrapper: {
 	    margin: 20,
 	    textAlign: 'center'
@@ -68035,9 +68073,9 @@
 	  classes: propTypes.object.isRequired,
 	  children: propTypes.oneOfType([propTypes.arrayOf(propTypes.node), propTypes.node]).isRequired
 	};
-	const enhance$6 = styles_3(styles$8)(PageLayout);
+	const enhance$7 = styles_3(styles$9)(PageLayout);
 
-	const styles$9 = {
+	const styles$a = {
 	  load: {
 	    fontSize: '1.3rem'
 	  }
@@ -68099,9 +68137,9 @@
 	  };
 	};
 
-	const enhance$7 = compose$1(styles_3(styles$9), connect(mapStateToProps$5))(BalanceCard);
+	const enhance$8 = compose$1(styles_3(styles$a), connect(mapStateToProps$5))(BalanceCard);
 
-	const styles$a = {
+	const styles$b = {
 	  load: {
 	    fontSize: '1.3rem'
 	  },
@@ -68200,9 +68238,9 @@
 	  };
 	};
 
-	const enhance$8 = compose$1(styles_3(styles$a), connect(mapStateToProps$6, mapDispatchToProps$5))(CpusCard);
+	const enhance$9 = compose$1(styles_3(styles$b), connect(mapStateToProps$6, mapDispatchToProps$5))(CpusCard);
 
-	const styles$b = {
+	const styles$c = {
 	  load: {
 	    fontSize: '1.3rem'
 	  }
@@ -68265,9 +68303,9 @@
 	  };
 	};
 
-	const enhance$9 = compose$1(styles_3(styles$b), connect(mapStateToProps$7))(EarningsCard);
+	const enhance$a = compose$1(styles_3(styles$c), connect(mapStateToProps$7))(EarningsCard);
 
-	const styles$c = {
+	const styles$d = {
 	  load: {
 	    fontSize: '1.3rem'
 	  },
@@ -68368,9 +68406,9 @@
 	  };
 	};
 
-	const enhance$a = compose$1(styles_3(styles$c), connect(mapStateToProps$8, mapDispatchToProps$6))(GpusCard);
+	const enhance$b = compose$1(styles_3(styles$d), connect(mapStateToProps$8, mapDispatchToProps$6))(GpusCard);
 
-	const styles$d = {
+	const styles$e = {
 	  container: {
 	    margin: 4,
 	    display: 'inline-block'
@@ -68409,9 +68447,9 @@
 	  title: propTypes.string.isRequired,
 	  children: propTypes.node.isRequired
 	};
-	const enhance$b = styles_3(styles$d)(ActionButton);
+	const enhance$c = styles_3(styles$e)(ActionButton);
 
-	const styles$e = {
+	const styles$f = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -68424,7 +68462,7 @@
 	      classes,
 	      openLogsDialog: openLogsDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$b, {
+	    return react.createElement(enhance$c, {
 	      onClick: openLogsDialog$$1,
 	      title: "Logs"
 	    }, react.createElement(AssessmentIcon, {
@@ -68445,9 +68483,9 @@
 	  };
 	};
 
-	const enhance$c = compose$1(styles_3(styles$e), connect(null, mapDispatchToProps$7))(LogsButton);
+	const enhance$d = compose$1(styles_3(styles$f), connect(null, mapDispatchToProps$7))(LogsButton);
 
-	const styles$f = {
+	const styles$g = {
 	  avatar: {
 	    width: 80,
 	    height: 80
@@ -68487,7 +68525,7 @@
 	      isMining
 	    } = this.props;
 	    const animateLogo = isMining && !hashRate;
-	    return react.createElement(enhance$b, {
+	    return react.createElement(enhance$c, {
 	      buttonClassName: animateLogo ? classes.flip : '',
 	      onClick: this.handleMiningClick,
 	      title: isMining ? 'Stop' : 'Start'
@@ -68530,9 +68568,9 @@
 	  };
 	};
 
-	const enhance$d = compose$1(styles_3(styles$f), connect(mapStateToProps$9, mapDispatchToProps$8))(MiningButton);
+	const enhance$e = compose$1(styles_3(styles$g), connect(mapStateToProps$9, mapDispatchToProps$8))(MiningButton);
 
-	const styles$g = {
+	const styles$h = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -68545,7 +68583,7 @@
 	      classes,
 	      openSettingsDialog: openSettingsDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$b, {
+	    return react.createElement(enhance$c, {
 	      onClick: openSettingsDialog$$1,
 	      title: "Settings"
 	    }, react.createElement(SettingsIcon, {
@@ -68566,9 +68604,9 @@
 	  };
 	};
 
-	const enhance$e = compose$1(styles_3(styles$g), connect(null, mapDispatchToProps$9))(SettingsButton);
+	const enhance$f = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$9))(SettingsButton);
 
-	const styles$h = {
+	const styles$i = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -68581,7 +68619,7 @@
 	      classes,
 	      openSupportDialog: openSupportDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$b, {
+	    return react.createElement(enhance$c, {
 	      onClick: openSupportDialog$$1,
 	      title: "Support"
 	    }, react.createElement(HelpIcon, {
@@ -68602,9 +68640,9 @@
 	  };
 	};
 
-	const enhance$f = compose$1(styles_3(styles$h), connect(null, mapDispatchToProps$a))(SupportButton);
+	const enhance$g = compose$1(styles_3(styles$i), connect(null, mapDispatchToProps$a))(SupportButton);
 
-	const styles$i = {
+	const styles$j = {
 	  icon: {
 	    width: 80,
 	    height: 80
@@ -68617,7 +68655,7 @@
 	      classes,
 	      openWalletDialog: openWalletDialog$$1
 	    } = this.props;
-	    return react.createElement(enhance$b, {
+	    return react.createElement(enhance$c, {
 	      onClick: openWalletDialog$$1,
 	      title: "Wallet"
 	    }, react.createElement(WalletIcon, {
@@ -68638,9 +68676,9 @@
 	  };
 	};
 
-	const enhance$g = compose$1(styles_3(styles$i), connect(null, mapDispatchToProps$b))(WalletButton);
+	const enhance$h = compose$1(styles_3(styles$j), connect(null, mapDispatchToProps$b))(WalletButton);
 
-	const styles$j = {
+	const styles$k = {
 	  center: {
 	    textAlign: 'center'
 	  }
@@ -68653,7 +68691,7 @@
 	    } = this.props;
 	    return react.createElement("div", {
 	      className: classes.center
-	    }, react.createElement(enhance$g, null), react.createElement(enhance$c, null), react.createElement(enhance$d, null), react.createElement(enhance$e, null), react.createElement(enhance$f, null));
+	    }, react.createElement(enhance$h, null), react.createElement(enhance$d, null), react.createElement(enhance$e, null), react.createElement(enhance$f, null), react.createElement(enhance$g, null));
 	  }
 
 	}
@@ -68661,9 +68699,9 @@
 	Actions.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhance$h = styles_3(styles$j)(Actions);
+	const enhance$i = styles_3(styles$k)(Actions);
 
-	const styles$k = {
+	const styles$l = {
 	  container: {
 	    margin: 16
 	  }
@@ -68702,9 +68740,9 @@
 	  };
 	};
 
-	const enhance$i = compose$1(styles_3(styles$k), connect(mapStateToProps$a))(Notifications);
+	const enhance$j = compose$1(styles_3(styles$l), connect(mapStateToProps$a))(Notifications);
 
-	const styles$l = {
+	const styles$m = {
 	  marginLeft: {
 	    marginLeft: 4
 	  },
@@ -68814,9 +68852,9 @@
 	  };
 	};
 
-	const enhance$j = compose$1(styles_3(styles$l), connect(mapStateToProps$b))(Stats);
+	const enhance$k = compose$1(styles_3(styles$m), connect(mapStateToProps$b))(Stats);
 
-	const styles$m = {
+	const styles$n = {
 	  stats: {
 	    position: 'absolute',
 	    bottom: 2,
@@ -68830,25 +68868,25 @@
 	    const {
 	      classes
 	    } = this.props;
-	    return react.createElement(enhance$6, null, react.createElement(Grid$2, {
+	    return react.createElement(enhance$7, null, react.createElement(Grid$2, {
 	      container: true,
 	      spacing: 16
 	    }, react.createElement(Grid$2, {
 	      item: true,
 	      xs: 12
-	    }, react.createElement(enhance$h, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$i, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
-	    }, react.createElement(enhance$8, null)), react.createElement(Grid$2, {
+	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 2
+	    }, react.createElement(enhance$b, null)), react.createElement(Grid$2, {
+	      item: true,
+	      xs: 4
 	    }, react.createElement(enhance$a, null)), react.createElement(Grid$2, {
 	      item: true,
 	      xs: 4
-	    }, react.createElement(enhance$9, null)), react.createElement(Grid$2, {
-	      item: true,
-	      xs: 4
-	    }, react.createElement(enhance$7, null))), react.createElement(enhance$i, null), react.createElement(enhance$j, {
+	    }, react.createElement(enhance$8, null))), react.createElement(enhance$j, null), react.createElement(enhance$k, {
 	      className: classes.stats
 	    }), react.createElement(Dialogs, null));
 	  }
@@ -68858,7 +68896,7 @@
 	MiningPage.propTypes = {
 	  classes: propTypes.object.isRequired
 	};
-	const enhanced$1 = styles_3(styles$m)(MiningPage);
+	const enhanced$1 = styles_3(styles$n)(MiningPage);
 
 	var _createClass$2 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -70012,7 +70050,7 @@
 	  persistor: persistor
 	}, react.createElement(styles_1, {
 	  theme: light
-	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$5, null, react.createElement(enhanced$1, null)))));
+	}, react.createElement(CssBaseline$2, null), react.createElement(enhance$6, null, react.createElement(enhanced$1, null)))));
 	reactDom.render(App, document.getElementById('root'));
 
 }());

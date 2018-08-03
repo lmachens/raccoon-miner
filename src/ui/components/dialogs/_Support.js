@@ -1,4 +1,4 @@
-import { Discord, FAQ, Feedback } from '../support';
+import { About, Discord, FAQ, Feedback } from '../support';
 import { FullScreenDialog, ListItemText, MenuItem } from '../generic';
 import React, { PureComponent } from 'react';
 
@@ -7,6 +7,7 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { setSupportDialogTab } from '../../../store/actions';
 
+export const SUPPORT_DIALOG_ABOUT = 'SUPPORT_DIALOG_ABOUT';
 export const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
 export const SUPPORT_DIALOG_FAQ = 'SUPPORT_DIALOG_FAQ';
 export const SUPPORT_DIALOG_FEEDBACK = 'SUPPORT_DIALOG_FEEDBACK';
@@ -45,6 +46,14 @@ class SupportDialog extends PureComponent {
         selected={tab === SUPPORT_DIALOG_FEEDBACK}
       >
         <ListItemText primary="Feedback" />
+      </MenuItem>,
+      <MenuItem
+        button
+        key={SUPPORT_DIALOG_ABOUT}
+        onClick={this.handleTabClick(SUPPORT_DIALOG_ABOUT)}
+        selected={tab === SUPPORT_DIALOG_ABOUT}
+      >
+        <ListItemText primary="About" />
       </MenuItem>
     ];
 
@@ -55,6 +64,8 @@ class SupportDialog extends PureComponent {
       content = <FAQ />;
     } else if (tab === SUPPORT_DIALOG_FEEDBACK) {
       content = <Feedback />;
+    } else if (tab === SUPPORT_DIALOG_ABOUT) {
+      content = <About />;
     }
 
     return (

@@ -2870,13 +2870,12 @@
 
 	const trackHardwareInfo = () => {
 	  return (dispatch, getState) => {
-	    const {
-	      hardwareInfo: {
-	        Cpus
-	      }
-	    } = getState();
-
 	    const hardwareInfoListener = hardwareInfo => {
+	      const {
+	        hardwareInfo: {
+	          Cpus
+	        }
+	      } = getState();
 	      dispatch({
 	        type: RECEIVE_HARDWARE_INFO,
 	        data: hardwareInfo

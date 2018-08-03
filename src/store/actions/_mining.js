@@ -223,12 +223,10 @@ export const startMining = (minerIdentifier, callback) => {
 
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier },
+      mining: { miners, selectedMinerIdentifier, cores, gpus },
       settings: { region }
     } = getState();
-    const { address = developerAddress, cores, gpus, workerName = 'raccoon' } = miners[
-      selectedMinerIdentifier
-    ];
+    const { address = developerAddress, workerName = 'raccoon' } = miners[selectedMinerIdentifier];
     if (handleDataByIdenfier[minerIdentifier]) return;
     const processManager = await getProcessManagerPlugin();
     const { parser, path, args, environmentVariables } = minersByIdentifier[minerIdentifier];
@@ -360,17 +358,16 @@ export const addCore = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier },
+      mining: { selectedMinerIdentifier, cores },
       hardwareInfo: { Cpus }
     } = getState();
-    const { cores } = miners[selectedMinerIdentifier];
 
     const maxCores = getMaxCores(Cpus);
 
     if (cores + 1 > maxCores) return;
     dispatch({
       type: SET_CORES,
-      data: { minerIdentifier: selectedMinerIdentifier, cores: cores + 1 }
+      data: { cores: cores + 1 }
     });
 
     const { isMining } = activeMiners[selectedMinerIdentifier];
@@ -384,14 +381,12 @@ export const removeCore = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier }
+      mining: { selectedMinerIdentifier, cores }
     } = getState();
-    const { cores } = miners[selectedMinerIdentifier];
-
     if (cores - 1 < 0) return;
     dispatch({
       type: SET_CORES,
-      data: { minerIdentifier: selectedMinerIdentifier, cores: cores - 1 }
+      data: { cores: cores - 1 }
     });
 
     const { isMining } = activeMiners[selectedMinerIdentifier];
@@ -405,19 +400,18 @@ export const addGPU = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier },
+      mining: { selectedMinerIdentifier, gpus },
       hardwareInfo: {
         Gpus: { Gpus }
       }
     } = getState();
-    const { gpus } = miners[selectedMinerIdentifier];
 
     const maxGPUs = getMaxGPUs(Gpus);
 
     if (gpus + 1 > maxGPUs) return;
     dispatch({
       type: SET_GPUS,
-      data: { minerIdentifier: selectedMinerIdentifier, gpus: gpus + 1 }
+      data: { gpus: gpus + 1 }
     });
 
     const { isMining } = activeMiners[selectedMinerIdentifier];
@@ -431,14 +425,13 @@ export const removeGPU = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier }
+      mining: { selectedMinerIdentifier, gpus }
     } = getState();
-    const { gpus } = miners[selectedMinerIdentifier];
 
     if (gpus - 1 < 0) return;
     dispatch({
       type: SET_GPUS,
-      data: { minerIdentifier: selectedMinerIdentifier, gpus: gpus - 1 }
+      data: { gpus: gpus - 1 }
     });
 
     const { isMining } = activeMiners[selectedMinerIdentifier];

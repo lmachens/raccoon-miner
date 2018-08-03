@@ -21,7 +21,7 @@ import thunk from 'redux-thunk';
 const persistConfig = {
   key: 'root',
   storage,
-  version: 5,
+  version: 7,
   blacklist: ['activeMiners', 'games', 'notifications'],
   migrate: createMigrate(migrations, { debug: true })
 };

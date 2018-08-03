@@ -21,8 +21,6 @@ import { developerAddress } from '../../api/nice-hash';
 import set from 'lodash/set';
 
 const defaultMinerProps = {
-  cores: 1,
-  gpus: 1,
   address: developerAddress,
   workerName: 'raccoon'
 };
@@ -41,7 +39,9 @@ export const mining = (
     workerStats: {
       unpaidBalance: 0
     },
-    metrics: {}
+    metrics: {},
+    cores: 1,
+    gpus: 1
   },
   { type, data }
 ) => {
@@ -63,10 +63,10 @@ export const mining = (
       set(newState, `workerStats`, data.workerStats);
       break;
     case SET_CORES:
-      set(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
+      set(newState, `cores`, data.cores);
       break;
     case SET_GPUS:
-      set(newState, `miners.${data.minerIdentifier}.gpus`, data.gpus);
+      set(newState, `gpus`, data.gpus);
       break;
     default:
       return state;

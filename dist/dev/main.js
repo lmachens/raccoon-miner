@@ -2521,7 +2521,9 @@
 	      activeMiners,
 	      mining: {
 	        miners: miners$$1,
-	        selectedMinerIdentifier
+	        selectedMinerIdentifier,
+	        cores,
+	        gpus
 	      },
 	      settings: {
 	        region
@@ -2529,8 +2531,6 @@
 	    } = getState();
 	    const {
 	      address = developerAddress,
-	      cores,
-	      gpus,
 	      workerName = 'raccoon'
 	    } = miners$$1[selectedMinerIdentifier];
 	    if (handleDataByIdenfier[minerIdentifier]) return;
@@ -2707,22 +2707,18 @@
 	    const {
 	      activeMiners,
 	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
+	        selectedMinerIdentifier,
+	        cores
 	      },
 	      hardwareInfo: {
 	        Cpus
 	      }
 	    } = getState();
-	    const {
-	      cores
-	    } = miners$$1[selectedMinerIdentifier];
 	    const maxCores = getMaxCores(Cpus);
 	    if (cores + 1 > maxCores) return;
 	    dispatch({
 	      type: SET_CORES,
 	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
 	        cores: cores + 1
 	      }
 	    });
@@ -2740,18 +2736,14 @@
 	    const {
 	      activeMiners,
 	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
+	        selectedMinerIdentifier,
+	        cores
 	      }
 	    } = getState();
-	    const {
-	      cores
-	    } = miners$$1[selectedMinerIdentifier];
 	    if (cores - 1 < 0) return;
 	    dispatch({
 	      type: SET_CORES,
 	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
 	        cores: cores - 1
 	      }
 	    });
@@ -2769,8 +2761,8 @@
 	    const {
 	      activeMiners,
 	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
+	        selectedMinerIdentifier,
+	        gpus
 	      },
 	      hardwareInfo: {
 	        Gpus: {
@@ -2778,15 +2770,11 @@
 	        }
 	      }
 	    } = getState();
-	    const {
-	      gpus
-	    } = miners$$1[selectedMinerIdentifier];
 	    const maxGPUs = getMaxGPUs(Gpus);
 	    if (gpus + 1 > maxGPUs) return;
 	    dispatch({
 	      type: SET_GPUS,
 	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
 	        gpus: gpus + 1
 	      }
 	    });
@@ -2804,18 +2792,14 @@
 	    const {
 	      activeMiners,
 	      mining: {
-	        miners: miners$$1,
-	        selectedMinerIdentifier
+	        selectedMinerIdentifier,
+	        gpus
 	      }
 	    } = getState();
-	    const {
-	      gpus
-	    } = miners$$1[selectedMinerIdentifier];
 	    if (gpus - 1 < 0) return;
 	    dispatch({
 	      type: SET_GPUS,
 	      data: {
-	        minerIdentifier: selectedMinerIdentifier,
 	        gpus: gpus - 1
 	      }
 	    });
@@ -2885,12 +2869,33 @@
 	};
 
 	const trackHardwareInfo = () => {
-	  return dispatch => {
+	  return (dispatch, getState) => {
+	    const {
+	      hardwareInfo: {
+	        Cpus
+	      }
+	    } = getState();
+
 	    const hardwareInfoListener = hardwareInfo => {
 	      dispatch({
 	        type: RECEIVE_HARDWARE_INFO,
 	        data: hardwareInfo
-	      });
+	      }); // First time hardware info is received
+
+	      if (Cpus.length === 0) {
+	        dispatch({
+	          type: SET_CORES,
+	          data: {
+	            cores: getMaxCores(hardwareInfo.Cpus)
+	          }
+	        });
+	        dispatch({
+	          type: SET_GPUS,
+	          data: {
+	            gpus: getMaxGPUs(hardwareInfo.Gpus.Gpus)
+	          }
+	        });
+	      }
 	    };
 
 	    addHardwareInfoListener(hardwareInfoListener);
@@ -3459,7 +3464,7 @@
 	const TRACKING_ID = false;
 
 	const migrations = {
-	  5: () => {
+	  7: () => {
 	    return null;
 	  }
 	};
@@ -3627,8 +3632,6 @@
 	var set_1 = set;
 
 	const defaultMinerProps = {
-	  cores: 1,
-	  gpus: 1,
 	  address: developerAddress,
 	  workerName: 'raccoon'
 	};
@@ -3643,7 +3646,9 @@
 	  workerStats: {
 	    unpaidBalance: 0
 	  },
-	  metrics: {}
+	  metrics: {},
+	  cores: 1,
+	  gpus: 1
 	}, {
 	  type,
 	  data
@@ -3673,11 +3678,11 @@
 	      break;
 
 	    case SET_CORES:
-	      set_1(newState, `miners.${data.minerIdentifier}.cores`, data.cores);
+	      set_1(newState, `cores`, data.cores);
 	      break;
 
 	    case SET_GPUS:
-	      set_1(newState, `miners.${data.minerIdentifier}.gpus`, data.gpus);
+	      set_1(newState, `gpus`, data.gpus);
 	      break;
 
 	    default:
@@ -67876,7 +67881,7 @@
 	const persistConfig = {
 	  key: 'root',
 	  storage: storage$1,
-	  version: 5,
+	  version: 7,
 	  blacklist: ['activeMiners', 'games', 'notifications'],
 	  migrate: createMigrate(migrations, {
 	    debug: true
@@ -68178,12 +68183,10 @@
 	    Cpus
 	  },
 	  mining: {
-	    selectedMinerIdentifier,
-	    miners
+	    cores
 	  }
 	}) => {
 	  const maxCores = getMaxCores(Cpus);
-	  const cores = miners[selectedMinerIdentifier].cores;
 	  return {
 	    cores,
 	    maxCores
@@ -68348,12 +68351,10 @@
 	    }
 	  },
 	  mining: {
-	    selectedMinerIdentifier,
-	    miners
+	    gpus
 	  }
 	}) => {
 	  const maxGPUs = getMaxGPUs(Gpus);
-	  const gpus = miners[selectedMinerIdentifier].gpus;
 	  return {
 	    gpus,
 	    maxGPUs

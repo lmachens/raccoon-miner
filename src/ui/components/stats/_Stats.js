@@ -71,7 +71,7 @@ class Stats extends PureComponent {
         <div className={classes.temperature}>
           <FanIcon className={classes.fanIcon} />
           <Typography className={classes.marginLeft} variant="subheading">
-            {temperatures && temperatures.max}
+            {temperatures && temperatures.max.toFixed(1)}
             °C
           </Typography>
         </div>

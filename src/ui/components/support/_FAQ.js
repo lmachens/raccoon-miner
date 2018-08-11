@@ -42,7 +42,7 @@ const FAQ = () => (
       question="Is this scam?"
     />
     <FAQEntry
-      answer="Right now I don't make any profit with this app. It is planned that a small percentage of your hashpower will donate to my wallet."
+      answer="There is a build in donation of ~3%. Every hour Raccoon Miner uses the developer address for two minutes."
       question="How do you make profit?"
     />
   </Fragment>

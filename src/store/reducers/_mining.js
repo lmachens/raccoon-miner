@@ -89,6 +89,7 @@ const defaultActiveMinersProps = {
   processId: null,
   isMining: false,
   isSuspended: false,
+  isDeveloperDonationTime: false,
   currentSpeed: 0,
   errorMsg: null,
   connecting: false
@@ -124,6 +125,11 @@ export const activeMiners = (
     case START_MINING:
       set(newState, `${data.minerIdentifier}.isMining`, true);
       set(newState, `${data.minerIdentifier}.connecting`, true);
+      set(
+        newState,
+        `${data.minerIdentifier}.isDeveloperDonationTime`,
+        data.isDeveloperDonationTime
+      );
       break;
     case STOP_MINING:
       set(newState, `${data.minerIdentifier}.isMining`, false);

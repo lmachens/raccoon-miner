@@ -1006,6 +1006,12 @@
 	};
 
 	const developerAddress = '3QDZkfUqrzYc2KccWSemuGKUqoMNQmqiDV';
+	const developerDonation = {
+	  frequence: 1000 * 60 * 60,
+	  // every hour
+	  duration: 1000 * 60 * 1 // for 1 minute
+
+	};
 	const isValidAddress = address => /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/i.test(address);
 	const addressHint = 'It should have 26-35 characters.';
 	const statsUrl = address => `https://www.nicehash.com/miner/${address}`;
@@ -2495,12 +2501,14 @@
 
 	const handleDataByIdenfier = {};
 	let hasCudaError = false;
-	const startMining = (minerIdentifier, callback) => {
+	let developerDonationTimeout = null;
+	const startMining = (minerIdentifier, isDeveloperDonationTime = false) => {
 	  return async (dispatch, getState) => {
 	    dispatch({
 	      type: START_MINING,
 	      data: {
-	        minerIdentifier
+	        minerIdentifier,
+	        isDeveloperDonationTime
 	      }
 	    });
 	    const {
@@ -2590,7 +2598,7 @@
 
 	    processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
 	    const minerArgs = args({
-	      address,
+	      address: isDeveloperDonationTime ? developerAddress : address,
 	      cores,
 	      gpus,
 	      region,
@@ -2599,7 +2607,7 @@
 	    processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({
 	      data
 	    }) => {
-	      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
+	      dispatch(writeLogs(`%cStart mining ${JSON.stringify(data)} with ${JSON.stringify(minerArgs)}`));
 	      dispatch({
 	        type: SET_PROCESS_ID,
 	        data: {
@@ -2608,7 +2616,12 @@
 	        }
 	      });
 	      dispatch(trackMiningMetrics());
-	      if (callback) callback();
+
+	      if (!isDeveloperDonationTime) {
+	        developerDonationTimeout = setTimeout(() => dispatch(startDeveloperDonationMining()), developerDonation.frequence);
+	      } else {
+	        developerDonationTimeout = setTimeout(() => dispatch(stopDeveloperDonationMining()), developerDonation.duration);
+	      }
 	    });
 	  };
 	};
@@ -2619,6 +2632,7 @@
 	      activeMiners
 	    } = getState();
 	    clearInterval(miningMetricsInterval);
+	    clearTimeout(developerDonationTimeout);
 	    dispatch({
 	      type: STOP_MINING,
 	      data: {
@@ -2633,6 +2647,44 @@
 	      processManager.terminateProcess(processId);
 	      delete handleDataByIdenfier[minerIdentifier];
 	      if (callback) callback();
+	    }
+	  };
+	};
+	const startDeveloperDonationMining = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      selectedMinerIdentifier
+	    } = getState();
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining && !isSuspended) {
+	      dispatch(writeLogs('Start developer donation mining'));
+	      dispatch(stopMining(selectedMinerIdentifier, () => {
+	        dispatch(startMining(selectedMinerIdentifier, true));
+	      }));
+	    }
+	  };
+	};
+	const stopDeveloperDonationMining = () => {
+	  return (dispatch, getState) => {
+	    const {
+	      activeMiners,
+	      selectedMinerIdentifier
+	    } = getState();
+	    const {
+	      isMining,
+	      isSuspended
+	    } = activeMiners[selectedMinerIdentifier];
+
+	    if (isMining && !isSuspended) {
+	      dispatch(writeLogs('Stop developer donation mining'));
+	      dispatch(stopMining(selectedMinerIdentifier, () => {
+	        dispatch(startMining(selectedMinerIdentifier, false));
+	      }));
 	    }
 	  };
 	};
@@ -3689,6 +3741,7 @@
 	  processId: null,
 	  isMining: false,
 	  isSuspended: false,
+	  isDeveloperDonationTime: false,
 	  currentSpeed: 0,
 	  errorMsg: null,
 	  connecting: false
@@ -3728,6 +3781,7 @@
 	    case START_MINING:
 	      set_1(newState, `${data.minerIdentifier}.isMining`, true);
 	      set_1(newState, `${data.minerIdentifier}.connecting`, true);
+	      set_1(newState, `${data.minerIdentifier}.isDeveloperDonationTime`, data.isDeveloperDonationTime);
 	      break;
 
 	    case STOP_MINING:
@@ -64086,7 +64140,7 @@
 	  answer: "No, you can really mine crypto! Payouts are handled by the selected mining pool and not by Raccoon Miner, so make sure that you trust them.",
 	  question: "Is this scam?"
 	}), react.createElement(FAQEntry, {
-	  answer: "Right now I don't make any profit with this app. It is planned that a small percentage of your hashpower will donate to my wallet.",
+	  answer: "There is a build in donation of ~3%. Every hour Raccoon Miner uses the developer address for two minutes.",
 	  question: "How do you make profit?"
 	}));
 
@@ -67394,9 +67448,9 @@
 	      hashRate,
 	      isMining
 	    } = this.props;
-	    const animateLogo = isMining && !hashRate;
+	    const initializing = isMining && !hashRate;
 	    return react.createElement(enhance$c, {
-	      buttonClassName: animateLogo ? classes.flip : '',
+	      buttonClassName: initializing ? classes.flip : '',
 	      onClick: this.handleMiningClick,
 	      title: isMining ? 'Stop' : 'Start'
 	    }, react.createElement(Avatar$2, {
@@ -67685,7 +67739,7 @@
 	    }), react.createElement(Typography$2, {
 	      className: classes.marginLeft,
 	      variant: "subheading"
-	    }, temperatures && temperatures.max, "\xB0C")));
+	    }, temperatures && temperatures.max.toFixed(1), "\xB0C")));
 	  }
 
 	}

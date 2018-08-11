@@ -37,10 +37,10 @@ class MiningButton extends PureComponent {
 
   render() {
     const { classes, hashRate, isMining } = this.props;
-    const animateLogo = isMining && !hashRate;
+    const initializing = isMining && !hashRate;
     return (
       <ActionButton
-        buttonClassName={animateLogo ? classes.flip : ''}
+        buttonClassName={initializing ? classes.flip : ''}
         onClick={this.handleMiningClick}
         title={isMining ? 'Stop' : 'Start'}
       >

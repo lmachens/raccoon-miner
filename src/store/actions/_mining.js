@@ -26,7 +26,7 @@ import {
   writeNvidiaConfig
 } from '../../api/mining';
 import { CUDA_ISSUE, TEST_MODE } from '../../api/notifications';
-import { developerAddress, getStats, isValidAddress } from '../../api/nice-hash';
+import { developerAddress, developerDonation, getStats, isValidAddress } from '../../api/nice-hash';
 import { getMaxCores, getMaxGPUs } from '../../api/benchmarking';
 
 import { getProcessManagerPlugin } from '../../api/plugins';
@@ -200,11 +200,12 @@ const fetchWorkerStats = () => {
 
 const handleDataByIdenfier = {};
 let hasCudaError = false;
-export const startMining = (minerIdentifier, callback) => {
+let developerDonationTimeout = null;
+export const startMining = (minerIdentifier, isDeveloperDonationTime = false) => {
   return async (dispatch, getState) => {
     dispatch({
       type: START_MINING,
-      data: { minerIdentifier }
+      data: { minerIdentifier, isDeveloperDonationTime }
     });
 
     const {
@@ -270,9 +271,17 @@ export const startMining = (minerIdentifier, callback) => {
       }
     };
     processManager.onDataReceivedEvent.addListener(handleDataByIdenfier[minerIdentifier]);
-    const minerArgs = args({ address, cores, gpus, region, workerName });
+    const minerArgs = args({
+      address: isDeveloperDonationTime ? developerAddress : address,
+      cores,
+      gpus,
+      region,
+      workerName
+    });
     processManager.launchProcess(path, minerArgs, environmentVariables(), true, ({ data }) => {
-      console.info(`%cStart mining ${data} with ${minerArgs}`, 'color: blue');
+      dispatch(
+        writeLogs(`%cStart mining ${JSON.stringify(data)} with ${JSON.stringify(minerArgs)}`)
+      );
       dispatch({
         type: SET_PROCESS_ID,
         data: {
@@ -281,7 +290,17 @@ export const startMining = (minerIdentifier, callback) => {
         }
       });
       dispatch(trackMiningMetrics());
-      if (callback) callback();
+      if (!isDeveloperDonationTime) {
+        developerDonationTimeout = setTimeout(
+          () => dispatch(startDeveloperDonationMining()),
+          developerDonation.frequence
+        );
+      } else {
+        developerDonationTimeout = setTimeout(
+          () => dispatch(stopDeveloperDonationMining()),
+          developerDonation.duration
+        );
+      }
     });
   };
 };
@@ -292,6 +311,7 @@ export const stopMining = (minerIdentifier, callback) => {
     const { activeMiners } = getState();
 
     clearInterval(miningMetricsInterval);
+    clearTimeout(developerDonationTimeout);
     dispatch({
       type: STOP_MINING,
       data: { minerIdentifier }
@@ -303,6 +323,36 @@ export const stopMining = (minerIdentifier, callback) => {
       processManager.terminateProcess(processId);
       delete handleDataByIdenfier[minerIdentifier];
       if (callback) callback();
+    }
+  };
+};
+
+export const startDeveloperDonationMining = () => {
+  return (dispatch, getState) => {
+    const { activeMiners, selectedMinerIdentifier } = getState();
+    const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
+    if (isMining && !isSuspended) {
+      dispatch(writeLogs('Start developer donation mining'));
+      dispatch(
+        stopMining(selectedMinerIdentifier, () => {
+          dispatch(startMining(selectedMinerIdentifier, true));
+        })
+      );
+    }
+  };
+};
+
+export const stopDeveloperDonationMining = () => {
+  return (dispatch, getState) => {
+    const { activeMiners, selectedMinerIdentifier } = getState();
+    const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
+    if (isMining && !isSuspended) {
+      dispatch(writeLogs('Stop developer donation mining'));
+      dispatch(
+        stopMining(selectedMinerIdentifier, () => {
+          dispatch(startMining(selectedMinerIdentifier, false));
+        })
+      );
     }
   };
 };

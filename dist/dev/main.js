@@ -63972,7 +63972,7 @@
 	    return react.createElement(enhanced, {
 	      menuItems: menuItems,
 	      open: open,
-	      title: "Settings (under construction)"
+	      title: "Settings"
 	    }, content);
 	  }
 
@@ -64036,7 +64036,7 @@
 	    return react.createElement("div", null, react.createElement("img", {
 	      className: classes.logo,
 	      src: 'assets/logo.png'
-	    }), react.createElement(Typography$2, null, "Raccoon Miner is an open source project developed by Leon Machens. You can find the source code on ", react.createElement(LinkEnhanced, {
+	    }), react.createElement(Typography$2, null, "Raccoon Miner is an open source (GNU GPLv3) project developed by Leon Machens. You can find the source code on ", react.createElement(LinkEnhanced, {
 	      to: "https://github.com/lmachens/raccoon-miner"
 	    }, "GitHub"), ".", react.createElement("br", null), "Feel free to contribute!"));
 	  }
@@ -64087,7 +64087,7 @@
 	      title,
 	      comment
 	    } = this.state;
-	    return react.createElement(react_5, null, react.createElement(TextField$2, {
+	    return react.createElement(react_5, null, react.createElement(Typography$2, null, "Your feedback helps to improve this app and make it more awesome! Please give as many details as possible if you report a bug or request a feature."), react.createElement(TextField$2, {
 	      margin: "normal",
 	      onChange: this.handleChange('title'),
 	      placeholder: "Title",
@@ -64120,29 +64120,35 @@
 	  question: propTypes.string.isRequired,
 	  answer: propTypes.string.isRequired
 	};
+	const entries = [{
+	  answer: 'Modern anti virus software tries to find hidden miners (Trojan:Win32/CoinMiner.C!cl) which runs without your permission. You want to mine so it is a false positive and you have to add an exception. Raccoon Miner uses open source miners (Ethminer and XMR-Stak) which are safe to use.',
+	  question: 'My anti virus detects Racoon Miner as threat. Why?'
+	}, {
+	  answer: 'This is normal when mining is active. Mining is a load intensive process which uses all ressources available.',
+	  question: 'Why is my CPU or GPU at 100%?'
+	}, {
+	  answer: '0.001 BTC or 0.1 BTC.',
+	  question: 'When do I get a payout?'
+	}, {
+	  answer: 'Yes, Raccoon Miner has no access to your wallet.',
+	  question: 'Is my wallet safe?'
+	}, {
+	  answer: 'No, you can really mine crypto! Payouts are handled by the selected mining pool and not by Raccoon Miner, so make sure that you trust them.',
+	  question: 'Is this scam?'
+	}, {
+	  answer: 'There is a build in donation of ~3%. Every hour Raccoon Miner uses the developer address for two minutes.',
+	  question: 'How do you make profit?'
+	}];
 
-	const FAQ = () => react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "FAQ (under construction)"), react.createElement(FAQEntry, {
-	  answer: "Modern anti virus software tries to find hidden miners (Trojan:Win32/CoinMiner.C!cl) which runs without your permission. You want to mine so it is a false positive and you have to add an exception. Raccoon Miner uses open source miners (Ethminer and XMR-Stak) which are safe to use.",
-	  question: "My anti virus detects Racoon Miner as threat. Why?"
-	}), react.createElement(FAQEntry, {
-	  answer: "A mining pool is the pooling of resources by miners, who share their processing power over\r a network, to split the reward equally, according to the amount of work they contributed\r to the probability of finding a block.",
-	  question: "What is a mining pool?"
-	}), react.createElement(FAQEntry, {
-	  answer: "This is normal when mining is active. Mining is a load intensive process which uses all ressources available.",
-	  question: "Why is my CPU or GPU at 100%?"
-	}), react.createElement(FAQEntry, {
-	  answer: "0.001 BTC or 0.1 BTC.",
-	  question: "When do I get a payout?"
-	}), react.createElement(FAQEntry, {
-	  answer: "Yes, Raccoon Miner has no access to your wallet and only use it for payouts.",
-	  question: "Is my wallet safe?"
-	}), react.createElement(FAQEntry, {
-	  answer: "No, you can really mine crypto! Payouts are handled by the selected mining pool and not by Raccoon Miner, so make sure that you trust them.",
-	  question: "Is this scam?"
-	}), react.createElement(FAQEntry, {
-	  answer: "There is a build in donation of ~3%. Every hour Raccoon Miner uses the developer address for two minutes.",
-	  question: "How do you make profit?"
-	}));
+	const FAQ = () => react.createElement(react_5, null, react.createElement(DialogContentText$2, null, "FAQ"), entries.map(({
+	  answer,
+	  question
+	}, index) => react.createElement(FAQEntry, {
+	  answer: answer,
+	  key: index // we can use index as key because it is a static list
+	  ,
+	  question: question
+	})));
 
 	const SUPPORT_DIALOG_ABOUT = 'SUPPORT_DIALOG_ABOUT';
 	const SUPPORT_DIALOG_DISCORD = 'SUPPORT_DIALOG_DISCORD';
@@ -64306,7 +64312,7 @@
 	    } = this.props;
 	    return react.createElement(enhanced, {
 	      open: open,
-	      title: "Logs (under construction)"
+	      title: "Logs"
 	    }, react.createElement(DialogContentText$2, null, "Here you can see the mining logs. To get more details from the mining pool, click on", ' ', react.createElement(LinkEnhanced, {
 	      to: statsLink
 	    }, "NiceHash Stats"), "."), open && react.createElement(LogsEnhanced, null));

@@ -65,7 +65,7 @@ class LogsDialog extends PureComponent {
     const { open, statsLink } = this.props;
 
     return (
-      <FullScreenDialog open={open} title="Logs (under construction)">
+      <FullScreenDialog open={open} title="Logs">
         <DialogContentText>
           Here you can see the mining logs. To get more details from the mining pool, click on{' '}
           <Link to={statsLink}>NiceHash Stats</Link>.

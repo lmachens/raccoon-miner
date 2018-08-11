@@ -156,7 +156,7 @@ class SettingsDialog extends PureComponent {
     }
 
     return (
-      <FullScreenDialog menuItems={menuItems} open={open} title="Settings (under construction)">
+      <FullScreenDialog menuItems={menuItems} open={open} title="Settings">
         {content}
       </FullScreenDialog>
     );

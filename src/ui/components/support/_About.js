@@ -19,8 +19,9 @@ class About extends PureComponent {
       <div>
         <img className={classes.logo} src={'assets/logo.png'} />
         <Typography>
-          Raccoon Miner is an open source project developed by Leon Machens. You can find the source
-          code on <Link to="https://github.com/lmachens/raccoon-miner">GitHub</Link>.<br />
+          Raccoon Miner is an open source (GNU GPLv3) project developed by Leon Machens. You can
+          find the source code on <Link to="https://github.com/lmachens/raccoon-miner">GitHub</Link>
+          .<br />
           Feel free to contribute!
         </Typography>
       </div>

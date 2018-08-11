@@ -1,4 +1,4 @@
-import { Button, TextField } from '../generic';
+import { Button, TextField, Typography } from '../generic';
 import React, { Fragment, PureComponent } from 'react';
 
 class Feedback extends PureComponent {
@@ -23,6 +23,10 @@ class Feedback extends PureComponent {
 
     return (
       <Fragment>
+        <Typography>
+          Your feedback helps to improve this app and make it more awesome! Please give as many
+          details as possible if you report a bug or request a feature.
+        </Typography>
         <TextField
           margin="normal"
           onChange={this.handleChange('title')}

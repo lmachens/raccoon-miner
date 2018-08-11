@@ -53618,7 +53618,6 @@
 	Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
 	Popper.placements = placements;
 	Popper.Defaults = Defaults;
-	//# sourceMappingURL=popper.js.map
 
 	var popper = /*#__PURE__*/Object.freeze({
 		default: Popper

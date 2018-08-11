@@ -3,7 +3,7 @@
 Raccoon Miner is a crypto mining app for [Overwolf](https://www.overwolf.com/), an appstore for PC games on Windows.
 The app supports multi algorithms and is compatible with [NiceHash](https://www.nicehash.com).
 
-![](.github/screenshot_0_14_5.jpg)
+![](.github/screenshot_0_22_0.jpg)
 
 ## Download app
 

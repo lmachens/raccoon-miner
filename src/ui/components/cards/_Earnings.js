@@ -57,7 +57,7 @@ EarningsCard.propTypes = {
 };
 
 const mapStateToProps = ({
-  mining: { selectedMinerIdentifier },
+  selectedMinerIdentifier,
   activeMiners,
   profitability,
   price,

@@ -47,9 +47,7 @@ BalanceCard.propTypes = {
 };
 
 const mapStateToProps = ({
-  mining: {
-    workerStats: { unpaidBalance = 0 }
-  },
+  workerStats: { unpaidBalance = 0 },
   price: { USD = 0, EUR = 0 },
   settings: { currency }
 }) => {

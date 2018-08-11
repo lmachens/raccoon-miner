@@ -178,7 +178,7 @@ SettingsDialog.propTypes = {
 const mapStateToProps = ({
   dialogs: { settingsDialogOpen, settingsDialogTab },
   settings,
-  mining: { selectedMinerIdentifier },
+  selectedMinerIdentifier,
   activeMiners,
   profitability
 }) => {

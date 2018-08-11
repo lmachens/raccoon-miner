@@ -71,7 +71,8 @@ class Stats extends PureComponent {
         <div className={classes.temperature}>
           <FanIcon className={classes.fanIcon} />
           <Typography className={classes.marginLeft} variant="subheading">
-            {temperatures && temperatures.max}°C
+            {temperatures && temperatures.max}
+            °C
           </Typography>
         </div>
       </div>
@@ -89,7 +90,7 @@ Stats.propTypes = {
 };
 
 const mapStateToProps = ({
-  mining: { selectedMinerIdentifier },
+  selectedMinerIdentifier,
   activeMiners,
   hardwareInfo,
   price,

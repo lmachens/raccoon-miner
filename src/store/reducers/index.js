@@ -1,4 +1,4 @@
-import { activeMiners, mining } from './_mining';
+import { activeMiners, cores, gpus, miners, selectedMinerIdentifier, workerStats } from './_mining';
 
 import { combineReducers } from 'redux';
 import { dialogs } from './_dialogs';
@@ -16,8 +16,12 @@ const reducers = combineReducers({
   games,
   hardwareInfo,
   logs,
-  mining,
+  cores,
+  gpus,
   activeMiners,
+  miners,
+  selectedMinerIdentifier,
+  workerStats,
   notifications,
   price,
   profitability,

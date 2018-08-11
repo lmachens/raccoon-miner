@@ -144,7 +144,8 @@ WalletDialog.propTypes = {
 
 const mapStateToProps = ({
   dialogs: { cryptoDialogOpen },
-  mining: { miners, selectedMinerIdentifier },
+  selectedMinerIdentifier,
+  miners,
   activeMiners
 }) => {
   const { address, workerName } = miners[selectedMinerIdentifier];

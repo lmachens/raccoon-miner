@@ -73,7 +73,7 @@ CpusCard.propTypes = {
   removeCore: PropTypes.func.isRequired
 };
 
-const mapStateToProps = ({ hardwareInfo: { Cpus }, mining: { cores } }) => {
+const mapStateToProps = ({ hardwareInfo: { Cpus }, cores }) => {
   const maxCores = getMaxCores(Cpus);
   return {
     cores,

@@ -73,7 +73,7 @@ const mapStateToProps = ({
   hardwareInfo: {
     Gpus: { Gpus }
   },
-  mining: { gpus }
+  gpus
 }) => {
   const maxGPUs = getMaxGPUs(Gpus);
 

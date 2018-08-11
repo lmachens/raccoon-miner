@@ -1,7 +1,6 @@
 import {
   CONNECTING_POOL,
   CONTINUE_MINING,
-  RECEIVE_MINING_METRICS,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
   SET_CORES,
@@ -20,58 +19,70 @@ import { CRYPTO_NIGHT_HEAVY, CRYPTO_NIGHT_V7 } from '../../api/mining';
 import { developerAddress } from '../../api/nice-hash';
 import set from 'lodash/set';
 
+export const selectedMinerIdentifier = (state = CRYPTO_NIGHT_V7, { type, data }) => {
+  switch (type) {
+    case SELECT_MINER:
+      return data.minerIdentifier;
+  }
+  return state;
+};
+
 const defaultMinerProps = {
   address: developerAddress,
   workerName: 'raccoon'
 };
 
-export const mining = (
+export const miners = (
   state = {
-    selectedMinerIdentifier: CRYPTO_NIGHT_V7,
-    miners: {
-      [CRYPTO_NIGHT_V7]: {
-        ...defaultMinerProps
-      },
-      [CRYPTO_NIGHT_HEAVY]: {
-        ...defaultMinerProps
-      }
+    [CRYPTO_NIGHT_V7]: {
+      ...defaultMinerProps
     },
-    workerStats: {
-      unpaidBalance: 0
-    },
-    metrics: {},
-    cores: 1,
-    gpus: 1
+    [CRYPTO_NIGHT_HEAVY]: {
+      ...defaultMinerProps
+    }
   },
   { type, data }
 ) => {
-  const newState = { ...state };
   switch (type) {
-    case SET_WORKER_NAME:
-      set(newState, `miners.${data.minerIdentifier}.workerName`, data.workerName);
-      break;
-    case SET_MINING_ADDRESS:
-      set(newState, `miners.${data.minerIdentifier}.address`, data.address);
-      break;
-    case SELECT_MINER:
-      set(newState, `selectedMinerIdentifier`, data);
-      break;
-    case RECEIVE_MINING_METRICS:
-      set(newState, `miners.metrics`, data.metrics);
-      break;
-    case RECEIVE_WORKER_STATS:
-      set(newState, `workerStats`, data.workerStats);
-      break;
-    case SET_CORES:
-      set(newState, `cores`, data.cores);
-      break;
-    case SET_GPUS:
-      set(newState, `gpus`, data.gpus);
-      break;
-    default:
-      return state;
+    case SET_WORKER_NAME: {
+      const miner = { ...state[data.minerIdentifier], workerName: data.workerName };
+      return { ...state, [data.minerIdentifier]: miner };
+    }
+    case SET_MINING_ADDRESS: {
+      const miner = { ...state[data.minerIdentifier], address: data.address };
+      return { ...state, [data.minerIdentifier]: miner };
+    }
   }
-  return newState;
+  return state;
+};
+
+export const workerStats = (
+  state = {
+    unpaidBalance: 0
+  },
+  { type, data }
+) => {
+  switch (type) {
+    case RECEIVE_WORKER_STATS:
+      return data.workerStats;
+  }
+  return state;
+};
+
+export const cores = (state = 1, { type, data }) => {
+  switch (type) {
+    case SET_CORES:
+      return data.cores;
+  }
+  return state;
+};
+
+export const gpus = (state = 1, { type, data }) => {
+  switch (type) {
+    case SET_GPUS:
+      return data.gpus;
+  }
+  return state;
 };
 
 const defaultActiveMinersProps = {

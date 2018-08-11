@@ -62,7 +62,7 @@ MiningButton.propTypes = {
   minerIdentifier: PropTypes.string.isRequired
 };
 
-const mapStateToProps = ({ mining: { selectedMinerIdentifier }, activeMiners }) => {
+const mapStateToProps = ({ selectedMinerIdentifier, activeMiners }) => {
   return {
     hashRate: activeMiners[selectedMinerIdentifier].currentSpeed,
     isMining: activeMiners[selectedMinerIdentifier].isMining,

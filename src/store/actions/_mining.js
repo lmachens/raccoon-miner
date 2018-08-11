@@ -1,7 +1,6 @@
 import {
   CONNECTING_POOL,
   CONTINUE_MINING,
-  RECEIVE_MINING_METRICS,
   RECEIVE_WORKER_STATS,
   SELECT_MINER,
   SET_CORES,
@@ -37,20 +36,20 @@ import { writeLogs } from './_logs';
 
 export const loadDefault = () => {
   return (dispatch, getState) => {
-    const {
-      mining: { selectedMinerIdentifier: minerIdentifier }
-    } = getState();
+    const { selectedMinerIdentifier } = getState();
     dispatch({
       type: SELECT_MINER,
-      data: CRYPTO_NIGHT_V7
+      data: {
+        minerIdentifier: CRYPTO_NIGHT_V7
+      }
     });
     dispatch({
       type: SET_MINING_ADDRESS,
-      data: { address: developerAddress, minerIdentifier }
+      data: { address: developerAddress, minerIdentifier: selectedMinerIdentifier }
     });
     dispatch({
       type: SET_WORKER_NAME,
-      data: { minerIdentifier, workerName: 'raccoon' }
+      data: { minerIdentifier: selectedMinerIdentifier, workerName: 'raccoon' }
     });
     dispatch({
       type: SET_NOTIFICATION,
@@ -61,10 +60,8 @@ export const loadDefault = () => {
 
 export const checkTestMode = () => {
   return (dispatch, getState) => {
-    const {
-      mining: { miners, selectedMinerIdentifier: minerIdentifier }
-    } = getState();
-    const { address } = miners[minerIdentifier];
+    const { miners, selectedMinerIdentifier } = getState();
+    const { address } = miners[selectedMinerIdentifier];
     if (address === developerAddress) {
       dispatch({
         type: SET_NOTIFICATION,
@@ -97,7 +94,6 @@ export const setMiningAddress = (minerIdentifier, address) => {
       dispatch({
         type: RECEIVE_WORKER_STATS,
         data: {
-          minerIdentifier,
           workerStats: {}
         }
       });
@@ -112,7 +108,9 @@ export const selectMiner = minerIdentifier => {
   return dispatch => {
     dispatch({
       type: SELECT_MINER,
-      data: minerIdentifier
+      data: {
+        minerIdentifier
+      }
     });
     dispatch(trackWorkerStats());
   };
@@ -131,22 +129,14 @@ export const trackWorkerStats = () => {
 
 export const fetchMiningMetrics = () => {
   return (dispatch, getState) => {
-    const {
-      mining: { selectedMinerIdentifier: minerIdentifier }
-    } = getState();
+    const { selectedMinerIdentifier } = getState();
     getMiningMetrics()
       .then(result => {
-        dispatch({
-          type: RECEIVE_MINING_METRICS,
-          data: {
-            metrics: result
-          }
-        });
         const speed = result.hashrate.total[0] || 0;
         dispatch({
           type: SET_MINING_SPEED,
           data: {
-            minerIdentifier,
+            minerIdentifier: selectedMinerIdentifier,
             speed
           }
         });
@@ -155,7 +145,7 @@ export const fetchMiningMetrics = () => {
         dispatch({
           type: SET_MINING_ERROR_MESSAGE,
           data: {
-            minerIdentifier,
+            minerIdentifier: selectedMinerIdentifier,
             errorMsg
           }
         });
@@ -176,17 +166,14 @@ export const trackMiningMetrics = () => {
 
 const fetchWorkerStats = () => {
   return (dispatch, getState) => {
-    const {
-      mining: { miners, selectedMinerIdentifier: minerIdentifier }
-    } = getState();
-    const { address } = miners[minerIdentifier];
+    const { miners, selectedMinerIdentifier } = getState();
+    const { address } = miners[selectedMinerIdentifier];
 
-    getStats(address, minerIdentifier)
+    getStats(address, selectedMinerIdentifier)
       .then(result => {
         dispatch({
           type: RECEIVE_WORKER_STATS,
           data: {
-            minerIdentifier,
             workerStats: result
           }
         });
@@ -195,7 +182,6 @@ const fetchWorkerStats = () => {
         dispatch({
           type: RECEIVE_WORKER_STATS,
           data: {
-            minerIdentifier,
             workerStats: {
               unpaidBalance: 0
             }
@@ -204,7 +190,7 @@ const fetchWorkerStats = () => {
         dispatch({
           type: SET_MINING_ERROR_MESSAGE,
           data: {
-            minerIdentifier,
+            selectedMinerIdentifier,
             errorMsg
           }
         });
@@ -223,7 +209,10 @@ export const startMining = (minerIdentifier, callback) => {
 
     const {
       activeMiners,
-      mining: { miners, selectedMinerIdentifier, cores, gpus },
+      miners,
+      selectedMinerIdentifier,
+      cores,
+      gpus,
       settings: { region }
     } = getState();
     const { address = developerAddress, workerName = 'raccoon' } = miners[selectedMinerIdentifier];
@@ -320,10 +309,7 @@ export const stopMining = (minerIdentifier, callback) => {
 
 export const suspendMining = gameTitle => {
   return (dispatch, getState) => {
-    const {
-      activeMiners,
-      mining: { selectedMinerIdentifier }
-    } = getState();
+    const { activeMiners, selectedMinerIdentifier } = getState();
     const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (isMining && !isSuspended) {
       dispatch(writeLogs(`${gameTitle} is running. Mining is suspended!`));
@@ -338,10 +324,7 @@ export const suspendMining = gameTitle => {
 
 export const continueMining = gameTitle => {
   return (dispatch, getState) => {
-    const {
-      activeMiners,
-      mining: { selectedMinerIdentifier }
-    } = getState();
+    const { activeMiners, selectedMinerIdentifier } = getState();
     const { isMining, isSuspended } = activeMiners[selectedMinerIdentifier];
     if (!isMining && isSuspended) {
       dispatch(writeLogs(`${gameTitle} is terminated. Continue mining!`));
@@ -358,7 +341,8 @@ export const addCore = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { selectedMinerIdentifier, cores },
+      selectedMinerIdentifier,
+      cores,
       hardwareInfo: { Cpus }
     } = getState();
 
@@ -379,10 +363,7 @@ export const addCore = () => {
 
 export const removeCore = () => {
   return (dispatch, getState) => {
-    const {
-      activeMiners,
-      mining: { selectedMinerIdentifier, cores }
-    } = getState();
+    const { activeMiners, selectedMinerIdentifier, cores } = getState();
     if (cores - 1 < 0) return;
     dispatch({
       type: SET_CORES,
@@ -400,7 +381,8 @@ export const addGPU = () => {
   return (dispatch, getState) => {
     const {
       activeMiners,
-      mining: { selectedMinerIdentifier, gpus },
+      selectedMinerIdentifier,
+      gpus,
       hardwareInfo: {
         Gpus: { Gpus }
       }
@@ -423,10 +405,7 @@ export const addGPU = () => {
 
 export const removeGPU = () => {
   return (dispatch, getState) => {
-    const {
-      activeMiners,
-      mining: { selectedMinerIdentifier, gpus }
-    } = getState();
+    const { activeMiners, selectedMinerIdentifier, gpus } = getState();
 
     if (gpus - 1 < 0) return;
     dispatch({

@@ -59,7 +59,7 @@
     "production": "rollup -c production.rollup.config.js",
     "test": "jest",
     "release": "git checkout master && git merge dev && standard-version && node tools/release && git checkout dev && git merge master && git push",
-    "release-minor": "git checkout master && git merge dev && standard-version --release-as minor && node tools/release && git checkout dev && git merge master && git push",
+    "release-major": "git checkout master && git merge dev && standard-version --release-as major && node tools/release && git checkout dev && git merge master && git push",
     "precommit": "lint-staged",
     "prepush": "jest",
     "storybook": "start-storybook -p 9001 -c .storybook"

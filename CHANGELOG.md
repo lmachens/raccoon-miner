@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.22.0](https://github.com/lmachens/raccoon-miner/compare/v0.21.0...v0.22.0) (2018-08-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency recompose to v0.28.2 ([#155](https://github.com/lmachens/raccoon-miner/issues/155)) ([86228e1](https://github.com/lmachens/raccoon-miner/commit/86228e1))
+* **deps:** update mui monorepo ([#153](https://github.com/lmachens/raccoon-miner/issues/153)) ([c0ec7c9](https://github.com/lmachens/raccoon-miner/commit/c0ec7c9))
+* **ui:** always show one decimal for temperature ([81336b3](https://github.com/lmachens/raccoon-miner/commit/81336b3))
+
+
+### Features
+
+* **mining:** add developer donation ([3697df4](https://github.com/lmachens/raccoon-miner/commit/3697df4))
+* **ui:** minor adjusted in faq and other texts ([c5028a5](https://github.com/lmachens/raccoon-miner/commit/c5028a5))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.21.0](https://github.com/lmachens/raccoon-miner/compare/v0.20.1...v0.21.0) (2018-08-03)
 
 

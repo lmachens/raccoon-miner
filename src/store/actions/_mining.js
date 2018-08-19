@@ -142,6 +142,7 @@ export const fetchMiningMetrics = () => {
         });
       })
       .catch(errorMsg => {
+        dispatch(writeLogs(errorMsg));
         dispatch({
           type: SET_MINING_ERROR_MESSAGE,
           data: {
@@ -179,6 +180,7 @@ const fetchWorkerStats = () => {
         });
       })
       .catch(errorMsg => {
+        dispatch(writeLogs(errorMsg));
         dispatch({
           type: RECEIVE_WORKER_STATS,
           data: {
@@ -242,6 +244,7 @@ export const startMining = (minerIdentifier, isDeveloperDonationTime = false) =>
           }
         });
       } else if (!isNil(errorMsg)) {
+        dispatch(writeLogs(errorMsg));
         dispatch({
           type: SET_MINING_ERROR_MESSAGE,
           data: {

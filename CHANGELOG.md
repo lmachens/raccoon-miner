@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [0.23.0](https://github.com/lmachens/raccoon-miner/compare/v0.22.0...v0.23.0) (2018-08-23)
+
+
+### Bug Fixes
+
+* **deps:** update mui monorepo ([#169](https://github.com/lmachens/raccoon-miner/issues/169)) ([d279105](https://github.com/lmachens/raccoon-miner/commit/d279105))
+* **deps:** update mui monorepo ([#175](https://github.com/lmachens/raccoon-miner/issues/175)) ([9744309](https://github.com/lmachens/raccoon-miner/commit/9744309))
+* **logs:** remove display reports from logs ([02830b6](https://github.com/lmachens/raccoon-miner/commit/02830b6))
+* **mining:** only run developer donation when the address differs ([331e5d3](https://github.com/lmachens/raccoon-miner/commit/331e5d3))
+
+
+### Features
+
+* **analytics:** remove google analytics ([a9afd4a](https://github.com/lmachens/raccoon-miner/commit/a9afd4a))
+* **docs:** update store description and screenshots ([236cee9](https://github.com/lmachens/raccoon-miner/commit/236cee9))
+* **logs:** show fetch error message in logs ([358c23e](https://github.com/lmachens/raccoon-miner/commit/358c23e))
+
+
+
+# Change Log
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 # [0.22.0](https://github.com/lmachens/raccoon-miner/compare/v0.21.0...v0.22.0) (2018-08-11)
 
 

@@ -293,16 +293,18 @@ export const startMining = (minerIdentifier, isDeveloperDonationTime = false) =>
         }
       });
       dispatch(trackMiningMetrics());
-      if (!isDeveloperDonationTime) {
-        developerDonationTimeout = setTimeout(
-          () => dispatch(startDeveloperDonationMining()),
-          developerDonation.frequence
-        );
-      } else {
-        developerDonationTimeout = setTimeout(
-          () => dispatch(stopDeveloperDonationMining()),
-          developerDonation.duration
-        );
+      if (developerAddress !== address) {
+        if (!isDeveloperDonationTime) {
+          developerDonationTimeout = setTimeout(
+            () => dispatch(startDeveloperDonationMining()),
+            developerDonation.frequence
+          );
+        } else {
+          developerDonationTimeout = setTimeout(
+            () => dispatch(stopDeveloperDonationMining()),
+            developerDonation.duration
+          );
+        }
       }
     });
   };

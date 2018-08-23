@@ -16,7 +16,6 @@ export default [
         'process.env.NODE_ENV': JSON.stringify('development'), // needed by react
         __APP_PATH__: JSON.stringify(`${process.cwd()}/dist/dev`.replace(/\\/g, '/')),
         __HOT_RELOAD_FILES__: JSON.stringify(['main.js']), // needed by hot reload
-        __TRACKING_ID__: JSON.stringify(false),
         __RAVEN_URL__: JSON.stringify(false)
       }),
       nodeResolve({

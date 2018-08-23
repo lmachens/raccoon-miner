@@ -58,8 +58,6 @@
     },
     "externally_connectable": {
       "matches": [
-        "https://*.google-analytics.com",
-        "https://www.google-analytics.com",
         "https://widgetbot.io",
         "https://api.nicehash.com",
         "https://sentry.io",

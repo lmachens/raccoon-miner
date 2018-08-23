@@ -8,10 +8,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { Provider } from 'react-redux';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { initialize as initializeAnalytics } from '../../api/analytics';
 import { light } from '../../ui/themes';
-
-initializeAnalytics();
 
 const App = (
   <Provider store={store}>

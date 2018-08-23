@@ -17,7 +17,6 @@ export default [
         'process.env.NODE_ENV': JSON.stringify('production'), // needed by react
         __APP_PATH__: JSON.stringify(`${process.cwd()}/dist/production`.replace(/\\/g, '/')),
         __HOT_RELOAD_FILES__: JSON.stringify(false),
-        __TRACKING_ID__: JSON.stringify('UA-115959266-2'),
         __RAVEN_URL__: JSON.stringify('https://567a64e71d344d34b0e7f0c773082c64@sentry.io/1208859')
       }),
       nodeResolve({

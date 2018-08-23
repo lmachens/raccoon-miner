@@ -2442,6 +2442,7 @@
 	        }
 	      });
 	    }).catch(errorMsg => {
+	      dispatch(writeLogs(errorMsg));
 	      dispatch({
 	        type: SET_MINING_ERROR_MESSAGE,
 	        data: {
@@ -2480,6 +2481,7 @@
 	        }
 	      });
 	    }).catch(errorMsg => {
+	      dispatch(writeLogs(errorMsg));
 	      dispatch({
 	        type: RECEIVE_WORKER_STATS,
 	        data: {
@@ -2567,6 +2569,7 @@
 	          }
 	        });
 	      } else if (!isNil_1(errorMsg)) {
+	        dispatch(writeLogs(errorMsg));
 	        dispatch({
 	          type: SET_MINING_ERROR_MESSAGE,
 	          data: {
@@ -2617,10 +2620,12 @@
 	      });
 	      dispatch(trackMiningMetrics());
 
-	      if (!isDeveloperDonationTime) {
-	        developerDonationTimeout = setTimeout(() => dispatch(startDeveloperDonationMining()), developerDonation.frequence);
-	      } else {
-	        developerDonationTimeout = setTimeout(() => dispatch(stopDeveloperDonationMining()), developerDonation.duration);
+	      if (developerAddress !== address) {
+	        if (!isDeveloperDonationTime) {
+	          developerDonationTimeout = setTimeout(() => dispatch(startDeveloperDonationMining()), developerDonation.frequence);
+	        } else {
+	          developerDonationTimeout = setTimeout(() => dispatch(stopDeveloperDonationMining()), developerDonation.duration);
+	        }
 	      }
 	    });
 	  };
@@ -3484,7 +3489,6 @@
 	/* eslint-disable no-undef */
 	const APP_PATH = "C:/RaccoonMiner/raccoon-miner/dist/dev";
 	const HOT_RELOAD_FILES = ["main.js"];
-	const TRACKING_ID = false;
 
 	const migrations = {
 	  7: () => {
@@ -3889,7 +3893,7 @@
 
 	var defineProperty$1 = _defineProperty$2;
 
-	function _objectWithoutProperties$2(source, excluded) {
+	function _objectWithoutPropertiesLoose$1(source, excluded) {
 	  if (source == null) return {};
 	  var target = {};
 	  var sourceKeys = Object.keys(source);
@@ -3900,6 +3904,16 @@
 	    if (excluded.indexOf(key) >= 0) continue;
 	    target[key] = source[key];
 	  }
+
+	  return target;
+	}
+
+	var objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose$1;
+
+	function _objectWithoutProperties$2(source, excluded) {
+	  if (source == null) return {};
+	  var target = objectWithoutPropertiesLoose(source, excluded);
+	  var key, i;
 
 	  if (Object.getOwnPropertySymbols) {
 	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
@@ -6379,27 +6393,6 @@
 
 	unwrapExports(interopRequireWildcard);
 
-	function _objectSpread$1(target) {
-	  for (var i = 1; i < arguments.length; i++) {
-	    var source = arguments[i] != null ? arguments[i] : {};
-	    var ownKeys = Object.keys(source);
-
-	    if (typeof Object.getOwnPropertySymbols === 'function') {
-	      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-	        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-	      }));
-	    }
-
-	    ownKeys.forEach(function (key) {
-	      defineProperty$1(target, key, source[key]);
-	    });
-	  }
-
-	  return target;
-	}
-
-	var objectSpread = _objectSpread$1;
-
 	function _classCallCheck$1(instance, Constructor) {
 	  if (!(instance instanceof Constructor)) {
 	    throw new TypeError("Cannot call a class as a function");
@@ -6466,6 +6459,30 @@
 
 	var possibleConstructorReturn = _possibleConstructorReturn$1;
 
+	var getPrototypeOf = createCommonjsModule(function (module) {
+	function _getPrototypeOf(o) {
+	  module.exports = _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+	    return o.__proto__ || Object.getPrototypeOf(o);
+	  };
+	  return _getPrototypeOf(o);
+	}
+
+	module.exports = _getPrototypeOf;
+	});
+
+	var setPrototypeOf = createCommonjsModule(function (module) {
+	function _setPrototypeOf(o, p) {
+	  module.exports = _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+	    o.__proto__ = p;
+	    return o;
+	  };
+
+	  return _setPrototypeOf(o, p);
+	}
+
+	module.exports = _setPrototypeOf;
+	});
+
 	function _inherits$1(subClass, superClass) {
 	  if (typeof superClass !== "function" && superClass !== null) {
 	    throw new TypeError("Super expression must either be null or a function");
@@ -6474,12 +6491,11 @@
 	  subClass.prototype = Object.create(superClass && superClass.prototype, {
 	    constructor: {
 	      value: subClass,
-	      enumerable: false,
 	      writable: true,
 	      configurable: true
 	    }
 	  });
-	  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	  if (superClass) setPrototypeOf(subClass, superClass);
 	}
 
 	var inherits = _inherits$1;
@@ -6489,8 +6505,6 @@
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
-	 *
-	 * @providesModule warning
 	 */
 
 	var warning$2 = function() {};
@@ -6568,14 +6582,14 @@
 	var getOwnPropertyNames = Object.getOwnPropertyNames;
 	var getOwnPropertySymbols$1 = Object.getOwnPropertySymbols;
 	var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-	var getPrototypeOf = Object.getPrototypeOf;
-	var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
+	var getPrototypeOf$1 = Object.getPrototypeOf;
+	var objectPrototype = getPrototypeOf$1 && getPrototypeOf$1(Object);
 
 	function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
 	    if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
 
 	        if (objectPrototype) {
-	            var inheritedComponent = getPrototypeOf(sourceComponent);
+	            var inheritedComponent = getPrototypeOf$1(sourceComponent);
 	            if (inheritedComponent && inheritedComponent !== objectPrototype) {
 	                hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
 	            }
@@ -10682,7 +10696,7 @@
 	});
 	exports.default = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _warning = interopRequireDefault(warning_1$1);
 
@@ -10700,7 +10714,7 @@
 	    return baseClasses;
 	  }
 
-	  return (0, _objectSpread2.default)({}, baseClasses, Object.keys(newClasses).reduce(function (accumulator, key) {
+	  return (0, _extends2.default)({}, baseClasses, Object.keys(newClasses).reduce(function (accumulator, key) {
 	    (0, _warning.default)(baseClasses[key] || noBase, ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not implemented in ".concat((0, _getDisplayName.default)(Component), "."), "You can only override one of the following: ".concat(Object.keys(baseClasses).join(','))].join('\n'));
 	    (0, _warning.default)(!newClasses[key] || typeof newClasses[key] === 'string', ["Material-UI: the key `".concat(key, "` ") + "provided to the classes property is not valid for ".concat((0, _getDisplayName.default)(Component), "."), "You need to provide a non empty string instead of: ".concat(newClasses[key], ".")].join('\n'));
 
@@ -10858,7 +10872,7 @@
 	exports.default = createBreakpoints;
 	exports.keys = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -10919,7 +10933,7 @@
 	    return values[key];
 	  }
 
-	  return (0, _objectSpread2.default)({
+	  return (0, _extends2.default)({
 	    keys: keys,
 	    values: values,
 	    up: up,
@@ -10945,18 +10959,18 @@
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread3 = interopRequireDefault(objectSpread);
+	var _extends3 = interopRequireDefault(_extends_1);
 
 	function createMixins(breakpoints, spacing, mixins) {
 	  var _toolbar;
 
-	  return (0, _objectSpread3.default)({
+	  return (0, _extends3.default)({
 	    gutters: function gutters() {
 	      var styles = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	      return (0, _objectSpread3.default)({
+	      return (0, _extends3.default)({
 	        paddingLeft: spacing.unit * 2,
 	        paddingRight: spacing.unit * 2
-	      }, styles, (0, _defineProperty2.default)({}, breakpoints.up('sm'), (0, _objectSpread3.default)({
+	      }, styles, (0, _defineProperty2.default)({}, breakpoints.up('sm'), (0, _extends3.default)({
 	        paddingLeft: spacing.unit * 3,
 	        paddingRight: spacing.unit * 3
 	      }, styles[breakpoints.up('sm')])));
@@ -11121,8 +11135,6 @@
 	exports.lighten = lighten;
 
 	var _warning = interopRequireDefault(warning_1$1);
-
-	//  weak
 
 	/* eslint-disable no-use-before-define */
 
@@ -11416,7 +11428,7 @@
 	exports.default = createPalette;
 	exports.dark = exports.light = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -11579,7 +11591,7 @@
 	    light: light
 	  };
 	  (0, _warning.default)(types[type], "Material-UI: the palette type `".concat(type, "` is not supported."));
-	  var paletteOutput = (0, _deepmerge.default)((0, _objectSpread2.default)({
+	  var paletteOutput = (0, _deepmerge.default)((0, _extends2.default)({
 	    // A collection of common colors.
 	    common: _common.default,
 	    // The palette type, can be light or dark.
@@ -11624,7 +11636,7 @@
 	});
 	exports.default = createTypography;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -11666,7 +11678,7 @@
 	    fontWeightLight: fontWeightLight,
 	    fontWeightRegular: fontWeightRegular,
 	    fontWeightMedium: fontWeightMedium,
-	    display4: (0, _objectSpread2.default)({
+	    display4: (0, _extends2.default)({
 	      fontSize: pxToRem(112),
 	      fontWeight: fontWeightLight,
 	      fontFamily: fontFamily,
@@ -11675,7 +11687,7 @@
 	      marginLeft: '-.04em',
 	      color: palette.text.secondary
 	    }, allVariants),
-	    display3: (0, _objectSpread2.default)({
+	    display3: (0, _extends2.default)({
 	      fontSize: pxToRem(56),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
@@ -11684,7 +11696,7 @@
 	      marginLeft: '-.02em',
 	      color: palette.text.secondary
 	    }, allVariants),
-	    display2: (0, _objectSpread2.default)({
+	    display2: (0, _extends2.default)({
 	      fontSize: pxToRem(45),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
@@ -11692,56 +11704,56 @@
 	      marginLeft: '-.02em',
 	      color: palette.text.secondary
 	    }, allVariants),
-	    display1: (0, _objectSpread2.default)({
+	    display1: (0, _extends2.default)({
 	      fontSize: pxToRem(34),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(41 / 34), "em"),
 	      color: palette.text.secondary
 	    }, allVariants),
-	    headline: (0, _objectSpread2.default)({
+	    headline: (0, _extends2.default)({
 	      fontSize: pxToRem(24),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(32.5 / 24), "em"),
 	      color: palette.text.primary
 	    }, allVariants),
-	    title: (0, _objectSpread2.default)({
+	    title: (0, _extends2.default)({
 	      fontSize: pxToRem(21),
 	      fontWeight: fontWeightMedium,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(24.5 / 21), "em"),
 	      color: palette.text.primary
 	    }, allVariants),
-	    subheading: (0, _objectSpread2.default)({
+	    subheading: (0, _extends2.default)({
 	      fontSize: pxToRem(16),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(24 / 16), "em"),
 	      color: palette.text.primary
 	    }, allVariants),
-	    body2: (0, _objectSpread2.default)({
+	    body2: (0, _extends2.default)({
 	      fontSize: pxToRem(14),
 	      fontWeight: fontWeightMedium,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(24 / 14), "em"),
 	      color: palette.text.primary
 	    }, allVariants),
-	    body1: (0, _objectSpread2.default)({
+	    body1: (0, _extends2.default)({
 	      fontSize: pxToRem(14),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(20.5 / 14), "em"),
 	      color: palette.text.primary
 	    }, allVariants),
-	    caption: (0, _objectSpread2.default)({
+	    caption: (0, _extends2.default)({
 	      fontSize: pxToRem(12),
 	      fontWeight: fontWeightRegular,
 	      fontFamily: fontFamily,
 	      lineHeight: "".concat(round(16.5 / 12), "em"),
 	      color: palette.text.secondary
 	    }, allVariants),
-	    button: (0, _objectSpread2.default)({
+	    button: (0, _extends2.default)({
 	      fontSize: pxToRem(14),
 	      textTransform: 'uppercase',
 	      fontWeight: fontWeightMedium,
@@ -11889,23 +11901,21 @@
 	  create: function create() {
 	    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ['all'];
 	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-	    return function () {
-	      var _options$duration = options.duration,
-	          durationOption = _options$duration === void 0 ? duration.standard : _options$duration,
-	          _options$easing = options.easing,
-	          easingOption = _options$easing === void 0 ? easing.easeInOut : _options$easing,
-	          _options$delay = options.delay,
-	          delay = _options$delay === void 0 ? 0 : _options$delay,
-	          other = (0, _objectWithoutProperties2.default)(options, ["duration", "easing", "delay"]);
-	      (0, _warning.default)(isString(props) || Array.isArray(props), 'Material-UI: argument "props" must be a string or Array.');
-	      (0, _warning.default)(isNumber(durationOption) || isString(durationOption), "Material-UI: argument \"duration\" must be a number or a string but found ".concat(durationOption, "."));
-	      (0, _warning.default)(isString(easingOption), 'Material-UI: argument "easing" must be a string.');
-	      (0, _warning.default)(isNumber(delay) || isString(delay), 'Material-UI: argument "delay" must be a number or a string.');
-	      (0, _warning.default)(Object.keys(other).length === 0, "Material-UI: unrecognized argument(s) [".concat(Object.keys(other).join(','), "]"));
-	      return (Array.isArray(props) ? props : [props]).map(function (animatedProp) {
-	        return "".concat(animatedProp, " ").concat(typeof durationOption === 'string' ? durationOption : formatMs(durationOption), " ").concat(easingOption, " ").concat(typeof delay === 'string' ? delay : formatMs(delay));
-	      }).join(',');
-	    }();
+	    var _options$duration = options.duration,
+	        durationOption = _options$duration === void 0 ? duration.standard : _options$duration,
+	        _options$easing = options.easing,
+	        easingOption = _options$easing === void 0 ? easing.easeInOut : _options$easing,
+	        _options$delay = options.delay,
+	        delay = _options$delay === void 0 ? 0 : _options$delay,
+	        other = (0, _objectWithoutProperties2.default)(options, ["duration", "easing", "delay"]);
+	    (0, _warning.default)(isString(props) || Array.isArray(props), 'Material-UI: argument "props" must be a string or Array.');
+	    (0, _warning.default)(isNumber(durationOption) || isString(durationOption), "Material-UI: argument \"duration\" must be a number or a string but found ".concat(durationOption, "."));
+	    (0, _warning.default)(isString(easingOption), 'Material-UI: argument "easing" must be a string.');
+	    (0, _warning.default)(isNumber(delay) || isString(delay), 'Material-UI: argument "delay" must be a number or a string.');
+	    (0, _warning.default)(Object.keys(other).length === 0, "Material-UI: unrecognized argument(s) [".concat(Object.keys(other).join(','), "]"));
+	    return (Array.isArray(props) ? props : [props]).map(function (animatedProp) {
+	      return "".concat(animatedProp, " ").concat(typeof durationOption === 'string' ? durationOption : formatMs(durationOption), " ").concat(easingOption, " ").concat(typeof delay === 'string' ? delay : formatMs(delay));
+	    }).join(',');
 	  },
 	  getAutoHeightDuration: function getAutoHeightDuration(height) {
 	    if (!height) {
@@ -11958,7 +11968,7 @@
 	});
 	exports.default = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -12001,7 +12011,7 @@
 	      other = (0, _objectWithoutProperties2.default)(options, ["breakpoints", "mixins", "palette", "shadows", "typography"]);
 	  var palette = (0, _createPalette.default)(paletteInput);
 	  var breakpoints = (0, _createBreakpoints.default)(breakpointsInput);
-	  var muiTheme = (0, _objectSpread2.default)({
+	  var muiTheme = (0, _extends2.default)({
 	    breakpoints: breakpoints,
 	    direction: 'ltr',
 	    mixins: (0, _createMixins.default)(breakpoints, _spacing.default, mixinsInput),
@@ -12153,7 +12163,7 @@
 	});
 	exports.default = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _typeof2 = interopRequireDefault(_typeof_1);
 
@@ -12179,7 +12189,7 @@
 	    }
 
 	    var overrides = theme.overrides[name];
-	    var stylesWithOverrides = (0, _objectSpread2.default)({}, styles);
+	    var stylesWithOverrides = (0, _extends2.default)({}, styles);
 	    Object.keys(overrides).forEach(function (key) {
 	      (0, _warning.default)(stylesWithOverrides[key], ['Material-UI: you are trying to override a style that does not exist.', "Fix the `".concat(key, "` key of `theme.overrides.").concat(name, "`.")].join('\n'));
 	      stylesWithOverrides[key] = (0, _deepmerge.default)(stylesWithOverrides[key], overrides[key], {
@@ -12239,13 +12249,13 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
 
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -12340,7 +12350,7 @@
 	        var _this;
 
 	        (0, _classCallCheck2.default)(this, WithStyles);
-	        _this = (0, _possibleConstructorReturn2.default)(this, (WithStyles.__proto__ || Object.getPrototypeOf(WithStyles)).call(this, props, context));
+	        _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(WithStyles).call(this, props, context));
 	        _this.disableStylesGeneration = false;
 	        _this.jss = null;
 	        _this.sheetOptions = null;
@@ -12349,8 +12359,8 @@
 	        _this.theme = null;
 	        _this.unsubscribeId = null;
 	        _this.state = {};
-	        _this.jss = _this.context[ns$$1.jss] || jss;
-	        var muiThemeProviderOptions = _this.context.muiThemeProviderOptions;
+	        _this.jss = context[ns$$1.jss] || jss;
+	        var muiThemeProviderOptions = context.muiThemeProviderOptions;
 
 	        if (muiThemeProviderOptions) {
 	          if (muiThemeProviderOptions.sheetsManager) {
@@ -12364,9 +12374,9 @@
 
 
 	        _this.stylesCreatorSaved = stylesCreator;
-	        _this.sheetOptions = (0, _objectSpread2.default)({
+	        _this.sheetOptions = (0, _extends2.default)({
 	          generateClassName: generateClassName
-	        }, _this.context[ns$$1.sheetOptions]); // We use || as the function call is lazy evaluated.
+	        }, context[ns$$1.sheetOptions]); // We use || as the function call is lazy evaluated.
 
 	        _this.theme = listenToTheme ? _themeListener.default.initial(context) || getDefaultTheme() : noopTheme;
 
@@ -12494,7 +12504,7 @@
 	              (0, _warning.default)(typeof meta === 'string', ['Material-UI: the component displayName is invalid. It needs to be a string.', "Please fix the following component: ".concat(Component, ".")].join('\n'));
 	            }
 
-	            var sheet = this.jss.createStyleSheet(styles, (0, _objectSpread2.default)({
+	            var sheet = this.jss.createStyleSheet(styles, (0, _extends2.default)({
 	              meta: meta,
 	              classNamePrefix: meta,
 	              flip: typeof flip === 'boolean' ? flip : theme.direction === 'rtl',
@@ -12538,10 +12548,10 @@
 	      }, {
 	        key: "render",
 	        value: function render() {
-	          var _props = this.props,
-	              classes = _props.classes,
-	              innerRef = _props.innerRef,
-	              other = (0, _objectWithoutProperties2.default)(_props, ["classes", "innerRef"]);
+	          var _this$props = this.props,
+	              classes = _this$props.classes,
+	              innerRef = _this$props.innerRef,
+	              other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "innerRef"]);
 	          var more = (0, _getThemeProps.default)({
 	            theme: this.theme,
 	            name: name
@@ -12572,7 +12582,7 @@
 	       */
 	      innerRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object])
 	    };
-	    WithStyles.contextTypes = (0, _objectSpread2.default)({
+	    WithStyles.contextTypes = (0, _extends2.default)({
 	      muiThemeProviderOptions: _propTypes.default.object
 	    }, _contextTypes.default, listenToTheme ? _themeListener.default.contextTypes : {});
 
@@ -12616,7 +12626,6 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	//  weak
 	function capitalize(string) {
 	  if (typeof string !== 'string') {
 	    throw new Error('Material-UI: capitalize(string) expects a string argument.');
@@ -12705,13 +12714,11 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -12730,7 +12737,7 @@
 	      boxShadow: shadow
 	    };
 	  });
-	  return (0, _objectSpread2.default)({
+	  return (0, _extends2.default)({
 	    /* Styles applied to the root element. */
 	    root: {
 	      backgroundColor: theme.palette.background.paper
@@ -13079,16 +13086,7 @@
 	  var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.colorDefault, childrenProp && !src && !srcSet), classNameProp);
 	  var children = null;
 
-	  if (childrenProp) {
-	    if (childrenClassNameProp && typeof childrenProp !== 'string' && _react.default.isValidElement(childrenProp)) {
-	      var childrenClassName = (0, _classnames.default)(childrenClassNameProp, childrenProp.props.className);
-	      children = _react.default.cloneElement(childrenProp, {
-	        className: childrenClassName
-	      });
-	    } else {
-	      children = childrenProp;
-	    }
-	  } else if (src || srcSet) {
+	  if (src || srcSet) {
 	    children = _react.default.createElement("img", (0, _extends2.default)({
 	      alt: alt,
 	      src: src,
@@ -13096,6 +13094,13 @@
 	      sizes: sizes,
 	      className: classes.img
 	    }, imgProps));
+	  } else if (childrenClassNameProp && _react.default.isValidElement(childrenProp)) {
+	    var childrenClassName = (0, _classnames.default)(childrenClassNameProp, childrenProp.props.className);
+	    children = _react.default.cloneElement(childrenProp, {
+	      className: childrenClassName
+	    });
+	  } else {
+	    children = childrenProp;
 	  }
 
 	  return _react.default.createElement(Component, (0, _extends2.default)({
@@ -30487,7 +30492,6 @@
 
 	var _ownerDocument = interopRequireDefault(ownerDocument_1);
 
-	//  weak
 	var internal = {
 	  focusKeyPressed: false,
 	  keyUpEventTimeout: -1
@@ -31585,6 +31589,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -31604,9 +31610,9 @@
 	  (0, _inherits2.default)(Ripple, _React$Component);
 
 	  function Ripple() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Ripple);
 
@@ -31614,18 +31620,25 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Ripple.__proto__ || Object.getPrototypeOf(Ripple)).call.apply(_ref, [this].concat(args))), _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Ripple)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.state = {
 	      visible: false,
 	      leaving: false
-	    }, _this.handleEnter = function () {
+	    };
+
+	    _this.handleEnter = function () {
 	      _this.setState({
 	        visible: true
 	      });
-	    }, _this.handleExit = function () {
+	    };
+
+	    _this.handleExit = function () {
 	      _this.setState({
 	        leaving: true
 	      });
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Ripple, [{
@@ -31633,17 +31646,17 @@
 	    value: function render() {
 	      var _classNames, _classNames2;
 
-	      var _props = this.props,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          pulsate = _props.pulsate,
-	          rippleX = _props.rippleX,
-	          rippleY = _props.rippleY,
-	          rippleSize = _props.rippleSize,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "pulsate", "rippleX", "rippleY", "rippleSize"]);
-	      var _state = this.state,
-	          visible = _state.visible,
-	          leaving = _state.leaving;
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          pulsate = _this$props.pulsate,
+	          rippleX = _this$props.rippleX,
+	          rippleY = _this$props.rippleY,
+	          rippleSize = _this$props.rippleSize,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "pulsate", "rippleX", "rippleY", "rippleSize"]);
+	      var _this$state = this.state,
+	          visible = _this$state.visible,
+	          leaving = _this$state.leaving;
 	      var rippleClassName = (0, _classnames.default)(classes.ripple, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.rippleVisible, visible), (0, _defineProperty2.default)(_classNames, classes.ripplePulsate, pulsate), _classNames), classNameProp);
 	      var rippleStyles = {
 	        width: rippleSize,
@@ -31727,6 +31740,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -31851,9 +31866,9 @@
 	  (0, _inherits2.default)(TouchRipple, _React$PureComponent);
 
 	  function TouchRipple() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, TouchRipple);
 
@@ -31861,15 +31876,23 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = TouchRipple.__proto__ || Object.getPrototypeOf(TouchRipple)).call.apply(_ref, [this].concat(args))), _this.ignoringMouseDown = false, _this.startTimer = null, _this.startTimerCommit = null, _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(TouchRipple)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.ignoringMouseDown = false;
+	    _this.startTimer = null;
+	    _this.startTimerCommit = null;
+	    _this.state = {
 	      // eslint-disable-next-line react/no-unused-state
 	      nextKey: 0,
 	      ripples: []
-	    }, _this.pulsate = function () {
+	    };
+
+	    _this.pulsate = function () {
 	      _this.start({}, {
 	        pulsate: true
 	      });
-	    }, _this.start = function () {
+	    };
+
+	    _this.start = function () {
 	      var event = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 	      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 	      var cb = arguments.length > 2 ? arguments[2] : undefined;
@@ -31889,7 +31912,7 @@
 	        _this.ignoringMouseDown = true;
 	      }
 
-	      var element = fakeElement ? null : _reactDom.default.findDOMNode((0, _assertThisInitialized2.default)(_this));
+	      var element = fakeElement ? null : _reactDom.default.findDOMNode((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)));
 	      var rect = element ? element.getBoundingClientRect() : {
 	        width: 0,
 	        height: 0,
@@ -31953,7 +31976,9 @@
 	          cb: cb
 	        });
 	      }
-	    }, _this.startCommit = function (params) {
+	    };
+
+	    _this.startCommit = function (params) {
 	      var pulsate = params.pulsate,
 	          rippleX = params.rippleX,
 	          rippleY = params.rippleY,
@@ -31977,7 +32002,9 @@
 	          })])
 	        };
 	      }, cb);
-	    }, _this.stop = function (event, cb) {
+	    };
+
+	    _this.stop = function (event, cb) {
 	      clearTimeout(_this.startTimer);
 	      var ripples = _this.state.ripples; // The touch interaction occurs too quickly.
 	      // We still want to show ripple effect.
@@ -32001,7 +32028,9 @@
 	          ripples: ripples.slice(1)
 	        }, cb);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(TouchRipple, [{
@@ -32012,11 +32041,11 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          center = _props.center,
-	          classes = _props.classes,
-	          className = _props.className,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["center", "classes", "className"]);
+	      var _this$props = this.props,
+	          center = _this$props.center,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["center", "classes", "className"]);
 	      return _react.default.createElement(_TransitionGroup.default, (0, _extends2.default)({
 	        component: "span",
 	        enter: true,
@@ -32124,6 +32153,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _assertThisInitialized2 = interopRequireDefault(assertThisInitialized);
@@ -32214,9 +32245,9 @@
 	  (0, _inherits2.default)(ButtonBase, _React$Component);
 
 	  function ButtonBase() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, ButtonBase);
 
@@ -32224,7 +32255,14 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ButtonBase.__proto__ || Object.getPrototypeOf(ButtonBase)).call.apply(_ref, [this].concat(args))), _this.ripple = null, _this.keyDown = false, _this.button = null, _this.focusVisibleTimeout = null, _this.focusVisibleCheckTime = 50, _this.focusVisibleMaxCheckTimes = 5, _this.handleMouseDown = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseDown', 'start', function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(ButtonBase)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.ripple = null;
+	    _this.keyDown = false;
+	    _this.button = null;
+	    _this.focusVisibleTimeout = null;
+	    _this.focusVisibleCheckTime = 50;
+	    _this.focusVisibleMaxCheckTimes = 5;
+	    _this.handleMouseDown = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'MouseDown', 'start', function () {
 	      clearTimeout(_this.focusVisibleTimeout);
 
 	      if (_this.state.focusVisible) {
@@ -32232,11 +32270,17 @@
 	          focusVisible: false
 	        });
 	      }
-	    }), _this.handleMouseUp = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseUp', 'stop'), _this.handleMouseLeave = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'MouseLeave', 'stop', function (event) {
+	    });
+	    _this.handleMouseUp = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'MouseUp', 'stop');
+	    _this.handleMouseLeave = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'MouseLeave', 'stop', function (event) {
 	      if (_this.state.focusVisible) {
 	        event.preventDefault();
 	      }
-	    }), _this.handleTouchStart = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchStart', 'start'), _this.handleTouchEnd = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchEnd', 'stop'), _this.handleTouchMove = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'TouchMove', 'stop'), _this.handleBlur = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)(_this), 'Blur', 'stop', function () {
+	    });
+	    _this.handleTouchStart = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'TouchStart', 'start');
+	    _this.handleTouchEnd = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'TouchEnd', 'stop');
+	    _this.handleTouchMove = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'TouchMove', 'stop');
+	    _this.handleBlur = (0, _createRippleHandler.default)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), 'Blur', 'stop', function () {
 	      clearTimeout(_this.focusVisibleTimeout);
 
 	      if (_this.state.focusVisible) {
@@ -32244,9 +32288,14 @@
 	          focusVisible: false
 	        });
 	      }
-	    }), _this.state = {}, _this.onRippleRef = function (node) {
+	    });
+	    _this.state = {};
+
+	    _this.onRippleRef = function (node) {
 	      _this.ripple = node;
-	    }, _this.onFocusVisibleHandler = function (event) {
+	    };
+
+	    _this.onFocusVisibleHandler = function (event) {
 	      _this.keyDown = false;
 
 	      _this.setState({
@@ -32256,7 +32305,9 @@
 	      if (_this.props.onFocusVisible) {
 	        _this.props.onFocusVisible(event);
 	      }
-	    }, _this.handleKeyDown = function (event) {
+	    };
+
+	    _this.handleKeyDown = function (event) {
 	      var _this$props = _this.props,
 	          component = _this$props.component,
 	          focusRipple = _this$props.focusRipple,
@@ -32285,7 +32336,9 @@
 	          onClick(event);
 	        }
 	      }
-	    }, _this.handleKeyUp = function (event) {
+	    };
+
+	    _this.handleKeyUp = function (event) {
 	      if (_this.props.focusRipple && (0, _keycode.default)(event) === 'space' && _this.ripple && _this.state.focusVisible) {
 	        _this.keyDown = false;
 	        event.persist();
@@ -32298,7 +32351,9 @@
 	      if (_this.props.onKeyUp) {
 	        _this.props.onKeyUp(event);
 	      }
-	    }, _this.handleFocus = function (event) {
+	    };
+
+	    _this.handleFocus = function (event) {
 	      if (_this.props.disabled) {
 	        return;
 	      } // Fix for https://github.com/facebook/react/issues/7769
@@ -32309,14 +32364,16 @@
 	      }
 
 	      event.persist();
-	      (0, focusVisible.detectFocusVisible)((0, _assertThisInitialized2.default)(_this), _this.button, function () {
+	      (0, focusVisible.detectFocusVisible)((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), _this.button, function () {
 	        _this.onFocusVisibleHandler(event);
 	      });
 
 	      if (_this.props.onFocus) {
 	        _this.props.onFocus(event);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(ButtonBase, [{
@@ -32357,34 +32414,34 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props = this.props,
-	          action = _props.action,
-	          buttonRef = _props.buttonRef,
-	          centerRipple = _props.centerRipple,
-	          children = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          component = _props.component,
-	          disabled = _props.disabled,
-	          disableRipple = _props.disableRipple,
-	          disableTouchRipple = _props.disableTouchRipple,
-	          focusRipple = _props.focusRipple,
-	          focusVisibleClassName = _props.focusVisibleClassName,
-	          onBlur = _props.onBlur,
-	          onFocus = _props.onFocus,
-	          onFocusVisible = _props.onFocusVisible,
-	          onKeyDown = _props.onKeyDown,
-	          onKeyUp = _props.onKeyUp,
-	          onMouseDown = _props.onMouseDown,
-	          onMouseLeave = _props.onMouseLeave,
-	          onMouseUp = _props.onMouseUp,
-	          onTouchEnd = _props.onTouchEnd,
-	          onTouchMove = _props.onTouchMove,
-	          onTouchStart = _props.onTouchStart,
-	          tabIndex = _props.tabIndex,
-	          TouchRippleProps = _props.TouchRippleProps,
-	          type = _props.type,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["action", "buttonRef", "centerRipple", "children", "classes", "className", "component", "disabled", "disableRipple", "disableTouchRipple", "focusRipple", "focusVisibleClassName", "onBlur", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "type"]);
+	      var _this$props2 = this.props,
+	          action = _this$props2.action,
+	          buttonRef = _this$props2.buttonRef,
+	          centerRipple = _this$props2.centerRipple,
+	          children = _this$props2.children,
+	          classes = _this$props2.classes,
+	          classNameProp = _this$props2.className,
+	          component = _this$props2.component,
+	          disabled = _this$props2.disabled,
+	          disableRipple = _this$props2.disableRipple,
+	          disableTouchRipple = _this$props2.disableTouchRipple,
+	          focusRipple = _this$props2.focusRipple,
+	          focusVisibleClassName = _this$props2.focusVisibleClassName,
+	          onBlur = _this$props2.onBlur,
+	          onFocus = _this$props2.onFocus,
+	          onFocusVisible = _this$props2.onFocusVisible,
+	          onKeyDown = _this$props2.onKeyDown,
+	          onKeyUp = _this$props2.onKeyUp,
+	          onMouseDown = _this$props2.onMouseDown,
+	          onMouseLeave = _this$props2.onMouseLeave,
+	          onMouseUp = _this$props2.onMouseUp,
+	          onTouchEnd = _this$props2.onTouchEnd,
+	          onTouchMove = _this$props2.onTouchMove,
+	          onTouchStart = _this$props2.onTouchStart,
+	          tabIndex = _this$props2.tabIndex,
+	          TouchRippleProps = _this$props2.TouchRippleProps,
+	          type = _this$props2.type,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["action", "buttonRef", "centerRipple", "children", "classes", "className", "component", "disabled", "disableRipple", "disableTouchRipple", "focusRipple", "focusVisibleClassName", "onBlur", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "type"]);
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.focusVisible, this.state.focusVisible), (0, _defineProperty2.default)(_classNames, focusVisibleClassName, this.state.focusVisible), _classNames), classNameProp);
 	      var buttonProps = {};
 	      var ComponentProp = component;
@@ -32650,13 +32707,11 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -32676,7 +32731,7 @@
 	var styles = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
-	    root: (0, _objectSpread2.default)({}, theme.typography.button, {
+	    root: (0, _extends2.default)({}, theme.typography.button, {
 	      lineHeight: '1.4em',
 	      // Improve readability for multiline button.
 	      boxSizing: 'border-box',
@@ -32685,7 +32740,7 @@
 	      padding: '8px 16px',
 	      borderRadius: theme.shape.borderRadius,
 	      color: theme.palette.text.primary,
-	      transition: theme.transitions.create(['background-color', 'box-shadow'], {
+	      transition: theme.transitions.create(['background-color', 'box-shadow', 'border'], {
 	        duration: theme.transitions.duration.short
 	      }),
 	      '&:hover': {
@@ -32752,6 +32807,22 @@
 	    /* Styles applied to the root element if `variant="outlined"`. */
 	    outlined: {
 	      border: "1px solid ".concat(theme.palette.type === 'light' ? 'rgba(0, 0, 0, 0.23)' : 'rgba(255, 255, 255, 0.23)')
+	    },
+
+	    /* Styles applied to the root element if `variant="outlined"` and `color="primary"`. */
+	    outlinedPrimary: {
+	      border: "1px solid ".concat((0, colorManipulator.fade)(theme.palette.primary.main, 0.5)),
+	      '&:hover': {
+	        border: "1px solid ".concat(theme.palette.primary.main)
+	      }
+	    },
+
+	    /* Styles applied to the root element if `variant="outlined"` and `color="secondary"`. */
+	    outlinedSecondary: {
+	      border: "1px solid ".concat((0, colorManipulator.fade)(theme.palette.secondary.main, 0.5)),
+	      '&:hover': {
+	        border: "1px solid ".concat(theme.palette.secondary.main)
+	      }
 	    },
 
 	    /* Styles applied to the root element if `variant="[contained | fab]"`. */
@@ -32902,7 +32973,7 @@
 	  var fab = variant === 'fab' || variant === 'extendedFab';
 	  var contained = variant === 'contained' || variant === 'raised';
 	  var text = variant === 'text' || variant === 'flat' || variant === 'outlined';
-	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.extendedFab, variant === 'extendedFab'), (0, _defineProperty2.default)(_classNames, classes.text, text), (0, _defineProperty2.default)(_classNames, classes.textPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.textSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.flat, variant === 'text' || variant === 'flat'), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, (variant === 'text' || variant === 'flat') && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, (variant === 'text' || variant === 'flat') && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.contained, contained || fab), (0, _defineProperty2.default)(_classNames, classes.containedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.containedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raised, contained || fab), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), _classNames), classNameProp);
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.fab, fab), (0, _defineProperty2.default)(_classNames, classes.mini, fab && mini), (0, _defineProperty2.default)(_classNames, classes.extendedFab, variant === 'extendedFab'), (0, _defineProperty2.default)(_classNames, classes.text, text), (0, _defineProperty2.default)(_classNames, classes.textPrimary, text && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.textSecondary, text && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.flat, variant === 'text' || variant === 'flat'), (0, _defineProperty2.default)(_classNames, classes.flatPrimary, (variant === 'text' || variant === 'flat') && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.flatSecondary, (variant === 'text' || variant === 'flat') && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.contained, contained || fab), (0, _defineProperty2.default)(_classNames, classes.containedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.containedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.raised, contained || fab), (0, _defineProperty2.default)(_classNames, classes.raisedPrimary, (contained || fab) && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.raisedSecondary, (contained || fab) && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes.outlined, variant === 'outlined'), (0, _defineProperty2.default)(_classNames, classes.outlinedPrimary, variant === 'outlined' && color === 'primary'), (0, _defineProperty2.default)(_classNames, classes.outlinedSecondary, variant === 'outlined' && color === 'secondary'), (0, _defineProperty2.default)(_classNames, classes["size".concat((0, helpers.capitalize)(size))], size !== 'medium'), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), (0, _defineProperty2.default)(_classNames, classes.colorInherit, color === 'inherit'), _classNames), classNameProp);
 	  return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
 	    className: className,
 	    disabled: disabled,
@@ -34382,7 +34453,7 @@
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread3 = interopRequireDefault(objectSpread);
+	var _extends3 = interopRequireDefault(_extends_1);
 
 	// This module is based on https://github.com/airbnb/prop-types-exact repository.
 	// However, in order to reduce the number of dependencies and to remove some extra safe checks
@@ -34393,7 +34464,7 @@
 
 	function exactProp(propTypes) {
 
-	  return (0, _objectSpread3.default)({}, propTypes, (0, _defineProperty2.default)({}, specialProperty, function (props) {
+	  return (0, _extends3.default)({}, propTypes, (0, _defineProperty2.default)({}, specialProperty, function (props) {
 	    var unsupportedProps = Object.keys(props).filter(function (prop) {
 	      return !propTypes.hasOwnProperty(prop);
 	    });
@@ -34415,7 +34486,7 @@
 	unwrapExports(exactProp_1);
 	var exactProp_2 = exactProp_1.specialProperty;
 
-	var require$$9 = ( brcast_es && createBroadcast ) || brcast_es;
+	var require$$10 = ( brcast_es && createBroadcast ) || brcast_es;
 
 	var MuiThemeProvider_1 = createCommonjsModule(function (module, exports) {
 
@@ -34428,7 +34499,7 @@
 	});
 	exports.default = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
@@ -34438,6 +34509,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -34446,7 +34519,7 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _brcast = interopRequireDefault(require$$9);
+	var _brcast = interopRequireDefault(require$$10);
 
 	var _themeListener = interopRequireWildcard(themeListener_1);
 
@@ -34467,14 +34540,14 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, MuiThemeProvider);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (MuiThemeProvider.__proto__ || Object.getPrototypeOf(MuiThemeProvider)).call(this, props, context)); // Get the outer theme from the context, can be null
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(MuiThemeProvider).call(this)); // Get the outer theme from the context, can be null
 
 	    _this.broadcast = (0, _brcast.default)();
 	    _this.unsubscribeId = null;
 	    _this.outerTheme = null;
 	    _this.outerTheme = _themeListener.default.initial(context); // Propagate the theme so it can be accessed by the children
 
-	    _this.broadcast.setState(_this.mergeOuterLocalTheme(_this.props.theme));
+	    _this.broadcast.setState(_this.mergeOuterLocalTheme(props.theme));
 
 	    return _this;
 	  }
@@ -34484,9 +34557,9 @@
 	    value: function getChildContext() {
 	      var _ref;
 
-	      var _props = this.props,
-	          sheetsManager = _props.sheetsManager,
-	          disableStylesGeneration = _props.disableStylesGeneration;
+	      var _this$props = this.props,
+	          sheetsManager = _this$props.sheetsManager,
+	          disableStylesGeneration = _this$props.disableStylesGeneration;
 	      var muiThemeProviderOptions = this.context.muiThemeProviderOptions || {};
 
 	      if (sheetsManager !== undefined) {
@@ -34540,7 +34613,7 @@
 	        return localTheme;
 	      }
 
-	      return (0, _objectSpread2.default)({}, this.outerTheme, localTheme);
+	      return (0, _extends2.default)({}, this.outerTheme, localTheme);
 	    }
 	  }, {
 	    key: "render",
@@ -34589,10 +34662,10 @@
 	  theme: _propTypes.default.oneOfType([_propTypes.default.object, _propTypes.default.func]).isRequired
 	};
 	MuiThemeProvider.propTypes = (0, _exactProp.default)(MuiThemeProvider.propTypes);
-	MuiThemeProvider.childContextTypes = (0, _objectSpread2.default)({}, _themeListener.default.contextTypes, {
+	MuiThemeProvider.childContextTypes = (0, _extends2.default)({}, _themeListener.default.contextTypes, {
 	  muiThemeProviderOptions: _propTypes.default.object
 	});
-	MuiThemeProvider.contextTypes = (0, _objectSpread2.default)({}, _themeListener.default.contextTypes, {
+	MuiThemeProvider.contextTypes = (0, _extends2.default)({}, _themeListener.default.contextTypes, {
 	  muiThemeProviderOptions: _propTypes.default.object
 	});
 	var _default = MuiThemeProvider;
@@ -34608,8 +34681,8 @@
 	});
 	exports.default = createStyles;
 
-	function createStyles(s) {
-	  return s;
+	function createStyles(styles) {
+	  return styles;
 	}
 	});
 
@@ -34633,6 +34706,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -34671,7 +34746,7 @@
 	        var _this;
 
 	        (0, _classCallCheck2.default)(this, WithTheme);
-	        _this = (0, _possibleConstructorReturn2.default)(this, (WithTheme.__proto__ || Object.getPrototypeOf(WithTheme)).call(this, props, context));
+	        _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(WithTheme).call(this));
 	        _this.unsubscribeId = null;
 	        _this.state = {};
 	        _this.state = {
@@ -34702,9 +34777,9 @@
 	      }, {
 	        key: "render",
 	        value: function render() {
-	          var _props = this.props,
-	              innerRef = _props.innerRef,
-	              other = (0, _objectWithoutProperties2.default)(_props, ["innerRef"]);
+	          var _this$props = this.props,
+	              innerRef = _this$props.innerRef,
+	              other = (0, _objectWithoutProperties2.default)(_this$props, ["innerRef"]);
 	          return _react.default.createElement(Component, (0, _extends2.default)({
 	            theme: this.state.theme,
 	            ref: innerRef
@@ -34857,8 +34932,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -34866,6 +34939,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -34901,9 +34976,9 @@
 	  (0, _inherits2.default)(Fade, _React$Component);
 
 	  function Fade() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Fade);
 
@@ -34911,7 +34986,9 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Fade.__proto__ || Object.getPrototypeOf(Fade)).call.apply(_ref, [this].concat(args))), _this.handleEnter = function (node) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Fade)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+	    _this.handleEnter = function (node) {
 	      var theme = _this.props.theme;
 	      (0, utils.reflow)(node); // So the animation always start from the start.
 
@@ -34924,7 +35001,9 @@
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(node);
 	      }
-	    }, _this.handleExit = function (node) {
+	    };
+
+	    _this.handleExit = function (node) {
 	      var theme = _this.props.theme;
 	      var transitionProps = (0, utils.getTransitionProps)(_this.props, {
 	        mode: 'exit'
@@ -34935,27 +35014,29 @@
 	      if (_this.props.onExit) {
 	        _this.props.onExit(node);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Fade, [{
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          onEnter = _props.onEnter,
-	          onExit = _props.onExit,
-	          styleProp = _props.style,
-	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "onEnter", "onExit", "style", "theme"]);
-	      var style = (0, _objectSpread2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          onEnter = _this$props.onEnter,
+	          onExit = _this$props.onExit,
+	          styleProp = _this$props.style,
+	          theme = _this$props.theme,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "onEnter", "onExit", "style", "theme"]);
+	      var style = (0, _extends2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
 	      return _react.default.createElement(_Transition.default, (0, _extends2.default)({
 	        appear: true,
 	        onEnter: this.handleEnter,
 	        onExit: this.handleExit
 	      }, other), function (state, childProps) {
-	        return _react.default.cloneElement(children, (0, _objectSpread2.default)({
-	          style: (0, _objectSpread2.default)({
+	        return _react.default.cloneElement(children, (0, _extends2.default)({
+	          style: (0, _extends2.default)({
 	            opacity: 0,
 	            willChange: 'opacity'
 	          }, styles[state], style)
@@ -35096,7 +35177,7 @@
 	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "invisible", "open", "transitionDuration"]);
 	  return _react.default.createElement(_Fade.default, (0, _extends2.default)({
 	    appear: true,
-	    "in": open,
+	    in: open,
 	    timeout: transitionDuration
 	  }, other), _react.default.createElement("div", {
 	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.invisible, invisible), className),
@@ -35515,6 +35596,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -35595,9 +35678,9 @@
 	  (0, _inherits2.default)(BottomNavigationAction, _React$Component);
 
 	  function BottomNavigationAction() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, BottomNavigationAction);
 
@@ -35605,7 +35688,9 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = BottomNavigationAction.__proto__ || Object.getPrototypeOf(BottomNavigationAction)).call.apply(_ref, [this].concat(args))), _this.handleChange = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(BottomNavigationAction)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+	    _this.handleChange = function (event) {
 	      var _this$props = _this.props,
 	          onChange = _this$props.onChange,
 	          value = _this$props.value,
@@ -35618,7 +35703,9 @@
 	      if (onClick) {
 	        onClick(event);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(BottomNavigationAction, [{
@@ -35626,17 +35713,17 @@
 	    value: function render() {
 	      var _classNames, _classNames2;
 
-	      var _props = this.props,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          icon = _props.icon,
-	          label = _props.label,
-	          onChange = _props.onChange,
-	          onClick = _props.onClick,
-	          selected = _props.selected,
-	          showLabelProp = _props.showLabel,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "icon", "label", "onChange", "onClick", "selected", "showLabel", "value"]);
+	      var _this$props2 = this.props,
+	          classes = _this$props2.classes,
+	          classNameProp = _this$props2.className,
+	          icon = _this$props2.icon,
+	          label = _this$props2.label,
+	          onChange = _this$props2.onChange,
+	          onClick = _this$props2.onClick,
+	          selected = _this$props2.selected,
+	          showLabelProp = _this$props2.showLabel,
+	          value = _this$props2.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["classes", "className", "icon", "label", "onChange", "onClick", "selected", "showLabel", "value"]);
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.selected, selected), (0, _defineProperty2.default)(_classNames, classes.iconOnly, !showLabelProp && !selected), _classNames), classNameProp);
 	      var labelClassName = (0, _classnames.default)(classes.label, (_classNames2 = {}, (0, _defineProperty2.default)(_classNames2, classes.selected, selected), (0, _defineProperty2.default)(_classNames2, classes.iconOnly, !showLabelProp && !selected), _classNames2));
 	      return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
@@ -36473,11 +36560,9 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -36518,7 +36603,7 @@
 	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component", "image", "src", "style"]);
 	  (0, _warning.default)(Boolean(image || src), 'Material-UI: either `image` or `src` property must be specified.');
 	  var isMediaComponent = MEDIA_COMPONENTS.indexOf(Component) !== -1;
-	  var composedStyle = !isMediaComponent && image ? (0, _objectSpread2.default)({
+	  var composedStyle = !isMediaComponent && image ? (0, _extends2.default)({
 	    backgroundImage: "url(\"".concat(image, "\")")
 	  }, style) : style;
 	  return _react.default.createElement(Component, (0, _extends2.default)({
@@ -36813,6 +36898,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -36865,7 +36952,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, SwitchBase);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (SwitchBase.__proto__ || Object.getPrototypeOf(SwitchBase)).call(this, props));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(SwitchBase).call(this));
 	    _this.input = null;
 	    _this.isControlled = null;
 	    _this.state = {};
@@ -36923,27 +37010,27 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props = this.props,
-	          autoFocus = _props.autoFocus,
-	          checkedProp = _props.checked,
-	          checkedIcon = _props.checkedIcon,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          disabledProp = _props.disabled,
-	          icon = _props.icon,
-	          id = _props.id,
-	          inputProps = _props.inputProps,
-	          inputRef = _props.inputRef,
-	          name = _props.name,
-	          onBlur = _props.onBlur,
-	          onChange = _props.onChange,
-	          onFocus = _props.onFocus,
-	          readOnly = _props.readOnly,
-	          required = _props.required,
-	          tabIndex = _props.tabIndex,
-	          type = _props.type,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["autoFocus", "checked", "checkedIcon", "classes", "className", "disabled", "icon", "id", "inputProps", "inputRef", "name", "onBlur", "onChange", "onFocus", "readOnly", "required", "tabIndex", "type", "value"]);
+	      var _this$props = this.props,
+	          autoFocus = _this$props.autoFocus,
+	          checkedProp = _this$props.checked,
+	          checkedIcon = _this$props.checkedIcon,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          disabledProp = _this$props.disabled,
+	          icon = _this$props.icon,
+	          id = _this$props.id,
+	          inputProps = _this$props.inputProps,
+	          inputRef = _this$props.inputRef,
+	          name = _this$props.name,
+	          onBlur = _this$props.onBlur,
+	          onChange = _this$props.onChange,
+	          onFocus = _this$props.onFocus,
+	          readOnly = _this$props.readOnly,
+	          required = _this$props.required,
+	          tabIndex = _this$props.tabIndex,
+	          type = _this$props.type,
+	          value = _this$props.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["autoFocus", "checked", "checkedIcon", "classes", "className", "disabled", "icon", "id", "inputProps", "inputRef", "name", "onBlur", "onChange", "onFocus", "readOnly", "required", "tabIndex", "type", "value"]);
 	      var muiFormControl = this.context.muiFormControl;
 	      var disabled = disabledProp;
 
@@ -37100,15 +37187,12 @@
 	  /**
 	   * The input component property `type`.
 	   */
-	  type: _propTypes.default.string,
+	  type: _propTypes.default.string.isRequired,
 
 	  /**
 	   * The value of the component.
 	   */
 	  value: _propTypes.default.string
-	};
-	SwitchBase.defaultProps = {
-	  type: 'checkbox'
 	};
 	SwitchBase.contextTypes = {
 	  muiFormControl: _propTypes.default.object
@@ -37303,6 +37387,7 @@
 	      indeterminateIcon = props.indeterminateIcon,
 	      other = (0, _objectWithoutProperties2.default)(props, ["checkedIcon", "classes", "color", "icon", "indeterminate", "indeterminateIcon"]);
 	  return _react.default.createElement(_SwitchBase.default, (0, _extends2.default)({
+	    type: "checkbox",
 	    checkedIcon: indeterminate ? indeterminateIcon : checkedIcon,
 	    classes: {
 	      root: (0, _classnames.default)(classes.root, classes["color".concat((0, helpers.capitalize)(color))]),
@@ -37485,6 +37570,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -37692,9 +37779,9 @@
 	  (0, _inherits2.default)(Chip, _React$Component);
 
 	  function Chip() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Chip);
 
@@ -37702,7 +37789,10 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Chip.__proto__ || Object.getPrototypeOf(Chip)).call.apply(_ref, [this].concat(args))), _this.chipRef = null, _this.handleDeleteIconClick = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Chip)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.chipRef = null;
+
+	    _this.handleDeleteIconClick = function (event) {
 	      // Stop the event from bubbling up to the `Chip`
 	      event.stopPropagation();
 	      var onDelete = _this.props.onDelete;
@@ -37710,7 +37800,9 @@
 	      if (onDelete) {
 	        onDelete(event);
 	      }
-	    }, _this.handleKeyDown = function (event) {
+	    };
+
+	    _this.handleKeyDown = function (event) {
 	      // Ignore events from children of `Chip`.
 	      if (event.currentTarget !== event.target) {
 	        return;
@@ -37739,7 +37831,9 @@
 	      if (onKeyDown) {
 	        onKeyDown(event);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Chip, [{
@@ -37747,20 +37841,20 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          avatarProp = _props.avatar,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          clickable = _props.clickable,
-	          color = _props.color,
-	          Component = _props.component,
-	          deleteIconProp = _props.deleteIcon,
-	          label = _props.label,
-	          onClick = _props.onClick,
-	          onDelete = _props.onDelete,
-	          onKeyDown = _props.onKeyDown,
-	          tabIndexProp = _props.tabIndex,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["avatar", "classes", "className", "clickable", "color", "component", "deleteIcon", "label", "onClick", "onDelete", "onKeyDown", "tabIndex"]);
+	      var _this$props2 = this.props,
+	          avatarProp = _this$props2.avatar,
+	          classes = _this$props2.classes,
+	          classNameProp = _this$props2.className,
+	          clickable = _this$props2.clickable,
+	          color = _this$props2.color,
+	          Component = _this$props2.component,
+	          deleteIconProp = _this$props2.deleteIcon,
+	          label = _this$props2.label,
+	          onClick = _this$props2.onClick,
+	          onDelete = _this$props2.onDelete,
+	          onKeyDown = _this$props2.onKeyDown,
+	          tabIndexProp = _this$props2.tabIndex,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["avatar", "classes", "className", "clickable", "color", "component", "deleteIcon", "label", "onClick", "onDelete", "onKeyDown", "tabIndex"]);
 	      var className = (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes["color".concat((0, helpers.capitalize)(color))], color !== 'default'), (0, _defineProperty2.default)({}, classes.clickable, onClick || clickable), (0, _defineProperty2.default)({}, classes["clickableColor".concat((0, helpers.capitalize)(color))], (onClick || clickable) && color !== 'default'), (0, _defineProperty2.default)({}, classes.deletable, onDelete), (0, _defineProperty2.default)({}, classes["deletableColor".concat((0, helpers.capitalize)(color))], onDelete && color !== 'default'), classNameProp);
 	      var deleteIcon = null;
 
@@ -37795,8 +37889,8 @@
 	        tabIndex: tabIndex,
 	        onClick: onClick,
 	        onKeyDown: this.handleKeyDown,
-	        ref: function ref(_ref2) {
-	          _this2.chipRef = _ref2;
+	        ref: function ref(_ref) {
+	          _this2.chipRef = _ref;
 	        }
 	      }, other), avatar, _react.default.createElement("span", {
 	        className: classes.label
@@ -37923,8 +38017,6 @@
 	exports.default = exports.styles = void 0;
 
 	var _extends2 = interopRequireDefault(_extends_1);
-
-	var _objectSpread2 = interopRequireDefault(objectSpread);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
@@ -38074,7 +38166,7 @@
 
 	  return _react.default.createElement("div", (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["color".concat((0, helpers.capitalize)(color))], color !== 'inherit'), (0, _defineProperty2.default)(_classNames, classes.indeterminate, variant === 'indeterminate'), (0, _defineProperty2.default)(_classNames, classes.static, variant === 'static'), _classNames), className),
-	    style: (0, _objectSpread2.default)({
+	    style: (0, _extends2.default)({
 	      width: size,
 	      height: size
 	    }, rootStyle, style),
@@ -38176,13 +38268,161 @@
 	unwrapExports(CircularProgress$1);
 	var CircularProgress_1$1 = CircularProgress$1.CircularProgress;
 
+	function _classCallCheck$2(instance, Constructor) {
+	  if (!(instance instanceof Constructor)) {
+	    throw new TypeError("Cannot call a class as a function");
+	  }
+	}
+
+	var classCallCheck$1 = _classCallCheck$2;
+
+	function _defineProperties$2(target, props) {
+	  for (var i = 0; i < props.length; i++) {
+	    var descriptor = props[i];
+	    descriptor.enumerable = descriptor.enumerable || false;
+	    descriptor.configurable = true;
+	    if ("value" in descriptor) descriptor.writable = true;
+	    Object.defineProperty(target, descriptor.key, descriptor);
+	  }
+	}
+
+	function _createClass$2(Constructor, protoProps, staticProps) {
+	  if (protoProps) _defineProperties$2(Constructor.prototype, protoProps);
+	  if (staticProps) _defineProperties$2(Constructor, staticProps);
+	  return Constructor;
+	}
+
+	var createClass$1 = _createClass$2;
+
+	var _typeof_1$1 = createCommonjsModule(function (module) {
+	function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
+
+	function _typeof(obj) {
+	  if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+	    module.exports = _typeof = function _typeof(obj) {
+	      return _typeof2(obj);
+	    };
+	  } else {
+	    module.exports = _typeof = function _typeof(obj) {
+	      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+	    };
+	  }
+
+	  return _typeof(obj);
+	}
+
+	module.exports = _typeof;
+	});
+
+	function _assertThisInitialized$2(self) {
+	  if (self === void 0) {
+	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	  }
+
+	  return self;
+	}
+
+	var assertThisInitialized$1 = _assertThisInitialized$2;
+
+	function _possibleConstructorReturn$2(self, call) {
+	  if (call && (_typeof_1$1(call) === "object" || typeof call === "function")) {
+	    return call;
+	  }
+
+	  return assertThisInitialized$1(self);
+	}
+
+	var possibleConstructorReturn$1 = _possibleConstructorReturn$2;
+
+	function _inherits$2(subClass, superClass) {
+	  if (typeof superClass !== "function" && superClass !== null) {
+	    throw new TypeError("Super expression must either be null or a function");
+	  }
+
+	  subClass.prototype = Object.create(superClass && superClass.prototype, {
+	    constructor: {
+	      value: subClass,
+	      enumerable: false,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	}
+
+	var inherits$1 = _inherits$2;
+
+	function _objectWithoutProperties$3(source, excluded) {
+	  if (source == null) return {};
+	  var target = {};
+	  var sourceKeys = Object.keys(source);
+	  var key, i;
+
+	  for (i = 0; i < sourceKeys.length; i++) {
+	    key = sourceKeys[i];
+	    if (excluded.indexOf(key) >= 0) continue;
+	    target[key] = source[key];
+	  }
+
+	  if (Object.getOwnPropertySymbols) {
+	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+	    for (i = 0; i < sourceSymbolKeys.length; i++) {
+	      key = sourceSymbolKeys[i];
+	      if (excluded.indexOf(key) >= 0) continue;
+	      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+	      target[key] = source[key];
+	    }
+	  }
+
+	  return target;
+	}
+
+	var objectWithoutProperties$1 = _objectWithoutProperties$3;
+
+	function _defineProperty$3(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+
+	  return obj;
+	}
+
+	var defineProperty$3 = _defineProperty$3;
+
+	function _objectSpread$1(target) {
+	  for (var i = 1; i < arguments.length; i++) {
+	    var source = arguments[i] != null ? arguments[i] : {};
+	    var ownKeys = Object.keys(source);
+
+	    if (typeof Object.getOwnPropertySymbols === 'function') {
+	      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+	        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+	      }));
+	    }
+
+	    ownKeys.forEach(function (key) {
+	      defineProperty$3(target, key, source[key]);
+	    });
+	  }
+
+	  return target;
+	}
+
+	var objectSpread = _objectSpread$1;
+
 	/**
 	 * Copyright (c) 2014-present, Facebook, Inc.
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
-	 *
-	 * @providesModule warning
 	 */
 
 	var warning$4 = function() {};
@@ -38236,12 +38476,12 @@
 
 	function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-	var _classCallCheck = _interopDefault(classCallCheck);
-	var _createClass = _interopDefault(createClass);
-	var _possibleConstructorReturn = _interopDefault(possibleConstructorReturn);
-	var _inherits = _interopDefault(inherits);
-	var _typeof = _interopDefault(_typeof_1);
-	var _objectWithoutProperties = _interopDefault(objectWithoutProperties);
+	var _classCallCheck = _interopDefault(classCallCheck$1);
+	var _createClass = _interopDefault(createClass$1);
+	var _possibleConstructorReturn = _interopDefault(possibleConstructorReturn$1);
+	var _inherits = _interopDefault(inherits$1);
+	var _typeof = _interopDefault(_typeof_1$1);
+	var _objectWithoutProperties = _interopDefault(objectWithoutProperties$1);
 	var _objectSpread = _interopDefault(objectSpread);
 	var React = _interopDefault(react);
 	var PropTypes = _interopDefault(propTypes);
@@ -38435,6 +38675,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -38459,9 +38701,9 @@
 	  (0, _inherits2.default)(ClickAwayListener, _React$Component);
 
 	  function ClickAwayListener() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, ClickAwayListener);
 
@@ -38469,7 +38711,11 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ClickAwayListener.__proto__ || Object.getPrototypeOf(ClickAwayListener)).call.apply(_ref, [this].concat(args))), _this.node = null, _this.mounted = null, _this.handleClickAway = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(ClickAwayListener)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.node = null;
+	    _this.mounted = null;
+
+	    _this.handleClickAway = function (event) {
 	      // Ignore events that have been `event.preventDefault()` marked.
 	      if (event.defaultPrevented) {
 	        return;
@@ -38490,7 +38736,9 @@
 	      if (doc.documentElement && doc.documentElement.contains(event.target) && !_this.node.contains(event.target)) {
 	        _this.props.onClickAway(event);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(ClickAwayListener, [{
@@ -38509,12 +38757,12 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          mouseEvent = _props.mouseEvent,
-	          touchEvent = _props.touchEvent,
-	          onClickAway = _props.onClickAway,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "mouseEvent", "touchEvent", "onClickAway"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          mouseEvent = _this$props.mouseEvent,
+	          touchEvent = _this$props.touchEvent,
+	          onClickAway = _this$props.onClickAway,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "mouseEvent", "touchEvent", "onClickAway"]);
 	      var listenerProps = {};
 
 	      if (mouseEvent !== false) {
@@ -38594,8 +38842,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -38605,6 +38851,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -38664,9 +38912,9 @@
 	  (0, _inherits2.default)(Collapse, _React$Component);
 
 	  function Collapse() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Collapse);
 
@@ -38674,13 +38922,20 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Collapse.__proto__ || Object.getPrototypeOf(Collapse)).call.apply(_ref, [this].concat(args))), _this.wrapper = null, _this.autoTransitionDuration = null, _this.timer = null, _this.handleEnter = function (node) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Collapse)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.wrapper = null;
+	    _this.autoTransitionDuration = null;
+	    _this.timer = null;
+
+	    _this.handleEnter = function (node) {
 	      node.style.height = _this.props.collapsedHeight;
 
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(node);
 	      }
-	    }, _this.handleEntering = function (node) {
+	    };
+
+	    _this.handleEntering = function (node) {
 	      var _this$props = _this.props,
 	          timeout = _this$props.timeout,
 	          theme = _this$props.theme;
@@ -38704,20 +38959,26 @@
 	      if (_this.props.onEntering) {
 	        _this.props.onEntering(node);
 	      }
-	    }, _this.handleEntered = function (node) {
+	    };
+
+	    _this.handleEntered = function (node) {
 	      node.style.height = 'auto';
 
 	      if (_this.props.onEntered) {
 	        _this.props.onEntered(node);
 	      }
-	    }, _this.handleExit = function (node) {
+	    };
+
+	    _this.handleExit = function (node) {
 	      var wrapperHeight = _this.wrapperRef ? _this.wrapperRef.clientHeight : 0;
 	      node.style.height = "".concat(wrapperHeight, "px");
 
 	      if (_this.props.onExit) {
 	        _this.props.onExit(node);
 	      }
-	    }, _this.handleExiting = function (node) {
+	    };
+
+	    _this.handleExiting = function (node) {
 	      var _this$props2 = _this.props,
 	          timeout = _this$props2.timeout,
 	          theme = _this$props2.theme;
@@ -38741,11 +39002,15 @@
 	      if (_this.props.onExiting) {
 	        _this.props.onExiting(node);
 	      }
-	    }, _this.addEndListener = function (_, next) {
+	    };
+
+	    _this.addEndListener = function (_, next) {
 	      if (_this.props.timeout === 'auto') {
 	        _this.timer = setTimeout(next, _this.autoTransitionDuration || 0);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Collapse, [{
@@ -38758,21 +39023,21 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          collapsedHeight = _props.collapsedHeight,
-	          Component = _props.component,
-	          onEnter = _props.onEnter,
-	          onEntered = _props.onEntered,
-	          onEntering = _props.onEntering,
-	          onExit = _props.onExit,
-	          onExiting = _props.onExiting,
-	          style = _props.style,
-	          theme = _props.theme,
-	          timeout = _props.timeout,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "collapsedHeight", "component", "onEnter", "onEntered", "onEntering", "onExit", "onExiting", "style", "theme", "timeout"]);
+	      var _this$props3 = this.props,
+	          children = _this$props3.children,
+	          classes = _this$props3.classes,
+	          className = _this$props3.className,
+	          collapsedHeight = _this$props3.collapsedHeight,
+	          Component = _this$props3.component,
+	          onEnter = _this$props3.onEnter,
+	          onEntered = _this$props3.onEntered,
+	          onEntering = _this$props3.onEntering,
+	          onExit = _this$props3.onExit,
+	          onExiting = _this$props3.onExiting,
+	          style = _this$props3.style,
+	          theme = _this$props3.theme,
+	          timeout = _this$props3.timeout,
+	          other = (0, _objectWithoutProperties2.default)(_this$props3, ["children", "classes", "className", "collapsedHeight", "component", "onEnter", "onEntered", "onEntering", "onExit", "onExiting", "style", "theme", "timeout"]);
 	      return _react.default.createElement(_Transition.default, (0, _extends2.default)({
 	        onEnter: this.handleEnter,
 	        onEntered: this.handleEntered,
@@ -38784,13 +39049,13 @@
 	      }, other), function (state, childProps) {
 	        return _react.default.createElement(Component, (0, _extends2.default)({
 	          className: (0, _classnames.default)(classes.container, (0, _defineProperty2.default)({}, classes.entered, state === 'entered'), className),
-	          style: (0, _objectSpread2.default)({}, style, {
+	          style: (0, _extends2.default)({}, style, {
 	            minHeight: collapsedHeight
 	          })
 	        }, childProps), _react.default.createElement("div", {
 	          className: classes.wrapper,
-	          ref: function ref(_ref2) {
-	            _this2.wrapperRef = _ref2;
+	          ref: function ref(_ref) {
+	            _this2.wrapperRef = _ref;
 	          }
 	        }, _react.default.createElement("div", {
 	          className: classes.wrapperInner
@@ -38932,6 +39197,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -38982,7 +39249,7 @@
 
 	  function CssBaseline() {
 	    (0, _classCallCheck2.default)(this, CssBaseline);
-	    return (0, _possibleConstructorReturn2.default)(this, (CssBaseline.__proto__ || Object.getPrototypeOf(CssBaseline)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(CssBaseline).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(CssBaseline, [{
@@ -39053,6 +39320,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -39081,8 +39350,8 @@
 	 * import RootRef from '@material-ui/core/RootRef';
 	 *
 	 * class MyComponent extends React.Component {
-	 *   constructor(props) {
-	 *     super(props);
+	 *   constructor() {
+	 *     super();
 	 *     this.domRef = React.createRef();
 	 *   }
 	 *
@@ -39109,7 +39378,7 @@
 
 	  function RootRef() {
 	    (0, _classCallCheck2.default)(this, RootRef);
-	    return (0, _possibleConstructorReturn2.default)(this, (RootRef.__proto__ || Object.getPrototypeOf(RootRef)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(RootRef).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(RootRef, [{
@@ -39192,6 +39461,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -39224,9 +39495,9 @@
 	  (0, _inherits2.default)(Portal, _React$Component);
 
 	  function Portal() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Portal);
 
@@ -39234,9 +39505,13 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Portal.__proto__ || Object.getPrototypeOf(Portal)).call.apply(_ref, [this].concat(args))), _this.getMountNode = function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Portal)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+	    _this.getMountNode = function () {
 	      return _this.mountNode;
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Portal, [{
@@ -39281,9 +39556,9 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          disablePortal = _props.disablePortal;
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          disablePortal = _this$props.disablePortal;
 
 	      if (disablePortal) {
 	        return children;
@@ -40094,6 +40369,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _assertThisInitialized2 = interopRequireDefault(assertThisInitialized);
@@ -40173,7 +40450,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Modal);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Modal).call(this));
 	    _this.mountNode = null;
 	    _this.modalRef = null;
 	    _this.dialogRef = null;
@@ -40194,14 +40471,14 @@
 	      var doc = (0, _ownerDocument.default)(_this.mountNode);
 	      var container = getContainer(_this.props.container, doc.body);
 
-	      _this.props.manager.add((0, _assertThisInitialized2.default)(_this), container);
+	      _this.props.manager.add((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)), container);
 
 	      doc.addEventListener('keydown', _this.handleDocumentKeyDown);
 	      doc.addEventListener('focus', _this.enforceFocus, true);
 	    };
 
 	    _this.handleClose = function () {
-	      _this.props.manager.remove((0, _assertThisInitialized2.default)(_this));
+	      _this.props.manager.remove((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)));
 
 	      var doc = (0, _ownerDocument.default)(_this.mountNode);
 	      doc.removeEventListener('keydown', _this.handleDocumentKeyDown);
@@ -40268,7 +40545,7 @@
 	    };
 
 	    _this.state = {
-	      exited: !_this.props.open
+	      exited: !props.open
 	    };
 	    return _this;
 	  }
@@ -40353,28 +40630,28 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          BackdropComponent = _props.BackdropComponent,
-	          BackdropProps = _props.BackdropProps,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          container = _props.container,
-	          disableAutoFocus = _props.disableAutoFocus,
-	          disableBackdropClick = _props.disableBackdropClick,
-	          disableEnforceFocus = _props.disableEnforceFocus,
-	          disableEscapeKeyDown = _props.disableEscapeKeyDown,
-	          disablePortal = _props.disablePortal,
-	          disableRestoreFocus = _props.disableRestoreFocus,
-	          hideBackdrop = _props.hideBackdrop,
-	          keepMounted = _props.keepMounted,
-	          manager = _props.manager,
-	          onBackdropClick = _props.onBackdropClick,
-	          onClose = _props.onClose,
-	          onEscapeKeyDown = _props.onEscapeKeyDown,
-	          onRendered = _props.onRendered,
-	          open = _props.open,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["BackdropComponent", "BackdropProps", "children", "classes", "className", "container", "disableAutoFocus", "disableBackdropClick", "disableEnforceFocus", "disableEscapeKeyDown", "disablePortal", "disableRestoreFocus", "hideBackdrop", "keepMounted", "manager", "onBackdropClick", "onClose", "onEscapeKeyDown", "onRendered", "open"]);
+	      var _this$props = this.props,
+	          BackdropComponent = _this$props.BackdropComponent,
+	          BackdropProps = _this$props.BackdropProps,
+	          children = _this$props.children,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          container = _this$props.container,
+	          disableAutoFocus = _this$props.disableAutoFocus,
+	          disableBackdropClick = _this$props.disableBackdropClick,
+	          disableEnforceFocus = _this$props.disableEnforceFocus,
+	          disableEscapeKeyDown = _this$props.disableEscapeKeyDown,
+	          disablePortal = _this$props.disablePortal,
+	          disableRestoreFocus = _this$props.disableRestoreFocus,
+	          hideBackdrop = _this$props.hideBackdrop,
+	          keepMounted = _this$props.keepMounted,
+	          manager = _this$props.manager,
+	          onBackdropClick = _this$props.onBackdropClick,
+	          onClose = _this$props.onClose,
+	          onEscapeKeyDown = _this$props.onEscapeKeyDown,
+	          onRendered = _this$props.onRendered,
+	          open = _this$props.open,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["BackdropComponent", "BackdropProps", "children", "classes", "className", "container", "disableAutoFocus", "disableBackdropClick", "disableEnforceFocus", "disableEscapeKeyDown", "disablePortal", "disableRestoreFocus", "hideBackdrop", "keepMounted", "manager", "onBackdropClick", "onClose", "onEscapeKeyDown", "onRendered", "open"]);
 	      var exited = this.state.exited;
 	      var hasTransition = getHasTransition(this.props);
 	      var childProps = {};
@@ -40625,8 +40902,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
@@ -40768,7 +41043,7 @@
 	      other = (0, _objectWithoutProperties2.default)(props, ["BackdropProps", "children", "classes", "className", "disableBackdropClick", "disableEscapeKeyDown", "fullScreen", "fullWidth", "maxWidth", "onBackdropClick", "onClose", "onEnter", "onEntered", "onEntering", "onEscapeKeyDown", "onExit", "onExited", "onExiting", "open", "PaperProps", "scroll", "TransitionComponent", "transitionDuration", "TransitionProps"]);
 	  return _react.default.createElement(_Modal.default, (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, classes["scroll".concat((0, helpers.capitalize)(scroll))], className),
-	    BackdropProps: (0, _objectSpread2.default)({
+	    BackdropProps: (0, _extends2.default)({
 	      transitionDuration: transitionDuration
 	    }, BackdropProps),
 	    disableBackdropClick: disableBackdropClick,
@@ -40780,7 +41055,7 @@
 	    role: "dialog"
 	  }, other), _react.default.createElement(TransitionComponent, (0, _extends2.default)({
 	    appear: true,
-	    "in": open,
+	    in: open,
 	    timeout: transitionDuration,
 	    onEnter: onEnter,
 	    onEntering: onEntering,
@@ -41186,40 +41461,27 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
 	var _react = interopRequireDefault(react);
 
 	var _propTypes = interopRequireDefault(propTypes);
-
-	var _classnames = interopRequireDefault(classnames);
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
 	var _Typography = interopRequireDefault(Typography$1);
 
 	// @inheritedComponent Typography
-	var styles = function styles(theme) {
-	  return {
-	    /* Styles applied to the root element. */
-	    root: {
-	      color: theme.palette.text.secondary
-	    }
-	  };
+	var styles = {
+	  /* Styles applied to the root element. */
+	  root: {}
 	};
-
 	exports.styles = styles;
 
 	function DialogContentText(props) {
-	  var children = props.children,
-	      classes = props.classes,
-	      className = props.className,
-	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className"]);
 	  return _react.default.createElement(_Typography.default, (0, _extends2.default)({
 	    component: "p",
 	    variant: "subheading",
-	    className: (0, _classnames.default)(classes.root, className)
-	  }, other), children);
+	    color: "textSecondary"
+	  }, props));
 	}
 
 	DialogContentText.propTypes = {
@@ -41232,12 +41494,7 @@
 	   * Override or extend the styles applied to the component.
 	   * See [CSS API](#css-api) below for more details.
 	   */
-	  classes: _propTypes.default.object.isRequired,
-
-	  /**
-	   * @ignore
-	   */
-	  className: _propTypes.default.string
+	  classes: _propTypes.default.object.isRequired
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -41526,8 +41783,7 @@
 	 * @param {Boolean} whether to execute at the beginning (`false`)
 	 * @api public
 	 */
-
-	var debounce = function debounce(func, wait, immediate){
+	function debounce(func, wait, immediate){
 	  var timeout, args, context, timestamp, result;
 	  if (null == wait) wait = 100;
 
@@ -41576,7 +41832,11 @@
 	  };
 
 	  return debounced;
-	};
+	}
+	// Adds compatibility for ES modules
+	debounce.debounce = debounce;
+
+	var debounce_1 = debounce;
 
 	var Slide_1 = createCommonjsModule(function (module, exports) {
 
@@ -41588,17 +41848,17 @@
 	exports.setTranslateValue = setTranslateValue;
 	exports.default = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
 
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -41610,7 +41870,7 @@
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	var _Transition = interopRequireDefault(Transition_1);
 
@@ -41685,9 +41945,9 @@
 	  (0, _inherits2.default)(Slide, _React$Component);
 
 	  function Slide() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Slide);
 
@@ -41695,7 +41955,10 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Slide.__proto__ || Object.getPrototypeOf(Slide)).call.apply(_ref, [this].concat(args))), _this.mounted = false, _this.transition = null, _this.handleResize = (0, _debounce.default)(function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Slide)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.mounted = false;
+	    _this.transition = null;
+	    _this.handleResize = (0, _debounce.default)(function () {
 	      // Skip configuration where the position is screen size invariant.
 	      if (_this.props.in || _this.props.direction === 'down' || _this.props.direction === 'right') {
 	        return;
@@ -41704,22 +41967,26 @@
 	      if (_this.transitionRef) {
 	        setTranslateValue(_this.props, _this.transitionRef);
 	      }
-	    }, 166), _this.handleEnter = function (node) {
+	    }, 166);
+
+	    _this.handleEnter = function (node) {
 	      setTranslateValue(_this.props, node);
 	      (0, utils.reflow)(node);
 
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(node);
 	      }
-	    }, _this.handleEntering = function (node) {
+	    };
+
+	    _this.handleEntering = function (node) {
 	      var theme = _this.props.theme;
 	      var transitionProps = (0, utils.getTransitionProps)(_this.props, {
 	        mode: 'enter'
 	      });
-	      node.style.webkitTransition = theme.transitions.create('-webkit-transform', (0, _objectSpread2.default)({}, transitionProps, {
+	      node.style.webkitTransition = theme.transitions.create('-webkit-transform', (0, _extends2.default)({}, transitionProps, {
 	        easing: theme.transitions.easing.easeOut
 	      }));
-	      node.style.transition = theme.transitions.create('transform', (0, _objectSpread2.default)({}, transitionProps, {
+	      node.style.transition = theme.transitions.create('transform', (0, _extends2.default)({}, transitionProps, {
 	        easing: theme.transitions.easing.easeOut
 	      }));
 	      node.style.webkitTransform = 'translate(0, 0)';
@@ -41728,15 +41995,17 @@
 	      if (_this.props.onEntering) {
 	        _this.props.onEntering(node);
 	      }
-	    }, _this.handleExit = function (node) {
+	    };
+
+	    _this.handleExit = function (node) {
 	      var theme = _this.props.theme;
 	      var transitionProps = (0, utils.getTransitionProps)(_this.props, {
 	        mode: 'exit'
 	      });
-	      node.style.webkitTransition = theme.transitions.create('-webkit-transform', (0, _objectSpread2.default)({}, transitionProps, {
+	      node.style.webkitTransition = theme.transitions.create('-webkit-transform', (0, _extends2.default)({}, transitionProps, {
 	        easing: theme.transitions.easing.sharp
 	      }));
-	      node.style.transition = theme.transitions.create('transform', (0, _objectSpread2.default)({}, transitionProps, {
+	      node.style.transition = theme.transitions.create('transform', (0, _extends2.default)({}, transitionProps, {
 	        easing: theme.transitions.easing.sharp
 	      }));
 	      setTranslateValue(_this.props, node);
@@ -41744,7 +42013,9 @@
 	      if (_this.props.onExit) {
 	        _this.props.onExit(node);
 	      }
-	    }, _this.handleExited = function (node) {
+	    };
+
+	    _this.handleExited = function (node) {
 	      // No need for transitions when the component is hidden
 	      node.style.webkitTransition = '';
 	      node.style.transition = '';
@@ -41752,7 +42023,9 @@
 	      if (_this.props.onExited) {
 	        _this.props.onExited(node);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Slide, [{
@@ -41796,15 +42069,15 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          onEnter = _props.onEnter,
-	          onEntering = _props.onEntering,
-	          onExit = _props.onExit,
-	          onExited = _props.onExited,
-	          styleProp = _props.style,
-	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "onEnter", "onEntering", "onExit", "onExited", "style", "theme"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          onEnter = _this$props.onEnter,
+	          onEntering = _this$props.onEntering,
+	          onExit = _this$props.onExit,
+	          onExited = _this$props.onExited,
+	          styleProp = _this$props.style,
+	          theme = _this$props.theme,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "onEnter", "onEntering", "onExit", "onExited", "style", "theme"]);
 	      var style = {}; // We use this state to handle the server-side rendering.
 	      // We don't know the width of the children ahead of time.
 	      // We need to render it.
@@ -41813,7 +42086,7 @@
 	        style.visibility = 'hidden';
 	      }
 
-	      style = (0, _objectSpread2.default)({}, style, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
+	      style = (0, _extends2.default)({}, style, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
 	      return _react.default.createElement(_reactEventListener.default, {
 	        target: "window",
 	        onResize: this.handleResize
@@ -41824,8 +42097,8 @@
 	        onExited: this.handleExited,
 	        appear: true,
 	        style: style,
-	        ref: function ref(_ref2) {
-	          _this2.transitionRef = _reactDom.default.findDOMNode(_ref2);
+	        ref: function ref(_ref) {
+	          _this2.transitionRef = _reactDom.default.findDOMNode(_ref);
 	        }
 	      }, other), children));
 	    }
@@ -41934,8 +42207,6 @@
 	exports.getAnchor = getAnchor;
 	exports.default = exports.styles = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
@@ -41947,6 +42218,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -41995,7 +42268,7 @@
 	      overflowY: 'auto',
 	      display: 'flex',
 	      flexDirection: 'column',
-	      height: '100vh',
+	      height: '100%',
 	      flex: '1 0 auto',
 	      zIndex: theme.zIndex.drawer,
 	      WebkitOverflowScrolling: 'touch',
@@ -42028,7 +42301,7 @@
 	      bottom: 'auto',
 	      right: 0,
 	      height: 'auto',
-	      maxHeight: '100vh'
+	      maxHeight: '100%'
 	    },
 
 	    /* Styles applied to the `Paper` component if `anchor="bottom"`. */
@@ -42038,7 +42311,7 @@
 	      bottom: 0,
 	      right: 0,
 	      height: 'auto',
-	      maxHeight: '100vh'
+	      maxHeight: '100%'
 	    },
 
 	    /* Styles applied to the `Paper` component if `anchor="left"` & `variant` is not "temporary". */
@@ -42079,9 +42352,9 @@
 	  (0, _inherits2.default)(Drawer, _React$Component);
 
 	  function Drawer() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Drawer);
 
@@ -42089,7 +42362,9 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Drawer.__proto__ || Object.getPrototypeOf(Drawer)).call.apply(_ref, [this].concat(args))), _this.mounted = false, _temp));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Drawer)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.mounted = false;
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Drawer, [{
@@ -42100,24 +42375,24 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          anchorProp = _props.anchor,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          elevation = _props.elevation,
-	          _props$ModalProps = _props.ModalProps;
-	      _props$ModalProps = _props$ModalProps === void 0 ? {} : _props$ModalProps;
-	      var BackdropPropsProp = _props$ModalProps.BackdropProps,
-	          ModalProps = (0, _objectWithoutProperties2.default)(_props$ModalProps, ["BackdropProps"]),
-	          onClose = _props.onClose,
-	          open = _props.open,
-	          PaperProps = _props.PaperProps,
-	          SlideProps = _props.SlideProps,
-	          theme = _props.theme,
-	          transitionDuration = _props.transitionDuration,
-	          variant = _props.variant,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["anchor", "children", "classes", "className", "elevation", "ModalProps", "onClose", "open", "PaperProps", "SlideProps", "theme", "transitionDuration", "variant"]);
+	      var _this$props = this.props,
+	          anchorProp = _this$props.anchor,
+	          children = _this$props.children,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          elevation = _this$props.elevation,
+	          _this$props$ModalProp = _this$props.ModalProps;
+	      _this$props$ModalProp = _this$props$ModalProp === void 0 ? {} : _this$props$ModalProp;
+	      var BackdropPropsProp = _this$props$ModalProp.BackdropProps,
+	          ModalProps = (0, _objectWithoutProperties2.default)(_this$props$ModalProp, ["BackdropProps"]),
+	          onClose = _this$props.onClose,
+	          open = _this$props.open,
+	          PaperProps = _this$props.PaperProps,
+	          SlideProps = _this$props.SlideProps,
+	          theme = _this$props.theme,
+	          transitionDuration = _this$props.transitionDuration,
+	          variant = _this$props.variant,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["anchor", "children", "classes", "className", "elevation", "ModalProps", "onClose", "open", "PaperProps", "SlideProps", "theme", "transitionDuration", "variant"]);
 	      var anchor = getAnchor(this.props);
 
 	      var drawer = _react.default.createElement(_Paper.default, (0, _extends2.default)({
@@ -42133,7 +42408,7 @@
 	      }
 
 	      var slidingDrawer = _react.default.createElement(_Slide.default, (0, _extends2.default)({
-	        "in": open,
+	        in: open,
 	        direction: oppositeDirection[anchor],
 	        timeout: transitionDuration,
 	        appear: this.mounted
@@ -42147,7 +42422,7 @@
 
 
 	      return _react.default.createElement(_Modal.default, (0, _extends2.default)({
-	        BackdropProps: (0, _objectSpread2.default)({}, BackdropPropsProp, {
+	        BackdropProps: (0, _extends2.default)({}, BackdropPropsProp, {
 	          transitionDuration: transitionDuration
 	        }),
 	        className: (0, _classnames.default)(classes.modal, className),
@@ -42286,8 +42561,6 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -42298,9 +42571,11 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -42355,7 +42630,7 @@
 	          display: 'none'
 	        }
 	      },
-	      '&:last-child': (0, _objectSpread2.default)({
+	      '&:last-child': (0, _extends2.default)({
 	        borderBottomLeftRadius: 2,
 	        borderBottomRightRadius: 2
 	      }, edgeFix),
@@ -42398,7 +42673,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, ExpansionPanel);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (ExpansionPanel.__proto__ || Object.getPrototypeOf(ExpansionPanel)).call(this, props));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(ExpansionPanel).call(this));
 	    _this.isControlled = null;
 	    _this.state = {};
 
@@ -42432,16 +42707,16 @@
 	      var _classNames,
 	          _this2 = this;
 
-	      var _props = this.props,
-	          childrenProp = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          CollapsePropsProp = _props.CollapseProps,
-	          defaultExpanded = _props.defaultExpanded,
-	          disabled = _props.disabled,
-	          expandedProp = _props.expanded,
-	          onChange = _props.onChange,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "CollapseProps", "defaultExpanded", "disabled", "expanded", "onChange"]);
+	      var _this$props = this.props,
+	          childrenProp = _this$props.children,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          CollapsePropsProp = _this$props.CollapseProps,
+	          defaultExpanded = _this$props.defaultExpanded,
+	          disabled = _this$props.disabled,
+	          expandedProp = _this$props.expanded,
+	          onChange = _this$props.onChange,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "classes", "className", "CollapseProps", "defaultExpanded", "disabled", "expanded", "onChange"]);
 	      var expanded = this.isControlled ? expandedProp : this.state.expanded;
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.expanded, expanded), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), _classNames), classNameProp);
 	      var summary = null;
@@ -42473,7 +42748,7 @@
 	        elevation: 1,
 	        square: true
 	      }, other), summary, _react.default.createElement(_Collapse.default, (0, _extends2.default)({
-	        "in": expanded,
+	        in: expanded,
 	        timeout: "auto"
 	      }, CollapseProps, CollapsePropsProp), children));
 	    }
@@ -42768,6 +43043,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -42859,9 +43136,9 @@
 	  (0, _inherits2.default)(ExpansionPanelSummary, _React$Component);
 
 	  function ExpansionPanelSummary() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, ExpansionPanelSummary);
 
@@ -42869,17 +43146,24 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ExpansionPanelSummary.__proto__ || Object.getPrototypeOf(ExpansionPanelSummary)).call.apply(_ref, [this].concat(args))), _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(ExpansionPanelSummary)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.state = {
 	      focused: false
-	    }, _this.handleFocus = function () {
+	    };
+
+	    _this.handleFocus = function () {
 	      _this.setState({
 	        focused: true
 	      });
-	    }, _this.handleBlur = function () {
+	    };
+
+	    _this.handleBlur = function () {
 	      _this.setState({
 	        focused: false
 	      });
-	    }, _this.handleChange = function (event) {
+	    };
+
+	    _this.handleChange = function (event) {
 	      var _this$props = _this.props,
 	          onChange = _this$props.onChange,
 	          onClick = _this$props.onClick;
@@ -42891,7 +43175,9 @@
 	      if (onClick) {
 	        onClick(event);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(ExpansionPanelSummary, [{
@@ -42899,16 +43185,16 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          disabled = _props.disabled,
-	          expanded = _props.expanded,
-	          expandIcon = _props.expandIcon,
-	          IconButtonProps = _props.IconButtonProps,
-	          onChange = _props.onChange,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "disabled", "expanded", "expandIcon", "IconButtonProps", "onChange"]);
+	      var _this$props2 = this.props,
+	          children = _this$props2.children,
+	          classes = _this$props2.classes,
+	          className = _this$props2.className,
+	          disabled = _this$props2.disabled,
+	          expanded = _this$props2.expanded,
+	          expandIcon = _this$props2.expandIcon,
+	          IconButtonProps = _this$props2.IconButtonProps,
+	          onChange = _this$props2.onChange,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["children", "classes", "className", "disabled", "expanded", "expandIcon", "IconButtonProps", "onChange"]);
 	      var focused = this.state.focused;
 	      return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
 	        focusRipple: false,
@@ -43037,6 +43323,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -43045,7 +43333,7 @@
 
 	var _classnames = interopRequireDefault(classnames);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
@@ -43100,10 +43388,8 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Textarea);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Textarea.__proto__ || Object.getPrototypeOf(Textarea)).call(this, props)); // <Input> expects the components it renders to respond to 'value'
-	    // so that it can check whether they are filled.
-
-	    _this.isControlled = _this.props.value != null;
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Textarea).call(this));
+	    _this.isControlled = null;
 	    _this.shadowRef = null;
 	    _this.singlelineShadowRef = null;
 	    _this.inputRef = null;
@@ -43150,6 +43436,9 @@
 	        _this.props.onChange(event);
 	      }
 	    };
+
+	    _this.isControlled = props.value != null; // <Input> expects the components it renders to respond to 'value'
+	    // so that it can check whether they are filled.
 
 	    _this.value = props.value || props.defaultValue || '';
 	    _this.state = {
@@ -43213,16 +43502,16 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          classes = _props.classes,
-	          className = _props.className,
-	          defaultValue = _props.defaultValue,
-	          onChange = _props.onChange,
-	          rows = _props.rows,
-	          rowsMax = _props.rowsMax,
-	          textareaRef = _props.textareaRef,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "defaultValue", "onChange", "rows", "rowsMax", "textareaRef", "value"]);
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          defaultValue = _this$props.defaultValue,
+	          onChange = _this$props.onChange,
+	          rows = _this$props.rows,
+	          rowsMax = _this$props.rowsMax,
+	          textareaRef = _this$props.textareaRef,
+	          value = _this$props.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "defaultValue", "onChange", "rows", "rowsMax", "textareaRef", "value"]);
 	      return _react.default.createElement("div", {
 	        className: classes.root,
 	        style: {
@@ -43334,8 +43623,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -43345,6 +43632,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -43413,7 +43702,7 @@
 	      display: 'inline-flex',
 	      position: 'relative',
 	      fontFamily: theme.typography.fontFamily,
-	      color: light ? 'rgba(0, 0, 0, 0.87)' : theme.palette.common.white,
+	      color: theme.palette.text.primary,
 	      fontSize: theme.typography.pxToRem(16),
 	      lineHeight: '1.1875em',
 	      // Reset (19px), match the native input line-height
@@ -43435,7 +43724,7 @@
 	    /* Styles applied to the root element if `disabled={true}`. */
 	    disabled: {},
 
-	    /* Styles applied to the root element if `disabledUnderline={false}`. */
+	    /* Styles applied to the root element if `disableUnderline={false}`. */
 	    underline: {
 	      '&:after': {
 	        borderBottom: "2px solid ".concat(theme.palette.primary[light ? 'dark' : 'light']),
@@ -43625,8 +43914,8 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Input);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Input.__proto__ || Object.getPrototypeOf(Input)).call(this, props, context));
-	    _this.isControlled = _this.props.value != null;
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Input).call(this, props, context));
+	    _this.isControlled = null;
 	    _this.input = null;
 	    _this.state = {
 	      focused: false
@@ -43700,6 +43989,8 @@
 	        }
 	      }
 	    };
+
+	    _this.isControlled = props.value != null;
 
 	    if (_this.isControlled) {
 	      _this.checkDirty(props);
@@ -43794,42 +44085,42 @@
 	    value: function render() {
 	      var _classNames, _classNames2;
 
-	      var _props = this.props,
-	          autoComplete = _props.autoComplete,
-	          autoFocus = _props.autoFocus,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          defaultValue = _props.defaultValue,
-	          disabledProp = _props.disabled,
-	          disableUnderline = _props.disableUnderline,
-	          endAdornment = _props.endAdornment,
-	          errorProp = _props.error,
-	          fullWidth = _props.fullWidth,
-	          id = _props.id,
-	          inputComponent = _props.inputComponent,
-	          _props$inputProps = _props.inputProps;
-	      _props$inputProps = _props$inputProps === void 0 ? {} : _props$inputProps;
-	      var inputPropsClassName = _props$inputProps.className,
-	          inputPropsProp = (0, _objectWithoutProperties2.default)(_props$inputProps, ["className"]),
-	          inputRef = _props.inputRef,
-	          marginProp = _props.margin,
-	          multiline = _props.multiline,
-	          name = _props.name,
-	          onBlur = _props.onBlur,
-	          onChange = _props.onChange,
-	          onEmpty = _props.onEmpty,
-	          onFilled = _props.onFilled,
-	          onFocus = _props.onFocus,
-	          onKeyDown = _props.onKeyDown,
-	          onKeyUp = _props.onKeyUp,
-	          placeholder = _props.placeholder,
-	          readOnly = _props.readOnly,
-	          rows = _props.rows,
-	          rowsMax = _props.rowsMax,
-	          startAdornment = _props.startAdornment,
-	          type = _props.type,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["autoComplete", "autoFocus", "classes", "className", "defaultValue", "disabled", "disableUnderline", "endAdornment", "error", "fullWidth", "id", "inputComponent", "inputProps", "inputRef", "margin", "multiline", "name", "onBlur", "onChange", "onEmpty", "onFilled", "onFocus", "onKeyDown", "onKeyUp", "placeholder", "readOnly", "rows", "rowsMax", "startAdornment", "type", "value"]);
+	      var _this$props = this.props,
+	          autoComplete = _this$props.autoComplete,
+	          autoFocus = _this$props.autoFocus,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          defaultValue = _this$props.defaultValue,
+	          disabledProp = _this$props.disabled,
+	          disableUnderline = _this$props.disableUnderline,
+	          endAdornment = _this$props.endAdornment,
+	          errorProp = _this$props.error,
+	          fullWidth = _this$props.fullWidth,
+	          id = _this$props.id,
+	          inputComponent = _this$props.inputComponent,
+	          _this$props$inputProp = _this$props.inputProps;
+	      _this$props$inputProp = _this$props$inputProp === void 0 ? {} : _this$props$inputProp;
+	      var inputPropsClassName = _this$props$inputProp.className,
+	          inputPropsProp = (0, _objectWithoutProperties2.default)(_this$props$inputProp, ["className"]),
+	          inputRef = _this$props.inputRef,
+	          marginProp = _this$props.margin,
+	          multiline = _this$props.multiline,
+	          name = _this$props.name,
+	          onBlur = _this$props.onBlur,
+	          onChange = _this$props.onChange,
+	          onEmpty = _this$props.onEmpty,
+	          onFilled = _this$props.onFilled,
+	          onFocus = _this$props.onFocus,
+	          onKeyDown = _this$props.onKeyDown,
+	          onKeyUp = _this$props.onKeyUp,
+	          placeholder = _this$props.placeholder,
+	          readOnly = _this$props.readOnly,
+	          rows = _this$props.rows,
+	          rowsMax = _this$props.rowsMax,
+	          startAdornment = _this$props.startAdornment,
+	          type = _this$props.type,
+	          value = _this$props.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["autoComplete", "autoFocus", "classes", "className", "defaultValue", "disabled", "disableUnderline", "endAdornment", "error", "fullWidth", "id", "inputComponent", "inputProps", "inputRef", "margin", "multiline", "name", "onBlur", "onChange", "onEmpty", "onFilled", "onFocus", "onKeyDown", "onKeyUp", "placeholder", "readOnly", "rows", "rowsMax", "startAdornment", "type", "value"]);
 	      var muiFormControl = this.context.muiFormControl;
 
 	      var _formControlState = formControlState(this.props, this.context),
@@ -43841,13 +44132,13 @@
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.error, error), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), (0, _defineProperty2.default)(_classNames, classes.focused, this.state.focused), (0, _defineProperty2.default)(_classNames, classes.formControl, muiFormControl), (0, _defineProperty2.default)(_classNames, classes.multiline, multiline), (0, _defineProperty2.default)(_classNames, classes.underline, !disableUnderline), _classNames), classNameProp);
 	      var inputClassName = (0, _classnames.default)(classes.input, (_classNames2 = {}, (0, _defineProperty2.default)(_classNames2, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames2, classes.inputType, type !== 'text'), (0, _defineProperty2.default)(_classNames2, classes.inputTypeSearch, type === 'search'), (0, _defineProperty2.default)(_classNames2, classes.inputMultiline, multiline), (0, _defineProperty2.default)(_classNames2, classes.inputMarginDense, margin === 'dense'), _classNames2), inputPropsClassName);
 	      var InputComponent = 'input';
-	      var inputProps = (0, _objectSpread2.default)({}, inputPropsProp, {
+	      var inputProps = (0, _extends2.default)({}, inputPropsProp, {
 	        ref: this.handleRefInput
 	      });
 
 	      if (inputComponent) {
 	        InputComponent = inputComponent;
-	        inputProps = (0, _objectSpread2.default)({
+	        inputProps = (0, _extends2.default)({
 	          // Rename ref to inputRef as we don't know the
 	          // provided `inputComponent` structure.
 	          inputRef: this.handleRefInput
@@ -43858,7 +44149,7 @@
 	        if (rows && !rowsMax) {
 	          InputComponent = 'textarea';
 	        } else {
-	          inputProps = (0, _objectSpread2.default)({
+	          inputProps = (0, _extends2.default)({
 	            rowsMax: rowsMax,
 	            textareaRef: this.handleRefInput
 	          }, inputProps, {
@@ -44066,7 +44357,7 @@
 	  /**
 	   * The input value, required for a controlled component.
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number]))])
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool]))])
 	};
 	Input.muiName = 'Input';
 	Input.defaultProps = {
@@ -44115,6 +44406,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -44184,7 +44477,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, FormControl);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (FormControl.__proto__ || Object.getPrototypeOf(FormControl)).call(this, props)); // We need to iterate through the children and find the Input in order
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(FormControl).call(this)); // We need to iterate through the children and find the Input in order
 	    // to fully support server side rendering.
 
 	    _this.state = {
@@ -44225,7 +44518,7 @@
 	      }
 	    };
 
-	    var children = _this.props.children;
+	    var children = props.children;
 
 	    if (children) {
 	      _react.default.Children.forEach(children, function (child) {
@@ -44251,15 +44544,15 @@
 	  (0, _createClass2.default)(FormControl, [{
 	    key: "getChildContext",
 	    value: function getChildContext() {
-	      var _props = this.props,
-	          disabled = _props.disabled,
-	          error = _props.error,
-	          required = _props.required,
-	          margin = _props.margin;
-	      var _state = this.state,
-	          adornedStart = _state.adornedStart,
-	          filled = _state.filled,
-	          focused = _state.focused;
+	      var _this$props = this.props,
+	          disabled = _this$props.disabled,
+	          error = _this$props.error,
+	          required = _this$props.required,
+	          margin = _this$props.margin;
+	      var _this$state = this.state,
+	          adornedStart = _this$state.adornedStart,
+	          filled = _this$state.filled,
+	          focused = _this$state.focused;
 	      return {
 	        muiFormControl: {
 	          adornedStart: adornedStart,
@@ -44281,16 +44574,16 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props2 = this.props,
-	          classes = _props2.classes,
-	          className = _props2.className,
-	          Component = _props2.component,
-	          disabled = _props2.disabled,
-	          error = _props2.error,
-	          fullWidth = _props2.fullWidth,
-	          margin = _props2.margin,
-	          required = _props2.required,
-	          other = (0, _objectWithoutProperties2.default)(_props2, ["classes", "className", "component", "disabled", "error", "fullWidth", "margin", "required"]);
+	      var _this$props2 = this.props,
+	          classes = _this$props2.classes,
+	          className = _this$props2.className,
+	          Component = _this$props2.component,
+	          disabled = _this$props2.disabled,
+	          error = _this$props2.error,
+	          fullWidth = _this$props2.fullWidth,
+	          margin = _this$props2.margin,
+	          required = _this$props2.required,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["classes", "className", "component", "disabled", "error", "fullWidth", "margin", "required"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["margin".concat((0, helpers.capitalize)(margin))], margin !== 'none'), (0, _defineProperty2.default)(_classNames, classes.fullWidth, fullWidth), _classNames), className)
 	      }, other));
@@ -45126,7 +45419,6 @@
 	});
 	exports.default = void 0;
 
-	//  weak
 	function requirePropFactory(componentNameInError) {
 
 	  var requireProp = function requireProp(requiredProp) {
@@ -45162,8 +45454,6 @@
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
-
-	var _objectSpread2 = interopRequireDefault(objectSpread);
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
@@ -45260,7 +45550,7 @@
 
 
 	var styles = function styles(theme) {
-	  return (0, _objectSpread2.default)({
+	  return (0, _extends2.default)({
 	    /* Styles applied to the root element if `container={true}`. */
 	    container: {
 	      boxSizing: 'border-box',
@@ -45541,7 +45831,7 @@
 
 	{
 	  var requireProp = (0, _requirePropFactory.default)('Grid');
-	  StyledGrid.propTypes = (0, _objectSpread2.default)({}, StyledGrid.propTypes, {
+	  StyledGrid.propTypes = (0, _extends2.default)({}, StyledGrid.propTypes, {
 	    alignContent: requireProp('container'),
 	    alignItems: requireProp('container'),
 	    direction: requireProp('container'),
@@ -45593,8 +45883,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _react = interopRequireDefault(react);
@@ -45633,7 +45921,7 @@
 	      other = (0, _objectWithoutProperties2.default)(props, ["cellHeight", "children", "classes", "className", "cols", "component", "spacing", "style"]);
 	  return _react.default.createElement(Component, (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, classNameProp),
-	    style: (0, _objectSpread2.default)({
+	    style: (0, _extends2.default)({
 	      margin: -spacing / 2
 	    }, style)
 	  }, other), _react.default.Children.map(children, function (child) {
@@ -45755,6 +46043,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -45765,7 +46055,7 @@
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	var _withStyles = interopRequireDefault(withStyles_1);
 
@@ -45810,9 +46100,9 @@
 	  (0, _inherits2.default)(GridListTile, _React$Component);
 
 	  function GridListTile() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, GridListTile);
 
@@ -45820,9 +46110,13 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = GridListTile.__proto__ || Object.getPrototypeOf(GridListTile)).call.apply(_ref, [this].concat(args))), _this.imgElement = null, _this.handleResize = (0, _debounce.default)(function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(GridListTile)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.imgElement = null;
+	    _this.handleResize = (0, _debounce.default)(function () {
 	      _this.fit();
-	    }, 166), _this.fit = function () {
+	    }, 166);
+
+	    _this.fit = function () {
 	      var imgElement = _this.imgElement;
 
 	      if (!imgElement || !imgElement.complete) {
@@ -45844,7 +46138,9 @@
 	      }
 
 	      imgElement.removeEventListener('load', _this.fit);
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(GridListTile, [{
@@ -45881,14 +46177,14 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          cols = _props.cols,
-	          Component = _props.component,
-	          rows = _props.rows,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "cols", "component", "rows"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          cols = _this$props.cols,
+	          Component = _this$props.component,
+	          rows = _this$props.rows,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "classes", "className", "cols", "component", "rows"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, className)
 	      }, other), _react.default.createElement(_reactEventListener.default, {
@@ -46198,8 +46494,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -46207,6 +46501,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -46248,9 +46544,9 @@
 	  (0, _inherits2.default)(Grow, _React$Component);
 
 	  function Grow() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Grow);
 
@@ -46258,7 +46554,11 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Grow.__proto__ || Object.getPrototypeOf(Grow)).call.apply(_ref, [this].concat(args))), _this.autoTimeout = null, _this.timer = null, _this.handleEnter = function (node) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Grow)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.autoTimeout = null;
+	    _this.timer = null;
+
+	    _this.handleEnter = function (node) {
 	      var _this$props = _this.props,
 	          theme = _this$props.theme,
 	          timeout = _this$props.timeout;
@@ -46290,7 +46590,9 @@
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(node);
 	      }
-	    }, _this.handleExit = function (node) {
+	    };
+
+	    _this.handleExit = function (node) {
 	      var _this$props2 = _this.props,
 	          theme = _this$props2.theme,
 	          timeout = _this$props2.timeout;
@@ -46322,11 +46624,15 @@
 	      if (_this.props.onExit) {
 	        _this.props.onExit(node);
 	      }
-	    }, _this.addEndListener = function (_, next) {
+	    };
+
+	    _this.addEndListener = function (_, next) {
 	      if (_this.props.timeout === 'auto') {
 	        _this.timer = setTimeout(next, _this.autoTimeout || 0);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Grow, [{
@@ -46337,15 +46643,15 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          onEnter = _props.onEnter,
-	          onExit = _props.onExit,
-	          styleProp = _props.style,
-	          theme = _props.theme,
-	          timeout = _props.timeout,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "onEnter", "onExit", "style", "theme", "timeout"]);
-	      var style = (0, _objectSpread2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
+	      var _this$props3 = this.props,
+	          children = _this$props3.children,
+	          onEnter = _this$props3.onEnter,
+	          onExit = _this$props3.onExit,
+	          styleProp = _this$props3.style,
+	          theme = _this$props3.theme,
+	          timeout = _this$props3.timeout,
+	          other = (0, _objectWithoutProperties2.default)(_this$props3, ["children", "onEnter", "onExit", "style", "theme", "timeout"]);
+	      var style = (0, _extends2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
 	      return _react.default.createElement(_Transition.default, (0, _extends2.default)({
 	        appear: true,
 	        onEnter: this.handleEnter,
@@ -46353,8 +46659,8 @@
 	        addEndListener: this.addEndListener,
 	        timeout: timeout === 'auto' ? null : timeout
 	      }, other), function (state, childProps) {
-	        return _react.default.cloneElement(children, (0, _objectSpread2.default)({
-	          style: (0, _objectSpread2.default)({
+	        return _react.default.cloneElement(children, (0, _extends2.default)({
+	          style: (0, _extends2.default)({
 	            opacity: 0,
 	            transform: getScale(0.75)
 	          }, styles[state], style)
@@ -46449,8 +46755,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -46458,6 +46762,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -46467,7 +46773,7 @@
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	var _wrapDisplayName = interopRequireDefault(wrapDisplayName_1);
 
@@ -46527,7 +46833,7 @@
 	        var _this;
 
 	        (0, _classCallCheck2.default)(this, WithWidth);
-	        _this = (0, _possibleConstructorReturn2.default)(this, (WithWidth.__proto__ || Object.getPrototypeOf(WithWidth)).call(this, props));
+	        _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(WithWidth).call(this, props));
 	        _this.handleResize = (0, _debounce.default)(function () {
 	          var width = _this.getWidth();
 
@@ -46597,13 +46903,12 @@
 	      }, {
 	        key: "render",
 	        value: function render() {
-	          var _props = this.props,
-	              initialWidth = _props.initialWidth,
-	              theme = _props.theme,
-	              width = _props.width,
-	              innerRef = _props.innerRef,
-	              other = (0, _objectWithoutProperties2.default)(_props, ["initialWidth", "theme", "width", "innerRef"]);
-	          var props = (0, _objectSpread2.default)({
+	          var _this$props = this.props,
+	              initialWidth = _this$props.initialWidth,
+	              theme = _this$props.theme,
+	              width = _this$props.width,
+	              other = (0, _objectWithoutProperties2.default)(_this$props, ["initialWidth", "theme", "width"]);
+	          var props = (0, _extends2.default)({
 	            width: width || this.state.width || initialWidth || initialWidthOption || (0, _getThemeProps.default)({
 	              theme: theme,
 	              name: 'MuiWithWidth'
@@ -46628,9 +46933,7 @@
 	          return _react.default.createElement(_reactEventListener.default, {
 	            target: "window",
 	            onResize: this.handleResize
-	          }, _react.default.createElement(Component, (0, _extends2.default)({}, more, props, {
-	            ref: innerRef
-	          })));
+	          }, _react.default.createElement(Component, (0, _extends2.default)({}, more, props)));
 	        }
 	      }]);
 	      return WithWidth;
@@ -46647,11 +46950,6 @@
 	       * http://caniuse.com/#search=client%20hint
 	       */
 	      initialWidth: _propTypes.default.oneOf(['xs', 'sm', 'md', 'lg', 'xl']),
-
-	      /**
-	       * Use that property to pass a ref callback to the decorated component.
-	       */
-	      innerRef: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.object]),
 
 	      /**
 	       * @ignore
@@ -46696,7 +46994,7 @@
 	  }
 	});
 
-	var _withWidth = interopRequireDefault(withWidth_1);
+	var _withWidth = interopRequireWildcard(withWidth_1);
 
 	Object.keys(_withWidth).forEach(function (key) {
 	  if (key === "default" || key === "__esModule") return;
@@ -47643,7 +47941,7 @@
 	  focused: _propTypes.default.bool,
 
 	  /**
-	   * `classes` property applied to the `FormLabel` element.
+	   * `classes` property applied to the [`FormLabel`](/api/form-label) element.
 	   */
 	  FormLabelClasses: _propTypes.default.object,
 
@@ -47741,8 +48039,9 @@
 	    colorPrimary: {
 	      backgroundColor: (0, colorManipulator.lighten)(theme.palette.primary.light, 0.6)
 	    },
+	    // eslint-disable-next-line max-len
 
-	    /* Styles applied to the root & bar2 elements if `color="secondary"`; bar2 if variant="buffer". */
+	    /* Styles applied to the root & bar2 elements if `color="secondary"`; bar2 if `variant="buffer"`. */
 	    colorSecondary: {
 	      backgroundColor: (0, colorManipulator.lighten)(theme.palette.secondary.light, 0.4)
 	    },
@@ -48039,6 +48338,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -48084,7 +48385,7 @@
 
 	  function List() {
 	    (0, _classCallCheck2.default)(this, List);
-	    return (0, _possibleConstructorReturn2.default)(this, (List.__proto__ || Object.getPrototypeOf(List)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(List).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(List, [{
@@ -48099,15 +48400,15 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          Component = _props.component,
-	          dense = _props.dense,
-	          disablePadding = _props.disablePadding,
-	          subheader = _props.subheader,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "className", "component", "dense", "disablePadding", "subheader"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          Component = _this$props.component,
+	          dense = _this$props.dense,
+	          disablePadding = _this$props.disablePadding,
+	          subheader = _this$props.subheader,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "classes", "className", "component", "dense", "disablePadding", "subheader"]);
 	      var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.dense, dense && !disablePadding), (0, _defineProperty2.default)(_classNames, classes.padding, !disablePadding), (0, _defineProperty2.default)(_classNames, classes.subheader, subheader), _classNames), classNameProp);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: className
@@ -48206,8 +48507,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -48217,6 +48516,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -48315,7 +48616,7 @@
 
 	  function ListItem() {
 	    (0, _classCallCheck2.default)(this, ListItem);
-	    return (0, _possibleConstructorReturn2.default)(this, (ListItem.__proto__ || Object.getPrototypeOf(ListItem)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(ListItem).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(ListItem, [{
@@ -48330,23 +48631,23 @@
 	    value: function render() {
 	      var _classNames;
 
-	      var _props = this.props,
-	          button = _props.button,
-	          childrenProp = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          componentProp = _props.component,
-	          ContainerComponent = _props.ContainerComponent,
-	          _props$ContainerProps = _props.ContainerProps;
-	      _props$ContainerProps = _props$ContainerProps === void 0 ? {} : _props$ContainerProps;
-	      var ContainerClassName = _props$ContainerProps.className,
-	          ContainerProps = (0, _objectWithoutProperties2.default)(_props$ContainerProps, ["className"]),
-	          dense = _props.dense,
-	          disabled = _props.disabled,
-	          disableGutters = _props.disableGutters,
-	          divider = _props.divider,
-	          focusVisibleClassName = _props.focusVisibleClassName,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["button", "children", "classes", "className", "component", "ContainerComponent", "ContainerProps", "dense", "disabled", "disableGutters", "divider", "focusVisibleClassName"]);
+	      var _this$props = this.props,
+	          button = _this$props.button,
+	          childrenProp = _this$props.children,
+	          classes = _this$props.classes,
+	          classNameProp = _this$props.className,
+	          componentProp = _this$props.component,
+	          ContainerComponent = _this$props.ContainerComponent,
+	          _this$props$Container = _this$props.ContainerProps;
+	      _this$props$Container = _this$props$Container === void 0 ? {} : _this$props$Container;
+	      var ContainerClassName = _this$props$Container.className,
+	          ContainerProps = (0, _objectWithoutProperties2.default)(_this$props$Container, ["className"]),
+	          dense = _this$props.dense,
+	          disabled = _this$props.disabled,
+	          disableGutters = _this$props.disableGutters,
+	          divider = _this$props.divider,
+	          focusVisibleClassName = _this$props.focusVisibleClassName,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["button", "children", "classes", "className", "component", "ContainerComponent", "ContainerProps", "dense", "disabled", "disableGutters", "divider", "focusVisibleClassName"]);
 	      var isDense = dense || this.context.dense || false;
 
 	      var children = _react.default.Children.toArray(childrenProp);
@@ -48356,7 +48657,7 @@
 	      });
 	      var hasSecondaryAction = children.length && (0, reactHelpers.isMuiElement)(children[children.length - 1], ['ListItemSecondaryAction']);
 	      var className = (0, _classnames.default)(classes.root, classes.default, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.dense, isDense || hasAvatar), (0, _defineProperty2.default)(_classNames, classes.gutters, !disableGutters), (0, _defineProperty2.default)(_classNames, classes.divider, divider), (0, _defineProperty2.default)(_classNames, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames, classes.button, button), (0, _defineProperty2.default)(_classNames, classes.secondaryAction, hasSecondaryAction), _classNames), classNameProp);
-	      var componentProps = (0, _objectSpread2.default)({
+	      var componentProps = (0, _extends2.default)({
 	        className: className,
 	        disabled: disabled
 	      }, other);
@@ -48511,7 +48812,7 @@
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -48561,7 +48862,7 @@
 	    return props.children;
 	  }
 
-	  return _react.default.cloneElement(children, (0, _objectSpread2.default)({
+	  return _react.default.cloneElement(children, (0, _extends2.default)({
 	    className: (0, _classnames.default)((0, _defineProperty2.default)({}, classes.root, context.dense), classNameProp, children.props.className),
 	    childrenClassName: (0, _classnames.default)((0, _defineProperty2.default)({}, classes.icon, context.dense), children.props.childrenClassName)
 	  }, other));
@@ -48627,7 +48928,7 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -48661,7 +48962,7 @@
 	      classes = props.classes,
 	      classNameProp = props.className,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className"]);
-	  return _react.default.cloneElement(children, (0, _objectSpread2.default)({
+	  return _react.default.cloneElement(children, (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, classNameProp, children.props.className)
 	  }, other));
 	}
@@ -49031,7 +49332,7 @@
 	var styles = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
-	    root: theme.mixins.gutters({
+	    root: {
 	      boxSizing: 'border-box',
 	      lineHeight: '48px',
 	      listStyle: 'none',
@@ -49039,7 +49340,7 @@
 	      fontFamily: theme.typography.fontFamily,
 	      fontWeight: theme.typography.fontWeightMedium,
 	      fontSize: theme.typography.pxToRem(14)
-	    }),
+	    },
 
 	    /* Styles applied to the root element if `color="primary"`. */
 	    colorPrimary: {
@@ -49050,6 +49351,9 @@
 	    colorInherit: {
 	      color: 'inherit'
 	    },
+
+	    /* Styles applied to the inner `component` element if `disableGutters={false}`. */
+	    gutters: theme.mixins.gutters(),
 
 	    /* Styles applied to the root element if `inset={true}`. */
 	    inset: {
@@ -49075,11 +49379,12 @@
 	      className = props.className,
 	      color = props.color,
 	      Component = props.component,
+	      disableGutters = props.disableGutters,
 	      disableSticky = props.disableSticky,
 	      inset = props.inset,
-	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "color", "component", "disableSticky", "inset"]);
+	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "color", "component", "disableGutters", "disableSticky", "inset"]);
 	  return _react.default.createElement(Component, (0, _extends2.default)({
-	    className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["color".concat((0, helpers.capitalize)(color))], color !== 'default'), (0, _defineProperty2.default)(_classNames, classes.inset, inset), (0, _defineProperty2.default)(_classNames, classes.sticky, !disableSticky), _classNames), className)
+	    className: (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes["color".concat((0, helpers.capitalize)(color))], color !== 'default'), (0, _defineProperty2.default)(_classNames, classes.inset, inset), (0, _defineProperty2.default)(_classNames, classes.sticky, !disableSticky), (0, _defineProperty2.default)(_classNames, classes.gutters, !disableGutters), _classNames), className)
 	  }, other));
 	}
 
@@ -49112,6 +49417,11 @@
 	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
 
 	  /**
+	   * If `true`, the List Subheader will not have gutters.
+	   */
+	  disableGutters: _propTypes.default.bool,
+
+	  /**
 	   * If `true`, the List Subheader will not stick to the top during scroll.
 	   */
 	  disableSticky: _propTypes.default.bool,
@@ -49124,6 +49434,7 @@
 	ListSubheader.defaultProps = {
 	  color: 'default',
 	  component: 'li',
+	  disableGutters: false,
 	  disableSticky: false,
 	  inset: false
 	};
@@ -49177,6 +49488,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -49187,7 +49500,7 @@
 
 	var _warning = interopRequireDefault(warning_1$1);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
@@ -49280,9 +49593,9 @@
 	  (0, _inherits2.default)(Popover, _React$Component);
 
 	  function Popover() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Popover);
 
@@ -49290,11 +49603,19 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Popover.__proto__ || Object.getPrototypeOf(Popover)).call.apply(_ref, [this].concat(args))), _this.paperRef = null, _this.handleGetOffsetTop = getOffsetTop, _this.handleGetOffsetLeft = getOffsetLeft, _this.handleResize = (0, _debounce.default)(function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Popover)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.paperRef = null;
+	    _this.handleGetOffsetTop = getOffsetTop;
+	    _this.handleGetOffsetLeft = getOffsetLeft;
+	    _this.handleResize = (0, _debounce.default)(function () {
 	      _this.setPositioningStyles(_this.paperRef);
-	    }, 166), _this.componentWillUnmount = function () {
+	    }, 166);
+
+	    _this.componentWillUnmount = function () {
 	      _this.handleResize.clear();
-	    }, _this.setPositioningStyles = function (element) {
+	    };
+
+	    _this.setPositioningStyles = function (element) {
 	      if (element && element.style) {
 	        var positioning = _this.getPositioningStyle(element);
 
@@ -49308,7 +49629,9 @@
 
 	        element.style.transformOrigin = positioning.transformOrigin;
 	      }
-	    }, _this.getPositioningStyle = function (element) {
+	    };
+
+	    _this.getPositioningStyle = function (element) {
 	      var _this$props = _this.props,
 	          anchorEl = _this$props.anchorEl,
 	          anchorReference = _this$props.anchorReference,
@@ -49375,13 +49698,17 @@
 	        left: "".concat(left, "px"),
 	        transformOrigin: getTransformOriginValue(transformOrigin)
 	      };
-	    }, _this.handleEnter = function (element) {
+	    };
+
+	    _this.handleEnter = function (element) {
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(element);
 	      }
 
 	      _this.setPositioningStyles(element);
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Popover, [{
@@ -49399,11 +49726,11 @@
 	    // Returns the top/left offset of the position
 	    // to attach to on the anchor element (or body if none is provided)
 	    value: function getAnchorOffset(contentAnchorOffset) {
-	      var _props = this.props,
-	          anchorEl = _props.anchorEl,
-	          anchorOrigin = _props.anchorOrigin,
-	          anchorReference = _props.anchorReference,
-	          anchorPosition = _props.anchorPosition;
+	      var _this$props2 = this.props,
+	          anchorEl = _this$props2.anchorEl,
+	          anchorOrigin = _this$props2.anchorOrigin,
+	          anchorReference = _this$props2.anchorReference,
+	          anchorPosition = _this$props2.anchorPosition;
 
 	      if (anchorReference === 'anchorPosition') {
 	        (0, _warning.default)(anchorPosition, 'Material-UI: you need to provide a `anchorPosition` property when using ' + '<Popover anchorReference="anchorPosition" />.');
@@ -49423,9 +49750,9 @@
 	  }, {
 	    key: "getContentAnchorOffset",
 	    value: function getContentAnchorOffset(element) {
-	      var _props2 = this.props,
-	          getContentAnchorEl = _props2.getContentAnchorEl,
-	          anchorReference = _props2.anchorReference;
+	      var _this$props3 = this.props,
+	          getContentAnchorEl = _this$props3.getContentAnchorEl,
+	          anchorReference = _this$props3.anchorReference;
 	      var contentAnchorOffset = 0;
 
 	      if (getContentAnchorEl && anchorReference === 'anchorEl') {
@@ -49437,7 +49764,7 @@
 	        } // != the default value
 
 
-	        (0, _warning.default)(this.props.anchorOrigin.vertical === 'top', ['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` property to the popover component.', 'Only use one of the two properties.', 'Set `getContentAnchorEl` to null or leave `anchorOrigin.vertical` unchanged.'].join('\n'));
+	        (0, _warning.default)(this.props.anchorOrigin.vertical === 'top', ['Material-UI: you can not change the default `anchorOrigin.vertical` value ', 'when also providing the `getContentAnchorEl` property to the popover component.', 'Only use one of the two properties.', 'Set `getContentAnchorEl` to `null | undefined`' + ' or leave `anchorOrigin.vertical` unchanged.'].join('\n'));
 	      }
 
 	      return contentAnchorOffset;
@@ -49459,32 +49786,33 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props3 = this.props,
-	          action = _props3.action,
-	          anchorEl = _props3.anchorEl,
-	          anchorOrigin = _props3.anchorOrigin,
-	          anchorPosition = _props3.anchorPosition,
-	          anchorReference = _props3.anchorReference,
-	          children = _props3.children,
-	          classes = _props3.classes,
-	          containerProp = _props3.container,
-	          elevation = _props3.elevation,
-	          getContentAnchorEl = _props3.getContentAnchorEl,
-	          marginThreshold = _props3.marginThreshold,
-	          onEnter = _props3.onEnter,
-	          onEntered = _props3.onEntered,
-	          onEntering = _props3.onEntering,
-	          onExit = _props3.onExit,
-	          onExited = _props3.onExited,
-	          onExiting = _props3.onExiting,
-	          open = _props3.open,
-	          PaperProps = _props3.PaperProps,
-	          role = _props3.role,
-	          transformOrigin = _props3.transformOrigin,
-	          TransitionComponent = _props3.TransitionComponent,
-	          transitionDurationProp = _props3.transitionDuration,
-	          TransitionProps = _props3.TransitionProps,
-	          other = (0, _objectWithoutProperties2.default)(_props3, ["action", "anchorEl", "anchorOrigin", "anchorPosition", "anchorReference", "children", "classes", "container", "elevation", "getContentAnchorEl", "marginThreshold", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "open", "PaperProps", "role", "transformOrigin", "TransitionComponent", "transitionDuration", "TransitionProps"]);
+	      var _this$props4 = this.props,
+	          action = _this$props4.action,
+	          anchorEl = _this$props4.anchorEl,
+	          anchorOrigin = _this$props4.anchorOrigin,
+	          anchorPosition = _this$props4.anchorPosition,
+	          anchorReference = _this$props4.anchorReference,
+	          children = _this$props4.children,
+	          classes = _this$props4.classes,
+	          containerProp = _this$props4.container,
+	          elevation = _this$props4.elevation,
+	          getContentAnchorEl = _this$props4.getContentAnchorEl,
+	          marginThreshold = _this$props4.marginThreshold,
+	          ModalClasses = _this$props4.ModalClasses,
+	          onEnter = _this$props4.onEnter,
+	          onEntered = _this$props4.onEntered,
+	          onEntering = _this$props4.onEntering,
+	          onExit = _this$props4.onExit,
+	          onExited = _this$props4.onExited,
+	          onExiting = _this$props4.onExiting,
+	          open = _this$props4.open,
+	          PaperProps = _this$props4.PaperProps,
+	          role = _this$props4.role,
+	          transformOrigin = _this$props4.transformOrigin,
+	          TransitionComponent = _this$props4.TransitionComponent,
+	          transitionDurationProp = _this$props4.transitionDuration,
+	          TransitionProps = _this$props4.TransitionProps,
+	          other = (0, _objectWithoutProperties2.default)(_this$props4, ["action", "anchorEl", "anchorOrigin", "anchorPosition", "anchorReference", "children", "classes", "container", "elevation", "getContentAnchorEl", "marginThreshold", "ModalClasses", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "open", "PaperProps", "role", "transformOrigin", "TransitionComponent", "transitionDuration", "TransitionProps"]);
 	      var transitionDuration = transitionDurationProp;
 
 	      if (transitionDurationProp === 'auto' && !TransitionComponent.muiSupportAuto) {
@@ -49496,6 +49824,7 @@
 
 	      var container = containerProp || (anchorEl ? (0, _ownerDocument.default)(getAnchorEl(anchorEl)).body : undefined);
 	      return _react.default.createElement(_Modal.default, (0, _extends2.default)({
+	        classes: ModalClasses,
 	        container: container,
 	        open: open,
 	        BackdropProps: {
@@ -49503,7 +49832,7 @@
 	        }
 	      }, other), _react.default.createElement(TransitionComponent, (0, _extends2.default)({
 	        appear: true,
-	        "in": open,
+	        in: open,
 	        onEnter: this.handleEnter,
 	        onEntered: onEntered,
 	        onEntering: onEntering,
@@ -49515,8 +49844,8 @@
 	      }, TransitionProps), _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	        className: classes.paper,
 	        elevation: elevation,
-	        ref: function ref(_ref2) {
-	          _this2.paperRef = _reactDom.default.findDOMNode(_ref2);
+	        ref: function ref(_ref) {
+	          _this2.paperRef = _reactDom.default.findDOMNode(_ref);
 	        }
 	      }, PaperProps), _react.default.createElement(_reactEventListener.default, {
 	        target: "window",
@@ -49613,6 +49942,11 @@
 	   * Specifies how close to the edge of the window the popover can appear.
 	   */
 	  marginThreshold: _propTypes.default.number,
+
+	  /**
+	   * `classes` property applied to the [`Modal`](/api/modal) element.
+	   */
+	  ModalClasses: _propTypes.default.object,
 
 	  /**
 	   * Callback fired when the component requests to be closed.
@@ -49761,6 +50095,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -49784,9 +50120,9 @@
 	  (0, _inherits2.default)(MenuList, _React$Component);
 
 	  function MenuList() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, MenuList);
 
@@ -49794,9 +50130,15 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = MenuList.__proto__ || Object.getPrototypeOf(MenuList)).call.apply(_ref, [this].concat(args))), _this.listRef = null, _this.selectedItemRef = null, _this.blurTimer = null, _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(MenuList)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.listRef = null;
+	    _this.selectedItemRef = null;
+	    _this.blurTimer = null;
+	    _this.state = {
 	      currentTabIndex: null
-	    }, _this.handleBlur = function (event) {
+	    };
+
+	    _this.handleBlur = function (event) {
 	      _this.blurTimer = setTimeout(function () {
 	        if (_this.listRef) {
 	          var list = _this.listRef;
@@ -49811,7 +50153,9 @@
 	      if (_this.props.onBlur) {
 	        _this.props.onBlur(event);
 	      }
-	    }, _this.handleKeyDown = function (event) {
+	    };
+
+	    _this.handleKeyDown = function (event) {
 	      var list = _this.listRef;
 	      var key = (0, _keycode.default)(event);
 	      var currentFocus = (0, _ownerDocument.default)(list).activeElement;
@@ -49839,7 +50183,9 @@
 	      if (_this.props.onKeyDown) {
 	        _this.props.onKeyDown(event, key);
 	      }
-	    }, _this.handleItemFocus = function (event) {
+	    };
+
+	    _this.handleItemFocus = function (event) {
 	      var list = _this.listRef;
 
 	      if (list) {
@@ -49851,7 +50197,9 @@
 	          }
 	        }
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(MenuList, [{
@@ -49915,16 +50263,16 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          className = _props.className,
-	          onBlur = _props.onBlur,
-	          onKeyDown = _props.onKeyDown,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "className", "onBlur", "onKeyDown"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          className = _this$props.className,
+	          onBlur = _this$props.onBlur,
+	          onKeyDown = _this$props.onKeyDown,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "className", "onBlur", "onKeyDown"]);
 	      return _react.default.createElement(_List.default, (0, _extends2.default)({
 	        role: "menu",
-	        ref: function ref(_ref2) {
-	          _this2.listRef = _reactDom.default.findDOMNode(_ref2);
+	        ref: function ref(_ref) {
+	          _this2.listRef = _reactDom.default.findDOMNode(_ref);
 	        },
 	        className: className,
 	        onKeyDown: this.handleKeyDown,
@@ -50005,8 +50353,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -50014,6 +50360,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -50059,9 +50407,9 @@
 	  (0, _inherits2.default)(Menu, _React$Component);
 
 	  function Menu() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Menu);
 
@@ -50069,13 +50417,18 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Menu.__proto__ || Object.getPrototypeOf(Menu)).call.apply(_ref, [this].concat(args))), _this.menuListRef = null, _this.getContentAnchorEl = function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Menu)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.menuListRef = null;
+
+	    _this.getContentAnchorEl = function () {
 	      if (!_this.menuListRef || !_this.menuListRef.selectedItemRef) {
 	        return _reactDom.default.findDOMNode(_this.menuListRef).firstChild;
 	      }
 
 	      return _reactDom.default.findDOMNode(_this.menuListRef.selectedItemRef);
-	    }, _this.focus = function () {
+	    };
+
+	    _this.focus = function () {
 	      if (_this.menuListRef && _this.menuListRef.selectedItemRef) {
 	        _reactDom.default.findDOMNode(_this.menuListRef.selectedItemRef).focus();
 
@@ -50087,7 +50440,9 @@
 	      if (menuList && menuList.firstChild) {
 	        menuList.firstChild.focus();
 	      }
-	    }, _this.handleEnter = function (element) {
+	    };
+
+	    _this.handleEnter = function (element) {
 	      var _this$props = _this.props,
 	          disableAutoFocusItem = _this$props.disableAutoFocusItem,
 	          theme = _this$props.theme;
@@ -50110,7 +50465,9 @@
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(element);
 	      }
-	    }, _this.handleListKeyDown = function (event, key) {
+	    };
+
+	    _this.handleListKeyDown = function (event, key) {
 	      if (key === 'tab') {
 	        event.preventDefault();
 
@@ -50118,7 +50475,9 @@
 	          _this.props.onClose(event);
 	        }
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Menu, [{
@@ -50133,33 +50492,33 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          disableAutoFocusItem = _props.disableAutoFocusItem,
-	          MenuListProps = _props.MenuListProps,
-	          onEnter = _props.onEnter,
-	          _props$PaperProps = _props.PaperProps,
-	          PaperProps = _props$PaperProps === void 0 ? {} : _props$PaperProps,
-	          PopoverClasses = _props.PopoverClasses,
-	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "classes", "disableAutoFocusItem", "MenuListProps", "onEnter", "PaperProps", "PopoverClasses", "theme"]);
+	      var _this$props2 = this.props,
+	          children = _this$props2.children,
+	          classes = _this$props2.classes,
+	          disableAutoFocusItem = _this$props2.disableAutoFocusItem,
+	          MenuListProps = _this$props2.MenuListProps,
+	          onEnter = _this$props2.onEnter,
+	          _this$props2$PaperPro = _this$props2.PaperProps,
+	          PaperProps = _this$props2$PaperPro === void 0 ? {} : _this$props2$PaperPro,
+	          PopoverClasses = _this$props2.PopoverClasses,
+	          theme = _this$props2.theme,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["children", "classes", "disableAutoFocusItem", "MenuListProps", "onEnter", "PaperProps", "PopoverClasses", "theme"]);
 	      return _react.default.createElement(_Popover.default, (0, _extends2.default)({
 	        getContentAnchorEl: this.getContentAnchorEl,
 	        classes: PopoverClasses,
 	        onEnter: this.handleEnter,
 	        anchorOrigin: theme.direction === 'rtl' ? RTL_ORIGIN : LTR_ORIGIN,
 	        transformOrigin: theme.direction === 'rtl' ? RTL_ORIGIN : LTR_ORIGIN,
-	        PaperProps: (0, _objectSpread2.default)({}, PaperProps, {
-	          classes: (0, _objectSpread2.default)({}, PaperProps.classes, {
+	        PaperProps: (0, _extends2.default)({}, PaperProps, {
+	          classes: (0, _extends2.default)({}, PaperProps.classes, {
 	            root: classes.paper
 	          })
 	        })
 	      }, other), _react.default.createElement(_MenuList.default, (0, _extends2.default)({
 	        onKeyDown: this.handleListKeyDown
 	      }, MenuListProps, {
-	        ref: function ref(_ref2) {
-	          _this2.menuListRef = _ref2;
+	        ref: function ref(_ref) {
+	          _this2.menuListRef = _ref;
 	        }
 	      }), children));
 	    }
@@ -50242,7 +50601,7 @@
 	  PaperProps: _propTypes.default.object,
 
 	  /**
-	   * `classes` property applied to the `Popover` element.
+	   * `classes` property applied to the [`Popover`](/api/popover) element.
 	   */
 	  PopoverClasses: _propTypes.default.object,
 
@@ -50304,13 +50663,11 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -50326,7 +50683,7 @@
 	var styles = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
-	    root: (0, _objectSpread2.default)({}, theme.typography.subheading, {
+	    root: (0, _extends2.default)({}, theme.typography.subheading, {
 	      height: 24,
 	      boxSizing: 'content-box',
 	      width: 'auto',
@@ -50738,7 +51095,7 @@
 	  /**
 	   * The input value.
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number])
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool])
 	};
 	var _default = NativeSelectInput;
 	exports.default = _default;
@@ -50789,7 +51146,7 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -50890,11 +51247,11 @@
 	      input = props.input,
 	      inputProps = props.inputProps,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "IconComponent", "input", "inputProps"]);
-	  return _react.default.cloneElement(input, (0, _objectSpread2.default)({
+	  return _react.default.cloneElement(input, (0, _extends2.default)({
 	    // Most of the logic is implemented in `NativeSelectInput`.
 	    // The `Select` component is a simple API wrapper to expose something better to play with.
 	    inputComponent: _NativeSelectInput.default,
-	    inputProps: (0, _objectSpread2.default)({
+	    inputProps: (0, _extends2.default)({
 	      children: children,
 	      classes: classes,
 	      IconComponent: IconComponent,
@@ -50942,7 +51299,7 @@
 	  /**
 	   * The input value.
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number])
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool])
 	};
 	NativeSelect.defaultProps = {
 	  IconComponent: _ArrowDropDown.default,
@@ -50994,6 +51351,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -51002,9 +51361,6 @@
 
 	var _exactProp = interopRequireDefault(exactProp_1);
 
-	var Fallback = function Fallback() {
-	  return null;
-	};
 	/**
 	 * NoSsr purposely removes components from the subject of Server Side Rendering (SSR).
 	 *
@@ -51014,17 +51370,15 @@
 	 * - Reduce the rendering time on the server.
 	 * - Under too heavy server load, you can turn on service degradation.
 	 */
-
-
 	var NoSsr =
 	/*#__PURE__*/
 	function (_React$Component) {
 	  (0, _inherits2.default)(NoSsr, _React$Component);
 
 	  function NoSsr() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, NoSsr);
 
@@ -51032,24 +51386,51 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = NoSsr.__proto__ || Object.getPrototypeOf(NoSsr)).call.apply(_ref, [this].concat(args))), _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(NoSsr)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.state = {
 	      mounted: false
-	    }, _temp));
+	    };
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(NoSsr, [{
 	    key: "componentDidMount",
 	    value: function componentDidMount() {
-	      this.setState({
-	        mounted: true
-	      }); // eslint-disable-line react/no-did-mount-set-state
+	      var _this2 = this;
+
+	      this.mounted = true;
+
+	      if (this.props.defer) {
+	        // Wondering why we use two raf? Check this video out:
+	        // https://www.youtube.com/watch?v=cCOL7MC4Pl0
+	        requestAnimationFrame(function () {
+	          // The browser should be about to render the DOM that React commited at this point.
+	          // We don't want to interrupt. Let's wait the next raf.
+	          requestAnimationFrame(function () {
+	            if (_this2.mounted) {
+	              _this2.setState({
+	                mounted: true
+	              });
+	            }
+	          });
+	        });
+	      } else {
+	        this.setState({
+	          mounted: true
+	        }); // eslint-disable-line react/no-did-mount-set-state
+	      }
+	    }
+	  }, {
+	    key: "componentWillUnmount",
+	    value: function componentWillUnmount() {
+	      this.mounted = false;
 	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          fallback = _props.fallback;
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          fallback = _this$props.fallback;
 	      return this.state.mounted ? children : fallback;
 	    }
 	  }]);
@@ -51058,11 +51439,22 @@
 
 	NoSsr.propTypes = {
 	  children: _propTypes.default.node.isRequired,
+
+	  /**
+	   * If `true`, the component will not only prevent server side rendering.
+	   * It will also defer the rendering of the children into a different screen frame.
+	   */
+	  defer: _propTypes.default.bool,
+
+	  /**
+	   * The fallback content to display.
+	   */
 	  fallback: _propTypes.default.node
 	};
 	NoSsr.propTypes = (0, _exactProp.default)(NoSsr.propTypes);
 	NoSsr.defaultProps = {
-	  fallback: _react.default.createElement(Fallback, null)
+	  defer: false,
+	  fallback: null
 	};
 	var _default = NoSsr;
 	exports.default = _default;
@@ -51442,13 +51834,13 @@
 	  };
 	}
 
-	var classCallCheck$1 = function (instance, Constructor) {
+	var classCallCheck$2 = function (instance, Constructor) {
 	  if (!(instance instanceof Constructor)) {
 	    throw new TypeError("Cannot call a class as a function");
 	  }
 	};
 
-	var createClass$1 = function () {
+	var createClass$2 = function () {
 	  function defineProperties(target, props) {
 	    for (var i = 0; i < props.length; i++) {
 	      var descriptor = props[i];
@@ -51470,7 +51862,7 @@
 
 
 
-	var defineProperty$3 = function (obj, key, value) {
+	var defineProperty$4 = function (obj, key, value) {
 	  if (key in obj) {
 	    Object.defineProperty(obj, key, {
 	      value: value,
@@ -52501,7 +52893,7 @@
 	  sideValue = Math.max(Math.min(popper[len] - arrowElementSize, sideValue), 0);
 
 	  data.arrowElement = arrowElement;
-	  data.offsets.arrow = (_data$offsets$arrow = {}, defineProperty$3(_data$offsets$arrow, side, Math.round(sideValue)), defineProperty$3(_data$offsets$arrow, altSide, ''), _data$offsets$arrow);
+	  data.offsets.arrow = (_data$offsets$arrow = {}, defineProperty$4(_data$offsets$arrow, side, Math.round(sideValue)), defineProperty$4(_data$offsets$arrow, altSide, ''), _data$offsets$arrow);
 
 	  return data;
 	}
@@ -52924,7 +53316,7 @@
 	      if (popper[placement] < boundaries[placement] && !options.escapeWithReference) {
 	        value = Math.max(popper[placement], boundaries[placement]);
 	      }
-	      return defineProperty$3({}, placement, value);
+	      return defineProperty$4({}, placement, value);
 	    },
 	    secondary: function secondary(placement) {
 	      var mainSide = placement === 'right' ? 'left' : 'top';
@@ -52932,7 +53324,7 @@
 	      if (popper[placement] > boundaries[placement] && !options.escapeWithReference) {
 	        value = Math.min(popper[mainSide], boundaries[placement] - (placement === 'right' ? popper.width : popper.height));
 	      }
-	      return defineProperty$3({}, mainSide, value);
+	      return defineProperty$4({}, mainSide, value);
 	    }
 	  };
 
@@ -52969,8 +53361,8 @@
 	    var measurement = isVertical ? 'width' : 'height';
 
 	    var shiftOffsets = {
-	      start: defineProperty$3({}, side, reference[side]),
-	      end: defineProperty$3({}, side, reference[side] + reference[measurement] - popper[measurement])
+	      start: defineProperty$4({}, side, reference[side]),
+	      end: defineProperty$4({}, side, reference[side] + reference[measurement] - popper[measurement])
 	    };
 
 	    data.offsets.popper = _extends$6({}, popper, shiftOffsets[shiftvariation]);
@@ -53479,7 +53871,7 @@
 	    var _this = this;
 
 	    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-	    classCallCheck$1(this, Popper);
+	    classCallCheck$2(this, Popper);
 
 	    this.scheduleUpdate = function () {
 	      return requestAnimationFrame(_this.update);
@@ -53545,7 +53937,7 @@
 	  // class prototype and break stuff like Sinon stubs
 
 
-	  createClass$1(Popper, [{
+	  createClass$2(Popper, [{
 	    key: 'update',
 	    value: function update$$1() {
 	      return update.call(this);
@@ -53634,17 +54026,17 @@
 	});
 	exports.default = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
 
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -53702,7 +54094,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Popper);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Popper.__proto__ || Object.getPrototypeOf(Popper)).call(this, props));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Popper).call(this));
 	    _this.popper = null;
 
 	    _this.handleOpen = function () {
@@ -53716,7 +54108,7 @@
 	          theme = _this$props.theme,
 	          disablePortal = _this$props.disablePortal;
 
-	      var popperNode = _reactDom.default.findDOMNode((0, _assertThisInitialized2.default)(_this));
+	      var popperNode = _reactDom.default.findDOMNode((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)));
 
 	      if (!popperNode || !anchorEl || !open) {
 	        return;
@@ -53728,10 +54120,10 @@
 	        _this.popper = null;
 	      }
 
-	      _this.popper = new _popper.default(getAnchorEl(anchorEl), popperNode, (0, _objectSpread2.default)({
+	      _this.popper = new _popper.default(getAnchorEl(anchorEl), popperNode, (0, _extends2.default)({
 	        placement: flipPlacement(theme, placement)
 	      }, popperOptions, {
-	        modifiers: (0, _objectSpread2.default)({}, disablePortal ? {} : {
+	        modifiers: (0, _extends2.default)({}, disablePortal ? {} : {
 	          // It's using scrollParent by default, we can use the viewport when using a portal.
 	          preventOverflow: {
 	            boundariesElement: 'window'
@@ -53771,7 +54163,7 @@
 	    };
 
 	    _this.state = {
-	      exited: !_this.props.open
+	      exited: !props.open
 	    };
 	    return _this;
 	  }
@@ -53797,22 +54189,22 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          anchorEl = _props.anchorEl,
-	          children = _props.children,
-	          container = _props.container,
-	          disablePortal = _props.disablePortal,
-	          keepMounted = _props.keepMounted,
-	          modifiers = _props.modifiers,
-	          open = _props.open,
-	          placementProps = _props.placement,
-	          popperOptions = _props.popperOptions,
-	          theme = _props.theme,
-	          transition = _props.transition,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["anchorEl", "children", "container", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "theme", "transition"]);
-	      var _state = this.state,
-	          exited = _state.exited,
-	          placement = _state.placement;
+	      var _this$props2 = this.props,
+	          anchorEl = _this$props2.anchorEl,
+	          children = _this$props2.children,
+	          container = _this$props2.container,
+	          disablePortal = _this$props2.disablePortal,
+	          keepMounted = _this$props2.keepMounted,
+	          modifiers = _this$props2.modifiers,
+	          open = _this$props2.open,
+	          placementProps = _this$props2.placement,
+	          popperOptions = _this$props2.popperOptions,
+	          theme = _this$props2.theme,
+	          transition = _this$props2.transition,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["anchorEl", "children", "container", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "theme", "transition"]);
+	      var _this$state = this.state,
+	          exited = _this$state.exited,
+	          placement = _this$state.placement;
 
 	      if (!keepMounted && !open && (!transition || exited)) {
 	        return null;
@@ -54243,6 +54635,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -54262,9 +54656,9 @@
 	  (0, _inherits2.default)(RadioGroup, _React$Component);
 
 	  function RadioGroup() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, RadioGroup);
 
@@ -54272,7 +54666,10 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = RadioGroup.__proto__ || Object.getPrototypeOf(RadioGroup)).call.apply(_ref, [this].concat(args))), _this.radios = [], _this.focus = function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(RadioGroup)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.radios = [];
+
+	    _this.focus = function () {
 	      if (!_this.radios || !_this.radios.length) {
 	        return;
 	      }
@@ -54295,11 +54692,15 @@
 	      }
 
 	      focusRadios[0].focus();
-	    }, _this.handleRadioChange = function (event, checked) {
+	    };
+
+	    _this.handleRadioChange = function (event, checked) {
 	      if (checked && _this.props.onChange) {
 	        _this.props.onChange(event, event.target.value);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(RadioGroup, [{
@@ -54307,12 +54708,12 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          name = _props.name,
-	          value = _props.value,
-	          onChange = _props.onChange,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "name", "value", "onChange"]);
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          name = _this$props.name,
+	          value = _this$props.value,
+	          onChange = _this$props.onChange,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "name", "value", "onChange"]);
 	      this.radios = [];
 	      return _react.default.createElement(_FormGroup.default, (0, _extends2.default)({
 	        role: "radiogroup"
@@ -54407,8 +54808,6 @@
 	});
 	exports.default = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
@@ -54422,6 +54821,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -54448,9 +54849,9 @@
 	  (0, _inherits2.default)(SelectInput, _React$Component);
 
 	  function SelectInput() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, SelectInput);
 
@@ -54458,12 +54859,18 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = SelectInput.__proto__ || Object.getPrototypeOf(SelectInput)).call.apply(_ref, [this].concat(args))), _this.ignoreNextBlur = false, _this.displayRef = null, _this.isOpenControlled = _this.props.open !== undefined, _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(SelectInput)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.ignoreNextBlur = false;
+	    _this.displayRef = null;
+	    _this.isOpenControlled = _this.props.open !== undefined;
+	    _this.state = {
 	      menuMinWidth: null,
 	      open: false
-	    }, _this.update = function (_ref2) {
-	      var event = _ref2.event,
-	          open = _ref2.open;
+	    };
+
+	    _this.update = function (_ref) {
+	      var event = _ref.event,
+	          open = _ref.open;
 
 	      if (_this.isOpenControlled) {
 	        if (open) {
@@ -54480,7 +54887,9 @@
 	        menuMinWidth: _this.props.autoWidth ? null : _this.displayRef.clientWidth,
 	        open: open
 	      });
-	    }, _this.handleClick = function (event) {
+	    };
+
+	    _this.handleClick = function (event) {
 	      // Opening the menu is going to blur the. It will be focused back when closed.
 	      _this.ignoreNextBlur = true;
 
@@ -54488,12 +54897,16 @@
 	        open: true,
 	        event: event
 	      });
-	    }, _this.handleClose = function (event) {
+	    };
+
+	    _this.handleClose = function (event) {
 	      _this.update({
 	        open: false,
 	        event: event
 	      });
-	    }, _this.handleItemClick = function (child) {
+	    };
+
+	    _this.handleItemClick = function (child) {
 	      return function (event) {
 	        if (!_this.props.multiple) {
 	          _this.update({
@@ -54530,7 +54943,9 @@
 	          onChange(event, child);
 	        }
 	      };
-	    }, _this.handleBlur = function (event) {
+	    };
+
+	    _this.handleBlur = function (event) {
 	      if (_this.ignoreNextBlur === true) {
 	        // The parent components are relying on the bubbling of the event.
 	        event.stopPropagation();
@@ -54539,9 +54954,20 @@
 	      }
 
 	      if (_this.props.onBlur) {
+	        var _this$props2 = _this.props,
+	            value = _this$props2.value,
+	            name = _this$props2.name;
+	        event.persist();
+	        event.target = {
+	          value: value,
+	          name: name
+	        };
+
 	        _this.props.onBlur(event);
 	      }
-	    }, _this.handleKeyDown = function (event) {
+	    };
+
+	    _this.handleKeyDown = function (event) {
 	      if (_this.props.readOnly) {
 	        return;
 	      }
@@ -54556,9 +54982,13 @@
 	          event: event
 	        });
 	      }
-	    }, _this.handleDisplayRef = function (ref) {
+	    };
+
+	    _this.handleDisplayRef = function (ref) {
 	      _this.displayRef = ref;
-	    }, _this.handleInputRef = function (ref) {
+	    };
+
+	    _this.handleInputRef = function (ref) {
 	      var inputRef = _this.props.inputRef;
 
 	      if (!inputRef) {
@@ -54576,7 +55006,9 @@
 	      } else {
 	        inputRef.current = nodeProxy;
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(SelectInput, [{
@@ -54599,34 +55031,34 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          autoWidth = _props.autoWidth,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          disabled = _props.disabled,
-	          displayEmpty = _props.displayEmpty,
-	          IconComponent = _props.IconComponent,
-	          inputRef = _props.inputRef,
-	          _props$MenuProps = _props.MenuProps,
-	          MenuProps = _props$MenuProps === void 0 ? {} : _props$MenuProps,
-	          multiple = _props.multiple,
-	          name = _props.name,
-	          onBlur = _props.onBlur,
-	          onChange = _props.onChange,
-	          onClose = _props.onClose,
-	          onFocus = _props.onFocus,
-	          onOpen = _props.onOpen,
-	          openProp = _props.open,
-	          readOnly = _props.readOnly,
-	          renderValue = _props.renderValue,
-	          required = _props.required,
-	          SelectDisplayProps = _props.SelectDisplayProps,
-	          tabIndexProp = _props.tabIndex,
-	          _props$type = _props.type,
-	          type = _props$type === void 0 ? 'hidden' : _props$type,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["autoWidth", "children", "classes", "className", "disabled", "displayEmpty", "IconComponent", "inputRef", "MenuProps", "multiple", "name", "onBlur", "onChange", "onClose", "onFocus", "onOpen", "open", "readOnly", "renderValue", "required", "SelectDisplayProps", "tabIndex", "type", "value"]);
+	      var _this$props3 = this.props,
+	          autoWidth = _this$props3.autoWidth,
+	          children = _this$props3.children,
+	          classes = _this$props3.classes,
+	          className = _this$props3.className,
+	          disabled = _this$props3.disabled,
+	          displayEmpty = _this$props3.displayEmpty,
+	          IconComponent = _this$props3.IconComponent,
+	          inputRef = _this$props3.inputRef,
+	          _this$props3$MenuProp = _this$props3.MenuProps,
+	          MenuProps = _this$props3$MenuProp === void 0 ? {} : _this$props3$MenuProp,
+	          multiple = _this$props3.multiple,
+	          name = _this$props3.name,
+	          onBlur = _this$props3.onBlur,
+	          onChange = _this$props3.onChange,
+	          onClose = _this$props3.onClose,
+	          onFocus = _this$props3.onFocus,
+	          onOpen = _this$props3.onOpen,
+	          openProp = _this$props3.open,
+	          readOnly = _this$props3.readOnly,
+	          renderValue = _this$props3.renderValue,
+	          required = _this$props3.required,
+	          SelectDisplayProps = _this$props3.SelectDisplayProps,
+	          tabIndexProp = _this$props3.tabIndex,
+	          _this$props3$type = _this$props3.type,
+	          type = _this$props3$type === void 0 ? 'hidden' : _this$props3$type,
+	          value = _this$props3.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props3, ["autoWidth", "children", "classes", "className", "disabled", "displayEmpty", "IconComponent", "inputRef", "MenuProps", "multiple", "name", "onBlur", "onChange", "onClose", "onFocus", "onOpen", "open", "readOnly", "renderValue", "required", "SelectDisplayProps", "tabIndex", "type", "value"]);
 	      var open = this.isOpenControlled && this.displayRef ? openProp : this.state.open;
 	      delete other['aria-invalid'];
 	      var display;
@@ -54729,11 +55161,11 @@
 	        open: open,
 	        onClose: this.handleClose
 	      }, MenuProps, {
-	        MenuListProps: (0, _objectSpread2.default)({
+	        MenuListProps: (0, _extends2.default)({
 	          role: 'listbox'
 	        }, MenuProps.MenuListProps),
-	        PaperProps: (0, _objectSpread2.default)({}, MenuProps.PaperProps, {
-	          style: (0, _objectSpread2.default)({
+	        PaperProps: (0, _extends2.default)({}, MenuProps.PaperProps, {
+	          style: (0, _extends2.default)({
 	            minWidth: menuMinWidth
 	          }, MenuProps.PaperProps != null ? MenuProps.PaperProps.style : null)
 	        })
@@ -54883,7 +55315,7 @@
 	  /**
 	   * The input value.
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number]))]).isRequired
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool]))]).isRequired
 	};
 	var _default = SelectInput;
 	exports.default = _default;
@@ -54900,7 +55332,7 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
+	var _extends2 = interopRequireDefault(_extends_1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
@@ -54944,11 +55376,11 @@
 	      SelectDisplayProps = props.SelectDisplayProps,
 	      other = (0, _objectWithoutProperties2.default)(props, ["autoWidth", "children", "classes", "displayEmpty", "IconComponent", "input", "inputProps", "MenuProps", "multiple", "native", "onClose", "onOpen", "open", "renderValue", "SelectDisplayProps"]);
 	  var inputComponent = native ? _NativeSelectInput.default : _SelectInput.default;
-	  return _react.default.cloneElement(input, (0, _objectSpread2.default)({
+	  return _react.default.cloneElement(input, (0, _extends2.default)({
 	    // Most of the logic is implemented in `SelectInput`.
 	    // The `Select` component is a simple API wrapper to expose something better to play with.
 	    inputComponent: inputComponent,
-	    inputProps: (0, _objectSpread2.default)({
+	    inputProps: (0, _extends2.default)({
 	      children: children,
 	      IconComponent: IconComponent,
 	      type: undefined
@@ -55078,7 +55510,7 @@
 	   * The input value.
 	   * This property is required when the `native` property is `false` (default).
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number]))])
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool]))])
 	};
 	Select.defaultProps = {
 	  autoWidth: false,
@@ -55272,8 +55704,6 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -55282,11 +55712,13 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread8 = interopRequireDefault(objectSpread);
+	var _extends8 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -55352,28 +55784,28 @@
 	    },
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'center' }}`. */
-	    anchorOriginTopCenter: (0, _objectSpread8.default)({}, top, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({}, center))),
+	    anchorOriginTopCenter: (0, _extends8.default)({}, top, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({}, center))),
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'center' }}`. */
-	    anchorOriginBottomCenter: (0, _objectSpread8.default)({}, bottom, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({}, center))),
+	    anchorOriginBottomCenter: (0, _extends8.default)({}, bottom, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({}, center))),
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'right' }}`. */
-	    anchorOriginTopRight: (0, _objectSpread8.default)({}, top, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({
+	    anchorOriginTopRight: (0, _extends8.default)({}, top, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({
 	      left: 'auto'
 	    }, topSpace, rightSpace))),
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'right' }}`. */
-	    anchorOriginBottomRight: (0, _objectSpread8.default)({}, bottom, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({
+	    anchorOriginBottomRight: (0, _extends8.default)({}, bottom, right, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({
 	      left: 'auto'
 	    }, bottomSpace, rightSpace))),
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'top', 'left' }}`. */
-	    anchorOriginTopLeft: (0, _objectSpread8.default)({}, top, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({
+	    anchorOriginTopLeft: (0, _extends8.default)({}, top, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({
 	      right: 'auto'
 	    }, topSpace, leftSpace))),
 
 	    /* Styles applied to the root element if `anchorOrigin={{ 'bottom', 'left' }}`. */
-	    anchorOriginBottomLeft: (0, _objectSpread8.default)({}, bottom, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _objectSpread8.default)({
+	    anchorOriginBottomLeft: (0, _extends8.default)({}, bottom, left, (0, _defineProperty2.default)({}, theme.breakpoints.up('md'), (0, _extends8.default)({
 	      right: 'auto'
 	    }, bottomSpace, leftSpace)))
 	  };
@@ -55393,9 +55825,9 @@
 	  (0, _inherits2.default)(Snackbar, _React$Component);
 
 	  function Snackbar() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Snackbar);
 
@@ -55403,25 +55835,37 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Snackbar.__proto__ || Object.getPrototypeOf(Snackbar)).call.apply(_ref, [this].concat(args))), _this.timerAutoHide = null, _this.state = {}, _this.handleMouseEnter = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Snackbar)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.timerAutoHide = null;
+	    _this.state = {};
+
+	    _this.handleMouseEnter = function (event) {
 	      if (_this.props.onMouseEnter) {
 	        _this.props.onMouseEnter(event);
 	      }
 
 	      _this.handlePause();
-	    }, _this.handleMouseLeave = function (event) {
+	    };
+
+	    _this.handleMouseLeave = function (event) {
 	      if (_this.props.onMouseLeave) {
 	        _this.props.onMouseLeave(event);
 	      }
 
 	      _this.handleResume();
-	    }, _this.handleClickAway = function (event) {
+	    };
+
+	    _this.handleClickAway = function (event) {
 	      if (_this.props.onClose) {
 	        _this.props.onClose(event, 'clickaway');
 	      }
-	    }, _this.handlePause = function () {
+	    };
+
+	    _this.handlePause = function () {
 	      clearTimeout(_this.timerAutoHide);
-	    }, _this.handleResume = function () {
+	    };
+
+	    _this.handleResume = function () {
 	      if (_this.props.autoHideDuration != null) {
 	        if (_this.props.resumeHideDuration != null) {
 	          _this.setAutoHideTimer(_this.props.resumeHideDuration);
@@ -55431,11 +55875,15 @@
 
 	        _this.setAutoHideTimer(_this.props.autoHideDuration * 0.5);
 	      }
-	    }, _this.handleExited = function () {
+	    };
+
+	    _this.handleExited = function () {
 	      _this.setState({
 	        exited: true
 	      });
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Snackbar, [{
@@ -55487,33 +55935,33 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          action = _props.action,
-	          _props$anchorOrigin = _props.anchorOrigin,
-	          vertical = _props$anchorOrigin.vertical,
-	          horizontal = _props$anchorOrigin.horizontal,
-	          autoHideDuration = _props.autoHideDuration,
-	          children = _props.children,
-	          classes = _props.classes,
-	          className = _props.className,
-	          ContentProps = _props.ContentProps,
-	          disableWindowBlurListener = _props.disableWindowBlurListener,
-	          message = _props.message,
-	          onClose = _props.onClose,
-	          onEnter = _props.onEnter,
-	          onEntered = _props.onEntered,
-	          onEntering = _props.onEntering,
-	          onExit = _props.onExit,
-	          onExited = _props.onExited,
-	          onExiting = _props.onExiting,
-	          onMouseEnter = _props.onMouseEnter,
-	          onMouseLeave = _props.onMouseLeave,
-	          open = _props.open,
-	          resumeHideDuration = _props.resumeHideDuration,
-	          TransitionComponent = _props.TransitionComponent,
-	          transitionDuration = _props.transitionDuration,
-	          TransitionProps = _props.TransitionProps,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["action", "anchorOrigin", "autoHideDuration", "children", "classes", "className", "ContentProps", "disableWindowBlurListener", "message", "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "onMouseEnter", "onMouseLeave", "open", "resumeHideDuration", "TransitionComponent", "transitionDuration", "TransitionProps"]); // So we only render active snackbars.
+	      var _this$props = this.props,
+	          action = _this$props.action,
+	          _this$props$anchorOri = _this$props.anchorOrigin,
+	          vertical = _this$props$anchorOri.vertical,
+	          horizontal = _this$props$anchorOri.horizontal,
+	          autoHideDuration = _this$props.autoHideDuration,
+	          children = _this$props.children,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          ContentProps = _this$props.ContentProps,
+	          disableWindowBlurListener = _this$props.disableWindowBlurListener,
+	          message = _this$props.message,
+	          onClose = _this$props.onClose,
+	          onEnter = _this$props.onEnter,
+	          onEntered = _this$props.onEntered,
+	          onEntering = _this$props.onEntering,
+	          onExit = _this$props.onExit,
+	          onExited = _this$props.onExited,
+	          onExiting = _this$props.onExiting,
+	          onMouseEnter = _this$props.onMouseEnter,
+	          onMouseLeave = _this$props.onMouseLeave,
+	          open = _this$props.open,
+	          resumeHideDuration = _this$props.resumeHideDuration,
+	          TransitionComponent = _this$props.TransitionComponent,
+	          transitionDuration = _this$props.transitionDuration,
+	          TransitionProps = _this$props.TransitionProps,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["action", "anchorOrigin", "autoHideDuration", "children", "classes", "className", "ContentProps", "disableWindowBlurListener", "message", "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "onMouseEnter", "onMouseLeave", "open", "resumeHideDuration", "TransitionComponent", "transitionDuration", "TransitionProps"]); // So we only render active snackbars.
 
 	      if (!open && this.state.exited) {
 	        return null;
@@ -55521,7 +55969,7 @@
 
 	      return _react.default.createElement(_ClickAwayListener.default, {
 	        onClickAway: this.handleClickAway
-	      }, _react.default.createElement("div", (0, _extends2.default)({
+	      }, _react.default.createElement("div", (0, _extends8.default)({
 	        className: (0, _classnames.default)(classes.root, classes["anchorOrigin".concat((0, helpers.capitalize)(vertical)).concat((0, helpers.capitalize)(horizontal))], className),
 	        onMouseEnter: this.handleMouseEnter,
 	        onMouseLeave: this.handleMouseLeave
@@ -55529,9 +55977,9 @@
 	        target: "window",
 	        onFocus: disableWindowBlurListener ? undefined : this.handleResume,
 	        onBlur: disableWindowBlurListener ? undefined : this.handlePause
-	      }), _react.default.createElement(TransitionComponent, (0, _extends2.default)({
+	      }), _react.default.createElement(TransitionComponent, (0, _extends8.default)({
 	        appear: true,
-	        "in": open,
+	        in: open,
 	        onEnter: onEnter,
 	        onEntered: onEntered,
 	        onEntering: onEntering,
@@ -55540,7 +55988,7 @@
 	        onExiting: onExiting,
 	        timeout: transitionDuration,
 	        direction: vertical === 'top' ? 'down' : 'up'
-	      }, TransitionProps), children || _react.default.createElement(_SnackbarContent.default, (0, _extends2.default)({
+	      }, TransitionProps), children || _react.default.createElement(_SnackbarContent.default, (0, _extends8.default)({
 	        message: message,
 	        action: action
 	      }, ContentProps)))));
@@ -55766,8 +56214,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -55836,7 +56282,7 @@
 	    }
 
 	    (0, _warning.default)(child.type !== _react.default.Fragment, ["Material-UI: the Step component doesn't accept a Fragment as a child.", 'Consider providing an array instead.'].join('\n'));
-	    return _react.default.cloneElement(child, (0, _objectSpread2.default)({
+	    return _react.default.cloneElement(child, (0, _extends2.default)({
 	      active: active,
 	      alternativeLabel: alternativeLabel,
 	      completed: completed,
@@ -56819,7 +57265,7 @@
 	  return _react.default.createElement("div", (0, _extends2.default)({
 	    className: (0, _classnames.default)(classes.root, (0, _defineProperty2.default)({}, classes.last, last), className)
 	  }, other), _react.default.createElement(TransitionComponent, (0, _extends2.default)({
-	    "in": active,
+	    in: active,
 	    className: classes.transition,
 	    timeout: transitionDuration,
 	    unmountOnExit: true
@@ -56942,8 +57388,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
@@ -57026,7 +57470,7 @@
 	    return [!alternativeLabel && connector && index > 0 && _react.default.cloneElement(connector, {
 	      key: index // eslint-disable-line react/no-array-index-key
 
-	    }), _react.default.cloneElement(step, (0, _objectSpread2.default)({}, controlProps, step.props))];
+	    }), _react.default.cloneElement(step, (0, _extends2.default)({}, controlProps, step.props))];
 	  });
 	  return _react.default.createElement(_Paper.default, (0, _extends2.default)({
 	    square: true,
@@ -57229,8 +57673,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -57238,6 +57680,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -57288,9 +57732,9 @@
 	  (0, _inherits2.default)(SwipeableDrawer, _React$Component);
 
 	  function SwipeableDrawer() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, SwipeableDrawer);
 
@@ -57298,9 +57742,17 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = SwipeableDrawer.__proto__ || Object.getPrototypeOf(SwipeableDrawer)).call.apply(_ref, [this].concat(args))), _this.backdrop = null, _this.paper = null, _this.isSwiping = null, _this.startX = null, _this.startY = null, _this.state = {}, _this.handleBodyTouchStart = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(SwipeableDrawer)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.backdrop = null;
+	    _this.paper = null;
+	    _this.isSwiping = null;
+	    _this.startX = null;
+	    _this.startY = null;
+	    _this.state = {};
+
+	    _this.handleBodyTouchStart = function (event) {
 	      // We are not supposed to hanlde this touch move.
-	      if (nodeThatClaimedTheSwipe !== null && nodeThatClaimedTheSwipe !== (0, _assertThisInitialized2.default)(_this)) {
+	      if (nodeThatClaimedTheSwipe !== null && nodeThatClaimedTheSwipe !== (0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this))) {
 	        return;
 	      }
 
@@ -57327,7 +57779,7 @@
 	        }
 	      }
 
-	      nodeThatClaimedTheSwipe = (0, _assertThisInitialized2.default)(_this);
+	      nodeThatClaimedTheSwipe = (0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this));
 	      _this.startX = currentX;
 	      _this.startY = currentY;
 
@@ -57348,7 +57800,9 @@
 	      document.body.addEventListener('touchend', _this.handleBodyTouchEnd); // https://plus.google.com/+PaulIrish/posts/KTwfn1Y2238
 
 	      document.body.addEventListener('touchcancel', _this.handleBodyTouchEnd);
-	    }, _this.handleBodyTouchMove = function (event) {
+	    };
+
+	    _this.handleBodyTouchMove = function (event) {
 	      // the ref may be null when a parent component updates while swiping
 	      if (!_this.paper) return;
 	      var anchor = (0, _Drawer.getAnchor)(_this.props);
@@ -57397,7 +57851,9 @@
 	      event.preventDefault();
 
 	      _this.setPosition(_this.getTranslate(horizontalSwipe ? currentX : currentY));
-	    }, _this.handleBodyTouchEnd = function (event) {
+	    };
+
+	    _this.handleBodyTouchEnd = function (event) {
 	      nodeThatClaimedTheSwipe = null;
 
 	      _this.removeBodyTouchListeners();
@@ -57444,11 +57900,17 @@
 	      }
 
 	      _this.isSwiping = null;
-	    }, _this.handleBackdropRef = function (node) {
+	    };
+
+	    _this.handleBackdropRef = function (node) {
 	      _this.backdrop = node ? _reactDom.default.findDOMNode(node) : null;
-	    }, _this.handlePaperRef = function (node) {
+	    };
+
+	    _this.handlePaperRef = function (node) {
 	      _this.paper = node ? _reactDom.default.findDOMNode(node) : null;
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(SwipeableDrawer, [{
@@ -57554,33 +58016,33 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          anchor = _props.anchor,
-	          disableBackdropTransition = _props.disableBackdropTransition,
-	          disableDiscovery = _props.disableDiscovery,
-	          disableSwipeToOpen = _props.disableSwipeToOpen,
-	          _props$ModalProps = _props.ModalProps;
-	      _props$ModalProps = _props$ModalProps === void 0 ? {} : _props$ModalProps;
-	      var BackdropProps = _props$ModalProps.BackdropProps,
-	          ModalPropsProp = (0, _objectWithoutProperties2.default)(_props$ModalProps, ["BackdropProps"]),
-	          onOpen = _props.onOpen,
-	          open = _props.open,
-	          _props$PaperProps = _props.PaperProps,
-	          PaperProps = _props$PaperProps === void 0 ? {} : _props$PaperProps,
-	          swipeAreaWidth = _props.swipeAreaWidth,
-	          variant = _props.variant,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["anchor", "disableBackdropTransition", "disableDiscovery", "disableSwipeToOpen", "ModalProps", "onOpen", "open", "PaperProps", "swipeAreaWidth", "variant"]);
+	      var _this$props2 = this.props,
+	          anchor = _this$props2.anchor,
+	          disableBackdropTransition = _this$props2.disableBackdropTransition,
+	          disableDiscovery = _this$props2.disableDiscovery,
+	          disableSwipeToOpen = _this$props2.disableSwipeToOpen,
+	          _this$props2$ModalPro = _this$props2.ModalProps;
+	      _this$props2$ModalPro = _this$props2$ModalPro === void 0 ? {} : _this$props2$ModalPro;
+	      var BackdropProps = _this$props2$ModalPro.BackdropProps,
+	          ModalPropsProp = (0, _objectWithoutProperties2.default)(_this$props2$ModalPro, ["BackdropProps"]),
+	          onOpen = _this$props2.onOpen,
+	          open = _this$props2.open,
+	          _this$props2$PaperPro = _this$props2.PaperProps,
+	          PaperProps = _this$props2$PaperPro === void 0 ? {} : _this$props2$PaperPro,
+	          swipeAreaWidth = _this$props2.swipeAreaWidth,
+	          variant = _this$props2.variant,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["anchor", "disableBackdropTransition", "disableDiscovery", "disableSwipeToOpen", "ModalProps", "onOpen", "open", "PaperProps", "swipeAreaWidth", "variant"]);
 	      var maybeSwiping = this.state.maybeSwiping;
 	      return _react.default.createElement(_react.default.Fragment, null, _react.default.createElement(_Drawer.default, (0, _extends2.default)({
 	        open: variant === 'temporary' && maybeSwiping ? true : open,
 	        variant: variant,
-	        ModalProps: (0, _objectSpread2.default)({
-	          BackdropProps: (0, _objectSpread2.default)({}, BackdropProps, {
+	        ModalProps: (0, _extends2.default)({
+	          BackdropProps: (0, _extends2.default)({}, BackdropProps, {
 	            ref: this.handleBackdropRef
 	          })
 	        }, ModalPropsProp),
-	        PaperProps: (0, _objectSpread2.default)({}, PaperProps, {
-	          style: (0, _objectSpread2.default)({
+	        PaperProps: (0, _extends2.default)({}, PaperProps, {
+	          style: (0, _extends2.default)({
 	            pointerEvents: variant === 'temporary' && !open ? 'none' : ''
 	          }, PaperProps.style),
 	          ref: this.handlePaperRef
@@ -57869,6 +58331,7 @@
 	  return _react.default.createElement("span", {
 	    className: (0, _classnames.default)(classes.root, className)
 	  }, _react.default.createElement(_SwitchBase.default, (0, _extends2.default)({
+	    type: "checkbox",
 	    icon: _react.default.createElement("span", {
 	      className: classes.icon
 	    }),
@@ -58018,6 +58481,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -58050,7 +58515,7 @@
 
 	  function Table() {
 	    (0, _classCallCheck2.default)(this, Table);
-	    return (0, _possibleConstructorReturn2.default)(this, (Table.__proto__ || Object.getPrototypeOf(Table)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Table).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(Table, [{
@@ -58058,17 +58523,20 @@
 	    value: function getChildContext() {
 	      // eslint-disable-line class-methods-use-this
 	      return {
-	        table: {}
+	        table: {
+	          padding: this.props.padding
+	        }
 	      };
 	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          classes = _props.classes,
-	          className = _props.className,
-	          Component = _props.component,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "component"]);
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          Component = _this$props.component,
+	          padding = _this$props.padding,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "component", "padding"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, className)
 	      }, other));
@@ -58098,10 +58566,16 @@
 	   * The component used for the root node.
 	   * Either a string to use a DOM element or a component.
 	   */
-	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object])
+	  component: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.func, _propTypes.default.object]),
+
+	  /**
+	   * Allows TableCells to inherit padding of the Table.
+	   */
+	  padding: _propTypes.default.oneOf(['default', 'checkbox', 'dense', 'none'])
 	};
 	Table.defaultProps = {
-	  component: 'table'
+	  component: 'table',
+	  padding: 'default'
 	};
 	Table.childContextTypes = {
 	  table: _propTypes.default.object
@@ -58159,6 +58633,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -58184,7 +58660,7 @@
 
 	  function TableBody() {
 	    (0, _classCallCheck2.default)(this, TableBody);
-	    return (0, _possibleConstructorReturn2.default)(this, (TableBody.__proto__ || Object.getPrototypeOf(TableBody)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(TableBody).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(TableBody, [{
@@ -58192,19 +58668,19 @@
 	    value: function getChildContext() {
 	      // eslint-disable-line class-methods-use-this
 	      return {
-	        table: {
-	          body: true
+	        tablelvl2: {
+	          variant: 'body'
 	        }
 	      };
 	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          classes = _props.classes,
-	          className = _props.className,
-	          Component = _props.component,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "component"]);
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          Component = _this$props.component,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "component"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, className)
 	      }, other));
@@ -58240,7 +58716,7 @@
 	  component: 'tbody'
 	};
 	TableBody.childContextTypes = {
-	  table: _propTypes.default.object
+	  tablelvl2: _propTypes.default.object
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -58377,26 +58853,28 @@
 	      component = props.component,
 	      sortDirection = props.sortDirection,
 	      numeric = props.numeric,
-	      padding = props.padding,
+	      paddingProp = props.padding,
 	      scopeProp = props.scope,
 	      variant = props.variant,
 	      other = (0, _objectWithoutProperties2.default)(props, ["children", "classes", "className", "component", "sortDirection", "numeric", "padding", "scope", "variant"]);
-	  var table = context.table;
+	  var table = context.table,
+	      tablelvl2 = context.tablelvl2;
 	  var Component;
 
 	  if (component) {
 	    Component = component;
 	  } else {
-	    Component = table && table.head ? 'th' : 'td';
+	    Component = tablelvl2 && tablelvl2.variant === 'head' ? 'th' : 'td';
 	  }
 
 	  var scope = scopeProp;
 
-	  if (!scope && table && table.head) {
+	  if (!scope && tablelvl2 && tablelvl2.variant === 'head') {
 	    scope = 'col';
 	  }
 
-	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.head, variant ? variant === 'head' : table && table.head), (0, _defineProperty2.default)(_classNames, classes.body, variant ? variant === 'body' : table && table.body), (0, _defineProperty2.default)(_classNames, classes.footer, variant ? variant === 'footer' : table && table.footer), (0, _defineProperty2.default)(_classNames, classes.numeric, numeric), (0, _defineProperty2.default)(_classNames, classes["padding".concat((0, helpers.capitalize)(padding))], padding !== 'default'), _classNames), classNameProp);
+	  var padding = paddingProp || (table && table.padding ? table.padding : 'default');
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.head, variant ? variant === 'head' : tablelvl2 && tablelvl2.variant === 'head'), (0, _defineProperty2.default)(_classNames, classes.body, variant ? variant === 'body' : tablelvl2 && tablelvl2.variant === 'body'), (0, _defineProperty2.default)(_classNames, classes.footer, variant ? variant === 'footer' : tablelvl2 && tablelvl2.variant === 'footer'), (0, _defineProperty2.default)(_classNames, classes.numeric, numeric), (0, _defineProperty2.default)(_classNames, classes["padding".concat((0, helpers.capitalize)(padding))], padding !== 'default'), _classNames), classNameProp);
 	  var ariaSort = null;
 
 	  if (sortDirection) {
@@ -58440,6 +58918,7 @@
 
 	  /**
 	   * Sets the padding applied to the cell.
+	   * By default, the Table parent component set the value.
 	   */
 	  padding: _propTypes.default.oneOf(['default', 'checkbox', 'dense', 'none']),
 
@@ -58460,11 +58939,11 @@
 	  variant: _propTypes.default.oneOf(['head', 'body', 'footer'])
 	};
 	TableCell.defaultProps = {
-	  numeric: false,
-	  padding: 'default'
+	  numeric: false
 	};
 	TableCell.contextTypes = {
-	  table: _propTypes.default.object.isRequired
+	  table: _propTypes.default.object,
+	  tablelvl2: _propTypes.default.object
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -58515,6 +58994,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -58540,7 +59021,7 @@
 
 	  function TableFooter() {
 	    (0, _classCallCheck2.default)(this, TableFooter);
-	    return (0, _possibleConstructorReturn2.default)(this, (TableFooter.__proto__ || Object.getPrototypeOf(TableFooter)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(TableFooter).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(TableFooter, [{
@@ -58548,19 +59029,19 @@
 	    value: function getChildContext() {
 	      // eslint-disable-line class-methods-use-this
 	      return {
-	        table: {
-	          footer: true
+	        tablelvl2: {
+	          variant: 'footer'
 	        }
 	      };
 	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          classes = _props.classes,
-	          className = _props.className,
-	          Component = _props.component,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "component"]);
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          Component = _this$props.component,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "component"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, className)
 	      }, other));
@@ -58596,7 +59077,7 @@
 	  component: 'tfoot'
 	};
 	TableFooter.childContextTypes = {
-	  table: _propTypes.default.object
+	  tablelvl2: _propTypes.default.object
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -58647,6 +59128,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -58672,7 +59155,7 @@
 
 	  function TableHead() {
 	    (0, _classCallCheck2.default)(this, TableHead);
-	    return (0, _possibleConstructorReturn2.default)(this, (TableHead.__proto__ || Object.getPrototypeOf(TableHead)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(TableHead).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(TableHead, [{
@@ -58680,19 +59163,19 @@
 	    value: function getChildContext() {
 	      // eslint-disable-line class-methods-use-this
 	      return {
-	        table: {
-	          head: true
+	        tablelvl2: {
+	          variant: 'head'
 	        }
 	      };
 	    }
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          classes = _props.classes,
-	          className = _props.className,
-	          Component = _props.component,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "component"]);
+	      var _this$props = this.props,
+	          classes = _this$props.classes,
+	          className = _this$props.className,
+	          Component = _this$props.component,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["classes", "className", "component"]);
 	      return _react.default.createElement(Component, (0, _extends2.default)({
 	        className: (0, _classnames.default)(classes.root, className)
 	      }, other));
@@ -58728,7 +59211,7 @@
 	  component: 'thead'
 	};
 	TableHead.childContextTypes = {
-	  table: _propTypes.default.object
+	  tablelvl2: _propTypes.default.object
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -58968,6 +59451,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -58982,13 +59467,13 @@
 
 	var _IconButton = interopRequireDefault(IconButton$1);
 
-	var _ref2 = _react.default.createElement(_KeyboardArrowRight.default, null);
+	var _ref = _react.default.createElement(_KeyboardArrowRight.default, null);
+
+	var _ref2 = _react.default.createElement(_KeyboardArrowLeft.default, null);
 
 	var _ref3 = _react.default.createElement(_KeyboardArrowLeft.default, null);
 
-	var _ref4 = _react.default.createElement(_KeyboardArrowLeft.default, null);
-
-	var _ref5 = _react.default.createElement(_KeyboardArrowRight.default, null);
+	var _ref4 = _react.default.createElement(_KeyboardArrowRight.default, null);
 
 	/**
 	 * @ignore - internal component.
@@ -58999,9 +59484,9 @@
 	  (0, _inherits2.default)(TablePaginationActions, _React$Component);
 
 	  function TablePaginationActions() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, TablePaginationActions);
 
@@ -59009,32 +59494,38 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = TablePaginationActions.__proto__ || Object.getPrototypeOf(TablePaginationActions)).call.apply(_ref, [this].concat(args))), _this.handleBackButtonClick = function (event) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(TablePaginationActions)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+	    _this.handleBackButtonClick = function (event) {
 	      _this.props.onChangePage(event, _this.props.page - 1);
-	    }, _this.handleNextButtonClick = function (event) {
+	    };
+
+	    _this.handleNextButtonClick = function (event) {
 	      _this.props.onChangePage(event, _this.props.page + 1);
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(TablePaginationActions, [{
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          backIconButtonProps = _props.backIconButtonProps,
-	          count = _props.count,
-	          nextIconButtonProps = _props.nextIconButtonProps,
-	          onChangePage = _props.onChangePage,
-	          page = _props.page,
-	          rowsPerPage = _props.rowsPerPage,
-	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["backIconButtonProps", "count", "nextIconButtonProps", "onChangePage", "page", "rowsPerPage", "theme"]);
+	      var _this$props = this.props,
+	          backIconButtonProps = _this$props.backIconButtonProps,
+	          count = _this$props.count,
+	          nextIconButtonProps = _this$props.nextIconButtonProps,
+	          onChangePage = _this$props.onChangePage,
+	          page = _this$props.page,
+	          rowsPerPage = _this$props.rowsPerPage,
+	          theme = _this$props.theme,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["backIconButtonProps", "count", "nextIconButtonProps", "onChangePage", "page", "rowsPerPage", "theme"]);
 	      return _react.default.createElement("div", other, _react.default.createElement(_IconButton.default, (0, _extends2.default)({
 	        onClick: this.handleBackButtonClick,
 	        disabled: page === 0
-	      }, backIconButtonProps), theme.direction === 'rtl' ? _ref2 : _ref3), _react.default.createElement(_IconButton.default, (0, _extends2.default)({
+	      }, backIconButtonProps), theme.direction === 'rtl' ? _ref : _ref2), _react.default.createElement(_IconButton.default, (0, _extends2.default)({
 	        onClick: this.handleNextButtonClick,
 	        disabled: page >= Math.ceil(count / rowsPerPage) - 1
-	      }, nextIconButtonProps), theme.direction === 'rtl' ? _ref4 : _ref5));
+	      }, nextIconButtonProps), theme.direction === 'rtl' ? _ref3 : _ref4));
 	    }
 	  }]);
 	  return TablePaginationActions;
@@ -59124,6 +59615,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -59225,7 +59718,7 @@
 
 	  function TablePagination() {
 	    (0, _classCallCheck2.default)(this, TablePagination);
-	    return (0, _possibleConstructorReturn2.default)(this, (TablePagination.__proto__ || Object.getPrototypeOf(TablePagination)).apply(this, arguments));
+	    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(TablePagination).apply(this, arguments));
 	  }
 
 	  (0, _createClass2.default)(TablePagination, [{
@@ -59233,11 +59726,11 @@
 	    // This logic would be better handled on userside.
 	    // However, we have it just in case.
 	    value: function componentDidUpdate() {
-	      var _props = this.props,
-	          count = _props.count,
-	          onChangePage = _props.onChangePage,
-	          page = _props.page,
-	          rowsPerPage = _props.rowsPerPage;
+	      var _this$props = this.props,
+	          count = _this$props.count,
+	          onChangePage = _this$props.onChangePage,
+	          page = _this$props.page,
+	          rowsPerPage = _this$props.rowsPerPage;
 	      var newLastPage = Math.max(0, Math.ceil(count / rowsPerPage) - 1);
 
 	      if (page > newLastPage) {
@@ -59247,23 +59740,23 @@
 	  }, {
 	    key: "render",
 	    value: function render() {
-	      var _props2 = this.props,
-	          ActionsComponent = _props2.ActionsComponent,
-	          backIconButtonProps = _props2.backIconButtonProps,
-	          classes = _props2.classes,
-	          colSpanProp = _props2.colSpan,
-	          Component = _props2.component,
-	          count = _props2.count,
-	          labelDisplayedRows = _props2.labelDisplayedRows,
-	          labelRowsPerPage = _props2.labelRowsPerPage,
-	          nextIconButtonProps = _props2.nextIconButtonProps,
-	          onChangePage = _props2.onChangePage,
-	          onChangeRowsPerPage = _props2.onChangeRowsPerPage,
-	          page = _props2.page,
-	          rowsPerPage = _props2.rowsPerPage,
-	          rowsPerPageOptions = _props2.rowsPerPageOptions,
-	          SelectProps = _props2.SelectProps,
-	          other = (0, _objectWithoutProperties2.default)(_props2, ["ActionsComponent", "backIconButtonProps", "classes", "colSpan", "component", "count", "labelDisplayedRows", "labelRowsPerPage", "nextIconButtonProps", "onChangePage", "onChangeRowsPerPage", "page", "rowsPerPage", "rowsPerPageOptions", "SelectProps"]);
+	      var _this$props2 = this.props,
+	          ActionsComponent = _this$props2.ActionsComponent,
+	          backIconButtonProps = _this$props2.backIconButtonProps,
+	          classes = _this$props2.classes,
+	          colSpanProp = _this$props2.colSpan,
+	          Component = _this$props2.component,
+	          count = _this$props2.count,
+	          labelDisplayedRows = _this$props2.labelDisplayedRows,
+	          labelRowsPerPage = _this$props2.labelRowsPerPage,
+	          nextIconButtonProps = _this$props2.nextIconButtonProps,
+	          onChangePage = _this$props2.onChangePage,
+	          onChangeRowsPerPage = _this$props2.onChangeRowsPerPage,
+	          page = _this$props2.page,
+	          rowsPerPage = _this$props2.rowsPerPage,
+	          rowsPerPageOptions = _this$props2.rowsPerPageOptions,
+	          SelectProps = _this$props2.SelectProps,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["ActionsComponent", "backIconButtonProps", "classes", "colSpan", "component", "count", "labelDisplayedRows", "labelRowsPerPage", "nextIconButtonProps", "onChangePage", "onChangeRowsPerPage", "page", "rowsPerPage", "rowsPerPageOptions", "SelectProps"]);
 	      var colSpan;
 
 	      if (Component === _TableCell.default || Component === 'td') {
@@ -59491,18 +59984,18 @@
 	      }
 	    },
 
-	    /* Styles applied to the root element if `context.table` & `selected={true}`. */
+	    /* Styles applied to the root element if `selected={true}`. */
 	    selected: {},
 
-	    /* Styles applied to the root element if `context.table` & `hover={true}`. */
+	    /* Styles applied to the root element if `hover={true}`. */
 	    hover: {},
 
-	    /* Styles applied to the root element if `context.table.head`. */
+	    /* Styles applied to the root element if table variant = 'head'. */
 	    head: {
 	      height: 56
 	    },
 
-	    /* Styles applied to the root element if `context.table.footer`. */
+	    /* Styles applied to the root element if table variant = 'footer'. */
 	    footer: {
 	      height: 56
 	    }
@@ -59525,8 +60018,8 @@
 	      hover = props.hover,
 	      selected = props.selected,
 	      other = (0, _objectWithoutProperties2.default)(props, ["classes", "className", "component", "hover", "selected"]);
-	  var table = context.table;
-	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.head, table && table.head), (0, _defineProperty2.default)(_classNames, classes.footer, table && table.footer), (0, _defineProperty2.default)(_classNames, classes.hover, table && hover), (0, _defineProperty2.default)(_classNames, classes.selected, table && selected), _classNames), classNameProp);
+	  var tablelvl2 = context.tablelvl2;
+	  var className = (0, _classnames.default)(classes.root, (_classNames = {}, (0, _defineProperty2.default)(_classNames, classes.head, tablelvl2 && tablelvl2.variant === 'head'), (0, _defineProperty2.default)(_classNames, classes.footer, tablelvl2 && tablelvl2.variant === 'footer'), (0, _defineProperty2.default)(_classNames, classes.hover, hover), (0, _defineProperty2.default)(_classNames, classes.selected, selected), _classNames), classNameProp);
 	  return _react.default.createElement(Component, (0, _extends2.default)({
 	    className: className
 	  }, other));
@@ -59571,7 +60064,7 @@
 	  selected: false
 	};
 	TableRow.contextTypes = {
-	  table: _propTypes.default.object
+	  tablelvl2: _propTypes.default.object
 	};
 
 	var _default = (0, _withStyles.default)(styles, {
@@ -59971,6 +60464,8 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _react = interopRequireDefault(react);
@@ -59979,7 +60474,7 @@
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 	// < 1kb payload overhead when lodash/debounce is > 3kb.
 	var styles = {
@@ -60002,9 +60497,9 @@
 	  (0, _inherits2.default)(ScrollbarSize, _React$Component);
 
 	  function ScrollbarSize() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, ScrollbarSize);
 
@@ -60012,7 +60507,8 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = ScrollbarSize.__proto__ || Object.getPrototypeOf(ScrollbarSize)).call.apply(_ref, [this].concat(args))), _this.handleResize = (0, _debounce.default)(function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(ScrollbarSize)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.handleResize = (0, _debounce.default)(function () {
 	      var onChange = _this.props.onChange;
 	      var prevHeight = _this.scrollbarHeight;
 	      var prevWidth = _this.scrollbarWidth;
@@ -60025,7 +60521,9 @@
 	          scrollbarWidth: _this.scrollbarWidth
 	        });
 	      }
-	    }, 166), _this.setMeasurements = function () {
+	    }, 166);
+
+	    _this.setMeasurements = function () {
 	      var nodeRef = _this.nodeRef;
 
 	      if (!nodeRef) {
@@ -60034,7 +60532,9 @@
 
 	      _this.scrollbarHeight = nodeRef.offsetHeight - nodeRef.clientHeight;
 	      _this.scrollbarWidth = nodeRef.offsetWidth - nodeRef.clientWidth;
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(ScrollbarSize, [{
@@ -60063,8 +60563,8 @@
 	        onResize: this.handleResize
 	      }) : null, _react.default.createElement("div", {
 	        style: styles,
-	        ref: function ref(_ref2) {
-	          _this2.nodeRef = _ref2;
+	        ref: function ref(_ref) {
+	          _this2.nodeRef = _ref;
 	        }
 	      }));
 	    }
@@ -60290,8 +60790,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -60299,6 +60797,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -60314,7 +60814,7 @@
 
 	var _reactEventListener = interopRequireDefault(reactEventListener_cjs);
 
-	var _debounce = interopRequireDefault(debounce);
+	var _debounce = interopRequireDefault(debounce_1);
 
 
 
@@ -60390,9 +60890,9 @@
 	  (0, _inherits2.default)(Tabs, _React$Component);
 
 	  function Tabs() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Tabs);
 
@@ -60400,13 +60900,18 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Tabs.__proto__ || Object.getPrototypeOf(Tabs)).call.apply(_ref, [this].concat(args))), _this.tabs = null, _this.valueToIndex = new Map(), _this.handleResize = (0, _debounce.default)(function () {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Tabs)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.tabs = null;
+	    _this.valueToIndex = new Map();
+	    _this.handleResize = (0, _debounce.default)(function () {
 	      _this.updateIndicatorState(_this.props);
 
 	      _this.updateScrollButtonState();
-	    }, 166), _this.handleTabsScroll = (0, _debounce.default)(function () {
+	    }, 166);
+	    _this.handleTabsScroll = (0, _debounce.default)(function () {
 	      _this.updateScrollButtonState();
-	    }, 166), _this.state = {
+	    }, 166);
+	    _this.state = {
 	      indicatorStyle: {},
 	      scrollerStyle: {
 	        marginBottom: 0
@@ -60414,7 +60919,9 @@
 	      showLeftScroll: false,
 	      showRightScroll: false,
 	      mounted: false
-	    }, _this.getConditionalElements = function () {
+	    };
+
+	    _this.getConditionalElements = function () {
 	      var _this$props = _this.props,
 	          classes = _this$props.classes,
 	          scrollable = _this$props.scrollable,
@@ -60440,7 +60947,9 @@
 	        className: (0, _classnames.default)(classes.scrollButtons, (0, _defineProperty2.default)({}, classes.scrollButtonsAuto, scrollButtons === 'auto'))
 	      }) : null;
 	      return conditionalElements;
-	    }, _this.getTabsMeta = function (value, direction) {
+	    };
+
+	    _this.getTabsMeta = function (value, direction) {
 	      var tabsMeta;
 
 	      if (_this.tabsRef) {
@@ -60474,19 +60983,27 @@
 	        tabsMeta: tabsMeta,
 	        tabMeta: tabMeta
 	      };
-	    }, _this.handleLeftScrollClick = function () {
+	    };
+
+	    _this.handleLeftScrollClick = function () {
 	      _this.moveTabsScroll(-_this.tabsRef.clientWidth);
-	    }, _this.handleRightScrollClick = function () {
+	    };
+
+	    _this.handleRightScrollClick = function () {
 	      _this.moveTabsScroll(_this.tabsRef.clientWidth);
-	    }, _this.handleScrollbarSizeChange = function (_ref2) {
-	      var scrollbarHeight = _ref2.scrollbarHeight;
+	    };
+
+	    _this.handleScrollbarSizeChange = function (_ref) {
+	      var scrollbarHeight = _ref.scrollbarHeight;
 
 	      _this.setState({
 	        scrollerStyle: {
 	          marginBottom: -scrollbarHeight
 	        }
 	      });
-	    }, _this.moveTabsScroll = function (delta) {
+	    };
+
+	    _this.moveTabsScroll = function (delta) {
 	      var theme = _this.props.theme;
 	      var multiplier = theme.direction === 'rtl' ? -1 : 1;
 	      var nextScrollLeft = _this.tabsRef.scrollLeft + delta * multiplier; // Fix for Edge
@@ -60494,7 +61011,9 @@
 	      var invert = theme.direction === 'rtl' && (0, main.detectScrollType)() === 'reverse' ? -1 : 1;
 
 	      _this.scroll(invert * nextScrollLeft);
-	    }, _this.scrollSelectedIntoView = function () {
+	    };
+
+	    _this.scrollSelectedIntoView = function () {
 	      var _this$props2 = _this.props,
 	          theme = _this$props2.theme,
 	          value = _this$props2.value;
@@ -60518,9 +61037,13 @@
 
 	        _this.scroll(_nextScrollLeft);
 	      }
-	    }, _this.scroll = function (value) {
+	    };
+
+	    _this.scroll = function (value) {
 	      (0, _animate.default)('scrollLeft', _this.tabsRef, value);
-	    }, _this.updateScrollButtonState = function () {
+	    };
+
+	    _this.updateScrollButtonState = function () {
 	      var _this$props3 = _this.props,
 	          scrollable = _this$props3.scrollable,
 	          scrollButtons = _this$props3.scrollButtons,
@@ -60541,7 +61064,9 @@
 	          });
 	        }
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Tabs, [{
@@ -60584,9 +61109,9 @@
 	      var theme = props.theme,
 	          value = props.value;
 
-	      var _getTabsMeta = this.getTabsMeta(value, theme.direction),
-	          tabsMeta = _getTabsMeta.tabsMeta,
-	          tabMeta = _getTabsMeta.tabMeta;
+	      var _this$getTabsMeta2 = this.getTabsMeta(value, theme.direction),
+	          tabsMeta = _this$getTabsMeta2.tabsMeta,
+	          tabMeta = _this$getTabsMeta2.tabMeta;
 
 	      var left = 0;
 
@@ -60613,25 +61138,25 @@
 	      var _classNames4,
 	          _this2 = this;
 
-	      var _props = this.props,
-	          action = _props.action,
-	          centered = _props.centered,
-	          childrenProp = _props.children,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          Component = _props.component,
-	          fullWidth = _props.fullWidth,
-	          indicatorColor = _props.indicatorColor,
-	          onChange = _props.onChange,
-	          scrollable = _props.scrollable,
-	          ScrollButtonComponent = _props.ScrollButtonComponent,
-	          scrollButtons = _props.scrollButtons,
-	          _props$TabIndicatorPr = _props.TabIndicatorProps,
-	          TabIndicatorProps = _props$TabIndicatorPr === void 0 ? {} : _props$TabIndicatorPr,
-	          textColor = _props.textColor,
-	          theme = _props.theme,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["action", "centered", "children", "classes", "className", "component", "fullWidth", "indicatorColor", "onChange", "scrollable", "ScrollButtonComponent", "scrollButtons", "TabIndicatorProps", "textColor", "theme", "value"]);
+	      var _this$props4 = this.props,
+	          action = _this$props4.action,
+	          centered = _this$props4.centered,
+	          childrenProp = _this$props4.children,
+	          classes = _this$props4.classes,
+	          classNameProp = _this$props4.className,
+	          Component = _this$props4.component,
+	          fullWidth = _this$props4.fullWidth,
+	          indicatorColor = _this$props4.indicatorColor,
+	          onChange = _this$props4.onChange,
+	          scrollable = _this$props4.scrollable,
+	          ScrollButtonComponent = _this$props4.ScrollButtonComponent,
+	          scrollButtons = _this$props4.scrollButtons,
+	          _this$props4$TabIndic = _this$props4.TabIndicatorProps,
+	          TabIndicatorProps = _this$props4$TabIndic === void 0 ? {} : _this$props4$TabIndic,
+	          textColor = _this$props4.textColor,
+	          theme = _this$props4.theme,
+	          value = _this$props4.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props4, ["action", "centered", "children", "classes", "className", "component", "fullWidth", "indicatorColor", "onChange", "scrollable", "ScrollButtonComponent", "scrollButtons", "TabIndicatorProps", "textColor", "theme", "value"]);
 	      (0, _warning.default)(!centered || !scrollable, 'Material-UI: you can not use the `centered={true}` and `scrollable={true}` properties ' + 'at the same time on a `Tabs` component.');
 	      var className = (0, _classnames.default)(classes.root, classNameProp);
 	      var flexContainerClassName = (0, _classnames.default)(classes.flexContainer, (0, _defineProperty2.default)({}, classes.centered, centered && !scrollable));
@@ -60641,7 +61166,7 @@
 	        className: classes.indicator,
 	        color: indicatorColor
 	      }, TabIndicatorProps, {
-	        style: (0, _objectSpread2.default)({}, this.state.indicatorStyle, TabIndicatorProps.style)
+	        style: (0, _extends2.default)({}, this.state.indicatorStyle, TabIndicatorProps.style)
 	      }));
 
 	      this.valueToIndex = new Map();
@@ -60680,8 +61205,8 @@
 	      }, conditionalElements.scrollButtonLeft, _react.default.createElement("div", {
 	        className: scrollerClassName,
 	        style: this.state.scrollerStyle,
-	        ref: function ref(_ref3) {
-	          _this2.tabsRef = _ref3;
+	        ref: function ref(_ref2) {
+	          _this2.tabsRef = _ref2;
 	        },
 	        role: "tablist",
 	        onScroll: this.handleTabsScroll
@@ -60841,8 +61366,6 @@
 	});
 	exports.default = exports.styles = void 0;
 
-	var _extends2 = interopRequireDefault(_extends_1);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -60851,11 +61374,13 @@
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
 
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
+
 	var _inherits2 = interopRequireDefault(inherits);
 
 	var _defineProperty2 = interopRequireDefault(defineProperty$1);
 
-	var _objectSpread3 = interopRequireDefault(objectSpread);
+	var _extends3 = interopRequireDefault(_extends_1);
 
 	var _react = interopRequireDefault(react);
 
@@ -60875,7 +61400,7 @@
 	var styles = function styles(theme) {
 	  return {
 	    /* Styles applied to the root element. */
-	    root: (0, _objectSpread3.default)({}, theme.typography.button, (0, _defineProperty2.default)({
+	    root: (0, _extends3.default)({}, theme.typography.button, (0, _defineProperty2.default)({
 	      maxWidth: 264,
 	      position: 'relative',
 	      minWidth: 72,
@@ -60936,7 +61461,7 @@
 	    fullWidth: {
 	      flexShrink: 1,
 	      flexGrow: 1,
-	      maxWidth: 'auto'
+	      maxWidth: 'none'
 	    },
 
 	    /* Styles applied to the `icon` and `label`'s wrapper element. */
@@ -60982,9 +61507,9 @@
 	  (0, _inherits2.default)(Tab, _React$Component);
 
 	  function Tab() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Tab);
 
@@ -60992,9 +61517,13 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Tab.__proto__ || Object.getPrototypeOf(Tab)).call.apply(_ref, [this].concat(args))), _this.label = null, _this.state = {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Tab)).call.apply(_getPrototypeOf2, [this].concat(args)));
+	    _this.label = null;
+	    _this.state = {
 	      labelWrapped: false
-	    }, _this.handleChange = function (event) {
+	    };
+
+	    _this.handleChange = function (event) {
 	      var _this$props = _this.props,
 	          onChange = _this$props.onChange,
 	          value = _this$props.value,
@@ -61007,7 +61536,9 @@
 	      if (onClick) {
 	        onClick(event);
 	      }
-	    }, _this.checkTextWrap = function () {
+	    };
+
+	    _this.checkTextWrap = function () {
 	      if (_this.labelRef) {
 	        var labelWrapped = _this.labelRef.getClientRects().length > 1;
 
@@ -61017,7 +61548,9 @@
 	          });
 	        }
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Tab, [{
@@ -61043,19 +61576,19 @@
 	      var _this2 = this,
 	          _classNames2;
 
-	      var _props = this.props,
-	          classes = _props.classes,
-	          classNameProp = _props.className,
-	          disabled = _props.disabled,
-	          fullWidth = _props.fullWidth,
-	          icon = _props.icon,
-	          indicator = _props.indicator,
-	          labelProp = _props.label,
-	          onChange = _props.onChange,
-	          selected = _props.selected,
-	          textColor = _props.textColor,
-	          value = _props.value,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["classes", "className", "disabled", "fullWidth", "icon", "indicator", "label", "onChange", "selected", "textColor", "value"]);
+	      var _this$props2 = this.props,
+	          classes = _this$props2.classes,
+	          classNameProp = _this$props2.className,
+	          disabled = _this$props2.disabled,
+	          fullWidth = _this$props2.fullWidth,
+	          icon = _this$props2.icon,
+	          indicator = _this$props2.indicator,
+	          labelProp = _this$props2.label,
+	          onChange = _this$props2.onChange,
+	          selected = _this$props2.selected,
+	          textColor = _this$props2.textColor,
+	          value = _this$props2.value,
+	          other = (0, _objectWithoutProperties2.default)(_this$props2, ["classes", "className", "disabled", "fullWidth", "icon", "indicator", "label", "onChange", "selected", "textColor", "value"]);
 	      var label;
 
 	      if (labelProp !== undefined) {
@@ -61063,14 +61596,14 @@
 	          className: classes.labelContainer
 	        }, _react.default.createElement("span", {
 	          className: (0, _classnames.default)(classes.label, (0, _defineProperty2.default)({}, classes.labelWrapped, this.state.labelWrapped)),
-	          ref: function ref(_ref2) {
-	            _this2.labelRef = _ref2;
+	          ref: function ref(_ref) {
+	            _this2.labelRef = _ref;
 	          }
 	        }, labelProp));
 	      }
 
 	      var className = (0, _classnames.default)(classes.root, classes["textColor".concat((0, helpers.capitalize)(textColor))], (_classNames2 = {}, (0, _defineProperty2.default)(_classNames2, classes.disabled, disabled), (0, _defineProperty2.default)(_classNames2, classes.selected, selected), (0, _defineProperty2.default)(_classNames2, classes.labelIcon, icon && label), (0, _defineProperty2.default)(_classNames2, classes.fullWidth, fullWidth), _classNames2), classNameProp);
-	      return _react.default.createElement(_ButtonBase.default, (0, _extends2.default)({
+	      return _react.default.createElement(_ButtonBase.default, (0, _extends3.default)({
 	        focusRipple: true,
 	        className: className,
 	        role: "tab",
@@ -61255,7 +61788,6 @@
 	      children = props.children,
 	      className = props.className,
 	      defaultValue = props.defaultValue,
-	      disabled = props.disabled,
 	      error = props.error,
 	      FormHelperTextProps = props.FormHelperTextProps,
 	      fullWidth = props.fullWidth,
@@ -61279,7 +61811,7 @@
 	      SelectProps = props.SelectProps,
 	      type = props.type,
 	      value = props.value,
-	      other = (0, _objectWithoutProperties2.default)(props, ["autoComplete", "autoFocus", "children", "className", "defaultValue", "disabled", "error", "FormHelperTextProps", "fullWidth", "helperText", "id", "InputLabelProps", "inputProps", "InputProps", "inputRef", "label", "multiline", "name", "onBlur", "onChange", "onFocus", "placeholder", "required", "rows", "rowsMax", "select", "SelectProps", "type", "value"]);
+	      other = (0, _objectWithoutProperties2.default)(props, ["autoComplete", "autoFocus", "children", "className", "defaultValue", "error", "FormHelperTextProps", "fullWidth", "helperText", "id", "InputLabelProps", "inputProps", "InputProps", "inputRef", "label", "multiline", "name", "onBlur", "onChange", "onFocus", "placeholder", "required", "rows", "rowsMax", "select", "SelectProps", "type", "value"]);
 	  (0, _warning.default)(!select || Boolean(children), 'Material-UI: `children` must be passed when using the `TextField` component with `select`.');
 	  var helperTextId = helperText && id ? "".concat(id, "-helper-text") : undefined;
 
@@ -61287,7 +61819,6 @@
 	    autoComplete: autoComplete,
 	    autoFocus: autoFocus,
 	    defaultValue: defaultValue,
-	    disabled: disabled,
 	    fullWidth: fullWidth,
 	    multiline: multiline,
 	    name: name,
@@ -61477,7 +62008,7 @@
 	  /**
 	   * The value of the `Input` element, required for a controlled component.
 	   */
-	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number]))])
+	  value: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool, _propTypes.default.arrayOf(_propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number, _propTypes.default.bool]))])
 	};
 	TextField.defaultProps = {
 	  required: false,
@@ -61524,6 +62055,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf2 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -61621,7 +62154,7 @@
 	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Tooltip);
-	    _this = (0, _possibleConstructorReturn2.default)(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).call(this, props));
+	    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(Tooltip).call(this));
 	    _this.childrenRef = null;
 	    _this.closeTimer = null;
 	    _this.defaultId = null;
@@ -61631,10 +62164,6 @@
 	    _this.isControlled = null;
 	    _this.leaveTimer = null;
 	    _this.touchTimer = null;
-	    _this.internalState = {
-	      hover: false,
-	      focus: false
-	    };
 
 	    _this.onRootRef = function (ref) {
 	      _this.childrenRef = ref;
@@ -61655,20 +62184,12 @@
 	          enterDelay = _this$props.enterDelay;
 	      var childrenProps = children.props;
 
-	      if (event.type === 'focus') {
-	        _this.internalState.focus = true;
-
-	        if (childrenProps.onFocus) {
-	          childrenProps.onFocus(event);
-	        }
+	      if (event.type === 'focus' && childrenProps.onFocus) {
+	        childrenProps.onFocus(event);
 	      }
 
-	      if (event.type === 'mouseover') {
-	        _this.internalState.hover = true;
-
-	        if (childrenProps.onMouseOver) {
-	          childrenProps.onMouseOver(event);
-	        }
+	      if (event.type === 'mouseover' && childrenProps.onMouseOver) {
+	        childrenProps.onMouseOver(event);
 	      }
 
 	      if (_this.ignoreNonTouchEvents && event.type !== 'touchstart') {
@@ -61714,20 +62235,12 @@
 	          leaveDelay = _this$props2.leaveDelay;
 	      var childrenProps = children.props;
 
-	      if (event.type === 'blur') {
-	        _this.internalState.focus = false;
-
-	        if (childrenProps.onBlur) {
-	          childrenProps.onBlur(event);
-	        }
+	      if (event.type === 'blur' && childrenProps.onBlur) {
+	        childrenProps.onBlur(event);
 	      }
 
-	      if (event.type === 'mouseleave') {
-	        _this.internalState.hover = false;
-
-	        if (childrenProps.onMouseLeave) {
-	          childrenProps.onMouseLeave(event);
-	        }
+	      if (event.type === 'mouseleave' && childrenProps.onMouseLeave) {
+	        childrenProps.onMouseLeave(event);
 	      }
 
 	      clearTimeout(_this.enterTimer);
@@ -61744,10 +62257,6 @@
 	    };
 
 	    _this.handleClose = function (event) {
-	      if (_this.internalState.focus || _this.internalState.hover) {
-	        return;
-	      }
-
 	      if (!_this.isControlled) {
 	        _this.setState({
 	          open: false
@@ -61840,20 +62349,20 @@
 	    value: function render() {
 	      var _this2 = this;
 
-	      var _props = this.props,
-	          children = _props.children,
-	          classes = _props.classes,
-	          disableFocusListener = _props.disableFocusListener,
-	          disableHoverListener = _props.disableHoverListener,
-	          disableTouchListener = _props.disableTouchListener,
-	          id = _props.id,
-	          openProp = _props.open,
-	          placement = _props.placement,
-	          PopperProps = _props.PopperProps,
-	          theme = _props.theme,
-	          title = _props.title,
-	          TransitionComponent = _props.TransitionComponent,
-	          TransitionProps = _props.TransitionProps;
+	      var _this$props5 = this.props,
+	          children = _this$props5.children,
+	          classes = _this$props5.classes,
+	          disableFocusListener = _this$props5.disableFocusListener,
+	          disableHoverListener = _this$props5.disableHoverListener,
+	          disableTouchListener = _this$props5.disableTouchListener,
+	          id = _this$props5.id,
+	          openProp = _this$props5.open,
+	          placement = _this$props5.placement,
+	          PopperProps = _this$props5.PopperProps,
+	          theme = _this$props5.theme,
+	          title = _this$props5.title,
+	          TransitionComponent = _this$props5.TransitionComponent,
+	          TransitionProps = _this$props5.TransitionProps;
 	      var open = this.isControlled ? openProp : this.state.open; // There is no point at displaying an empty tooltip.
 
 	      if (title === '') {
@@ -62131,8 +62640,6 @@
 
 	var _extends2 = interopRequireDefault(_extends_1);
 
-	var _objectSpread2 = interopRequireDefault(objectSpread);
-
 	var _objectWithoutProperties2 = interopRequireDefault(objectWithoutProperties);
 
 	var _classCallCheck2 = interopRequireDefault(classCallCheck);
@@ -62140,6 +62647,8 @@
 	var _createClass2 = interopRequireDefault(createClass);
 
 	var _possibleConstructorReturn2 = interopRequireDefault(possibleConstructorReturn);
+
+	var _getPrototypeOf3 = interopRequireDefault(getPrototypeOf);
 
 	var _inherits2 = interopRequireDefault(inherits);
 
@@ -62176,9 +62685,9 @@
 	  (0, _inherits2.default)(Zoom, _React$Component);
 
 	  function Zoom() {
-	    var _ref;
+	    var _getPrototypeOf2;
 
-	    var _temp, _this;
+	    var _this;
 
 	    (0, _classCallCheck2.default)(this, Zoom);
 
@@ -62186,7 +62695,9 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    return (0, _possibleConstructorReturn2.default)(_this, (_temp = _this = (0, _possibleConstructorReturn2.default)(this, (_ref = Zoom.__proto__ || Object.getPrototypeOf(Zoom)).call.apply(_ref, [this].concat(args))), _this.handleEnter = function (node) {
+	    _this = (0, _possibleConstructorReturn2.default)(this, (_getPrototypeOf2 = (0, _getPrototypeOf3.default)(Zoom)).call.apply(_getPrototypeOf2, [this].concat(args)));
+
+	    _this.handleEnter = function (node) {
 	      var theme = _this.props.theme;
 	      (0, utils.reflow)(node); // So the animation always start from the start.
 
@@ -62199,7 +62710,9 @@
 	      if (_this.props.onEnter) {
 	        _this.props.onEnter(node);
 	      }
-	    }, _this.handleExit = function (node) {
+	    };
+
+	    _this.handleExit = function (node) {
 	      var theme = _this.props.theme;
 	      var transitionProps = (0, utils.getTransitionProps)(_this.props, {
 	        mode: 'exit'
@@ -62210,27 +62723,29 @@
 	      if (_this.props.onExit) {
 	        _this.props.onExit(node);
 	      }
-	    }, _temp));
+	    };
+
+	    return _this;
 	  }
 
 	  (0, _createClass2.default)(Zoom, [{
 	    key: "render",
 	    value: function render() {
-	      var _props = this.props,
-	          children = _props.children,
-	          onEnter = _props.onEnter,
-	          onExit = _props.onExit,
-	          styleProp = _props.style,
-	          theme = _props.theme,
-	          other = (0, _objectWithoutProperties2.default)(_props, ["children", "onEnter", "onExit", "style", "theme"]);
-	      var style = (0, _objectSpread2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
+	      var _this$props = this.props,
+	          children = _this$props.children,
+	          onEnter = _this$props.onEnter,
+	          onExit = _this$props.onExit,
+	          styleProp = _this$props.style,
+	          theme = _this$props.theme,
+	          other = (0, _objectWithoutProperties2.default)(_this$props, ["children", "onEnter", "onExit", "style", "theme"]);
+	      var style = (0, _extends2.default)({}, styleProp, _react.default.isValidElement(children) ? children.props.style : {});
 	      return _react.default.createElement(_Transition.default, (0, _extends2.default)({
 	        appear: true,
 	        onEnter: this.handleEnter,
 	        onExit: this.handleExit
 	      }, other), function (state, childProps) {
-	        return _react.default.cloneElement(children, (0, _objectSpread2.default)({
-	          style: (0, _objectSpread2.default)({
+	        return _react.default.cloneElement(children, (0, _extends2.default)({
+	          style: (0, _extends2.default)({
 	            transform: 'scale(0)',
 	            willChange: 'transform'
 	          }, styles[state], style)
@@ -62314,7 +62829,7 @@
 
 	unwrapExports(Zoom$1);
 
-	/** @license Material-UI v1.4.3
+	/** @license Material-UI v1.5.1
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
@@ -62520,11 +63035,11 @@
 	  /* eslint-enable no-empty */
 	}
 
-	function _classCallCheck$2(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _possibleConstructorReturn$2(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	function _possibleConstructorReturn$3(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	function _inherits$2(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function _inherits$3(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	var didWarnAboutReceivingStore = false;
 	function warnAboutReceivingStore() {
@@ -62545,7 +63060,7 @@
 	  var subscriptionKey = subKey || storeKey + 'Subscription';
 
 	  var Provider = function (_Component) {
-	    _inherits$2(Provider, _Component);
+	    _inherits$3(Provider, _Component);
 
 	    Provider.prototype.getChildContext = function getChildContext() {
 	      var _ref;
@@ -62554,9 +63069,9 @@
 	    };
 
 	    function Provider(props, context) {
-	      _classCallCheck$2(this, Provider);
+	      _classCallCheck$3(this, Provider);
 
-	      var _this = _possibleConstructorReturn$2(this, _Component.call(this, props, context));
+	      var _this = _possibleConstructorReturn$3(this, _Component.call(this, props, context));
 
 	      _this[storeKey] = props.store;
 	      return _this;
@@ -62708,7 +63223,7 @@
 
 	var browser$1 = invariant$1;
 
-	function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	// encapsulates the subscription logic for connecting a component to the redux store, as
 	// well as nesting subscriptions of descendant components, so that we can ensure the
@@ -62757,7 +63272,7 @@
 
 	var Subscription = function () {
 	  function Subscription(store, parentSub, onStateChange) {
-	    _classCallCheck$3(this, Subscription);
+	    _classCallCheck$4(this, Subscription);
 
 	    this.store = store;
 	    this.parentSub = parentSub;
@@ -62801,13 +63316,13 @@
 
 	var _extends$7 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck$5(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _possibleConstructorReturn$3(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	function _possibleConstructorReturn$4(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	function _inherits$3(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function _inherits$4(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	function _objectWithoutProperties$3(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+	function _objectWithoutProperties$4(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 	var hotReloadingVersion = 0;
 	var dummyState = {};
@@ -62866,7 +63381,7 @@
 	      storeKey = _ref$storeKey === undefined ? 'store' : _ref$storeKey,
 	      _ref$withRef = _ref.withRef,
 	      withRef = _ref$withRef === undefined ? false : _ref$withRef,
-	      connectOptions = _objectWithoutProperties$3(_ref, ['getDisplayName', 'methodName', 'renderCountProp', 'shouldHandleStateChanges', 'storeKey', 'withRef']);
+	      connectOptions = _objectWithoutProperties$4(_ref, ['getDisplayName', 'methodName', 'renderCountProp', 'shouldHandleStateChanges', 'storeKey', 'withRef']);
 
 	  var subscriptionKey = storeKey + 'Subscription';
 	  var version = hotReloadingVersion++;
@@ -62894,12 +63409,12 @@
 	    });
 
 	    var Connect = function (_Component) {
-	      _inherits$3(Connect, _Component);
+	      _inherits$4(Connect, _Component);
 
 	      function Connect(props, context) {
-	        _classCallCheck$4(this, Connect);
+	        _classCallCheck$5(this, Connect);
 
-	        var _this = _possibleConstructorReturn$3(this, _Component.call(this, props, context));
+	        var _this = _possibleConstructorReturn$4(this, _Component.call(this, props, context));
 
 	        _this.version = version;
 	        _this.state = {};
@@ -63475,7 +63990,7 @@
 	  verify(mergeProps, 'mergeProps', displayName);
 	}
 
-	function _objectWithoutProperties$4(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+	function _objectWithoutProperties$5(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 	function impureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch) {
 	  return function impureFinalPropsSelector(state, ownProps) {
@@ -63561,7 +64076,7 @@
 	  var initMapStateToProps = _ref2.initMapStateToProps,
 	      initMapDispatchToProps = _ref2.initMapDispatchToProps,
 	      initMergeProps = _ref2.initMergeProps,
-	      options = _objectWithoutProperties$4(_ref2, ['initMapStateToProps', 'initMapDispatchToProps', 'initMergeProps']);
+	      options = _objectWithoutProperties$5(_ref2, ['initMapStateToProps', 'initMapDispatchToProps', 'initMergeProps']);
 
 	  var mapStateToProps = initMapStateToProps(dispatch, options);
 	  var mapDispatchToProps = initMapDispatchToProps(dispatch, options);
@@ -63578,7 +64093,7 @@
 
 	var _extends$9 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	function _objectWithoutProperties$5(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+	function _objectWithoutProperties$6(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 	/*
 	  connect is a facade over connectAdvanced. It turns its args into a compatible
@@ -63639,7 +64154,7 @@
 	        areStatePropsEqual = _ref2$areStatePropsEq === undefined ? shallowEqual$3 : _ref2$areStatePropsEq,
 	        _ref2$areMergedPropsE = _ref2.areMergedPropsEqual,
 	        areMergedPropsEqual = _ref2$areMergedPropsE === undefined ? shallowEqual$3 : _ref2$areMergedPropsE,
-	        extraOptions = _objectWithoutProperties$5(_ref2, ['pure', 'areStatesEqual', 'areOwnPropsEqual', 'areStatePropsEqual', 'areMergedPropsEqual']);
+	        extraOptions = _objectWithoutProperties$6(_ref2, ['pure', 'areStatesEqual', 'areOwnPropsEqual', 'areStatePropsEqual', 'areMergedPropsEqual']);
 
 	    var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps');
 	    var initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps');
@@ -67823,31 +68338,31 @@
 	};
 	const enhanced$1 = styles_3(styles$n)(MiningPage);
 
-	var _createClass$2 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass$3 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	function _classCallCheck$5(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck$6(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _possibleConstructorReturn$4(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	function _possibleConstructorReturn$5(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	function _inherits$4(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function _inherits$5(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	// eslint-disable-line import/no-unresolved
 
 
 	var PersistGate = function (_PureComponent) {
-	  _inherits$4(PersistGate, _PureComponent);
+	  _inherits$5(PersistGate, _PureComponent);
 
 	  function PersistGate() {
 	    var _ref;
 
 	    var _temp, _this, _ret;
 
-	    _classCallCheck$5(this, PersistGate);
+	    _classCallCheck$6(this, PersistGate);
 
 	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 	      args[_key] = arguments[_key];
 	    }
 
-	    return _ret = (_temp = (_this = _possibleConstructorReturn$4(this, (_ref = PersistGate.__proto__ || Object.getPrototypeOf(PersistGate)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+	    return _ret = (_temp = (_this = _possibleConstructorReturn$5(this, (_ref = PersistGate.__proto__ || Object.getPrototypeOf(PersistGate)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
 	      bootstrapped: false
 	    }, _this.handlePersistorState = function () {
 	      var persistor = _this.props.persistor;
@@ -67867,10 +68382,10 @@
 	        }
 	        _this._unsubscribe && _this._unsubscribe();
 	      }
-	    }, _temp), _possibleConstructorReturn$4(_this, _ret);
+	    }, _temp), _possibleConstructorReturn$5(_this, _ret);
 	  }
 
-	  _createClass$2(PersistGate, [{
+	  _createClass$3(PersistGate, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this._unsubscribe = this.props.persistor.subscribe(this.handlePersistorState);
@@ -67901,1054 +68416,6 @@
 	  loading: null
 	};
 
-	var reactGa = createCommonjsModule(function (module, exports) {
-	(function webpackUniversalModuleDefinition(root, factory) {
-		module.exports = factory(react, propTypes);
-	})(typeof self !== 'undefined' ? self : commonjsGlobal, function(__WEBPACK_EXTERNAL_MODULE_11__, __WEBPACK_EXTERNAL_MODULE_12__) {
-	return /******/ (function(modules) { // webpackBootstrap
-	/******/ 	// The module cache
-	/******/ 	var installedModules = {};
-	/******/
-	/******/ 	// The require function
-	/******/ 	function __webpack_require__(moduleId) {
-	/******/
-	/******/ 		// Check if module is in cache
-	/******/ 		if(installedModules[moduleId]) {
-	/******/ 			return installedModules[moduleId].exports;
-	/******/ 		}
-	/******/ 		// Create a new module (and put it into the cache)
-	/******/ 		var module = installedModules[moduleId] = {
-	/******/ 			i: moduleId,
-	/******/ 			l: false,
-	/******/ 			exports: {}
-	/******/ 		};
-	/******/
-	/******/ 		// Execute the module function
-	/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-	/******/
-	/******/ 		// Flag the module as loaded
-	/******/ 		module.l = true;
-	/******/
-	/******/ 		// Return the exports of the module
-	/******/ 		return module.exports;
-	/******/ 	}
-	/******/
-	/******/
-	/******/ 	// expose the modules object (__webpack_modules__)
-	/******/ 	__webpack_require__.m = modules;
-	/******/
-	/******/ 	// expose the module cache
-	/******/ 	__webpack_require__.c = installedModules;
-	/******/
-	/******/ 	// define getter function for harmony exports
-	/******/ 	__webpack_require__.d = function(exports, name, getter) {
-	/******/ 		if(!__webpack_require__.o(exports, name)) {
-	/******/ 			Object.defineProperty(exports, name, {
-	/******/ 				configurable: false,
-	/******/ 				enumerable: true,
-	/******/ 				get: getter
-	/******/ 			});
-	/******/ 		}
-	/******/ 	};
-	/******/
-	/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-	/******/ 	__webpack_require__.n = function(module) {
-	/******/ 		var getter = module && module.__esModule ?
-	/******/ 			function getDefault() { return module['default']; } :
-	/******/ 			function getModuleExports() { return module; };
-	/******/ 		__webpack_require__.d(getter, 'a', getter);
-	/******/ 		return getter;
-	/******/ 	};
-	/******/
-	/******/ 	// Object.prototype.hasOwnProperty.call
-	/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-	/******/
-	/******/ 	// __webpack_public_path__
-	/******/ 	__webpack_require__.p = "";
-	/******/
-	/******/ 	// Load entry module and return exports
-	/******/ 	return __webpack_require__(__webpack_require__.s = 2);
-	/******/ })
-	/************************************************************************/
-	/******/ ([
-	/* 0 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = warn;
-	function warn(s) {
-	  console.warn('[react-ga]', s);
-	}
-
-	/***/ }),
-	/* 1 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = trim;
-	// GA strings need to have leading/trailing whitespace trimmed, and not all
-	// browsers have String.prototoype.trim().
-
-	function trim(s) {
-	  return s.replace(/^\s+|\s+$/g, '');
-	}
-
-	/***/ }),
-	/* 2 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.testModeAPI = exports.OutboundLink = exports.plugin = undefined;
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	exports.initialize = initialize;
-	exports.ga = ga;
-	exports.set = set;
-	exports.send = send;
-	exports.pageview = pageview;
-	exports.modalview = modalview;
-	exports.timing = timing;
-	exports.event = event;
-	exports.exception = exception;
-	exports.outboundLink = outboundLink;
-
-	var _format2 = __webpack_require__(3);
-
-	var _format3 = _interopRequireDefault(_format2);
-
-	var _removeLeadingSlash = __webpack_require__(6);
-
-	var _removeLeadingSlash2 = _interopRequireDefault(_removeLeadingSlash);
-
-	var _trim = __webpack_require__(1);
-
-	var _trim2 = _interopRequireDefault(_trim);
-
-	var _loadGA = __webpack_require__(7);
-
-	var _loadGA2 = _interopRequireDefault(_loadGA);
-
-	var _warn = __webpack_require__(0);
-
-	var _warn2 = _interopRequireDefault(_warn);
-
-	var _log = __webpack_require__(8);
-
-	var _log2 = _interopRequireDefault(_log);
-
-	var _testModeAPI = __webpack_require__(9);
-
-	var _testModeAPI2 = _interopRequireDefault(_testModeAPI);
-
-	var _OutboundLink = __webpack_require__(10);
-
-	var _OutboundLink2 = _interopRequireDefault(_OutboundLink);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
-	                                                                                                                                                                                                     * React Google Analytics Module
-	                                                                                                                                                                                                     *
-	                                                                                                                                                                                                     * @package react-ga
-	                                                                                                                                                                                                     * @author  Adam Lofting <adam@mozillafoundation.org>
-	                                                                                                                                                                                                     *          Atul Varma <atul@mozillafoundation.org>
-	                                                                                                                                                                                                     */
-
-	/**
-	 * Utilities
-	 */
-
-
-	var _debug = false;
-	var _titleCase = true;
-	var _testMode = false;
-	var _alwaysSendToDefaultTracker = true;
-
-	var internalGa = function internalGa() {
-	  var _window;
-
-	  if (_testMode) return _testModeAPI2.default.ga.apply(_testModeAPI2.default, arguments);
-	  if (!window.ga) return (0, _warn2.default)('ReactGA.initialize must be called first or GoogleAnalytics should be loaded manually');
-	  return (_window = window).ga.apply(_window, arguments);
-	};
-
-	function _format(s) {
-	  return (0, _format3.default)(s, _titleCase);
-	}
-
-	function _gaCommand(trackerNames) {
-	  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-	    args[_key - 1] = arguments[_key];
-	  }
-
-	  var command = args[0];
-	  if (typeof internalGa === 'function') {
-	    if (typeof command !== 'string') {
-	      (0, _warn2.default)('ga command must be a string');
-	      return;
-	    }
-
-	    if (_alwaysSendToDefaultTracker || !Array.isArray(trackerNames)) internalGa.apply(undefined, args);
-	    if (Array.isArray(trackerNames)) {
-	      trackerNames.forEach(function (name) {
-	        internalGa.apply(undefined, _toConsumableArray([name + '.' + command].concat(args.slice(1))));
-	      });
-	    }
-	  }
-	}
-
-	function _initialize(gaTrackingID, options) {
-	  if (!gaTrackingID) {
-	    (0, _warn2.default)('gaTrackingID is required in initialize()');
-	    return;
-	  }
-
-	  if (options) {
-	    if (options.debug && options.debug === true) {
-	      _debug = true;
-	    }
-
-	    if (options.titleCase === false) {
-	      _titleCase = false;
-	    }
-	  }
-
-	  if (options && options.gaOptions) {
-	    internalGa('create', gaTrackingID, options.gaOptions);
-	  } else {
-	    internalGa('create', gaTrackingID, 'auto');
-	  }
-	}
-
-	function initialize(configsOrTrackingId, options) {
-	  if (options && options.testMode === true) {
-	    _testMode = true;
-	  } else {
-	    if (typeof window === 'undefined') {
-	      return false;
-	    }
-
-	    (0, _loadGA2.default)(options);
-	  }
-
-	  _alwaysSendToDefaultTracker = options && typeof options.alwaysSendToDefaultTracker === 'boolean' ? options.alwaysSendToDefaultTracker : true;
-
-	  if (Array.isArray(configsOrTrackingId)) {
-	    configsOrTrackingId.forEach(function (config) {
-	      if ((typeof config === 'undefined' ? 'undefined' : _typeof(config)) !== 'object') {
-	        (0, _warn2.default)('All configs must be an object');
-	        return;
-	      }
-	      _initialize(config.trackingId, config);
-	    });
-	  } else {
-	    _initialize(configsOrTrackingId, options);
-	  }
-	  return true;
-	}
-
-	/**
-	 * ga:
-	 * Returns the original GA object.
-	 */
-	function ga() {
-	  for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-	    args[_key2] = arguments[_key2];
-	  }
-
-	  if (args.length > 0) {
-	    internalGa.apply(undefined, args);
-	    if (_debug) {
-	      (0, _log2.default)('called ga(\'arguments\');');
-	      (0, _log2.default)('with arguments: ' + JSON.stringify(args));
-	    }
-	  }
-
-	  return window.ga;
-	}
-
-	/**
-	 * set:
-	 * GA tracker set method
-	 * @param {Object} fieldsObject - a field/value pair or a group of field/value pairs on the tracker
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function set(fieldsObject, trackerNames) {
-	  if (!fieldsObject) {
-	    (0, _warn2.default)('`fieldsObject` is required in .set()');
-	    return;
-	  }
-
-	  if ((typeof fieldsObject === 'undefined' ? 'undefined' : _typeof(fieldsObject)) !== 'object') {
-	    (0, _warn2.default)('Expected `fieldsObject` arg to be an Object');
-	    return;
-	  }
-
-	  if (Object.keys(fieldsObject).length === 0) {
-	    (0, _warn2.default)('empty `fieldsObject` given to .set()');
-	  }
-
-	  _gaCommand(trackerNames, 'set', fieldsObject);
-
-	  if (_debug) {
-	    (0, _log2.default)('called ga(\'set\', fieldsObject);');
-	    (0, _log2.default)('with fieldsObject: ' + JSON.stringify(fieldsObject));
-	  }
-	}
-
-	/**
-	 * send:
-	 * Clone of the low level `ga.send` method
-	 * WARNING: No validations will be applied to this
-	 * @param  {Object} fieldObject - field object for tracking different analytics
-	 * @param  {Array} trackerNames - trackers to send the command to
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function send(fieldObject, trackerNames) {
-	  _gaCommand(trackerNames, 'send', fieldObject);
-	  if (_debug) {
-	    (0, _log2.default)('called ga(\'send\', fieldObject);');
-	    (0, _log2.default)('with fieldObject: ' + JSON.stringify(fieldObject));
-	    (0, _log2.default)('with trackers: ' + JSON.stringify(trackerNames));
-	  }
-	}
-
-	/**
-	 * pageview:
-	 * Basic GA pageview tracking
-	 * @param  {String} path - the current page page e.g. '/about'
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 * @param {String} title - (optional) the page title e. g. 'My Website'
-	 */
-	function pageview(rawPath, trackerNames, title) {
-	  if (!rawPath) {
-	    (0, _warn2.default)('path is required in .pageview()');
-	    return;
-	  }
-
-	  var path = (0, _trim2.default)(rawPath);
-	  if (path === '') {
-	    (0, _warn2.default)('path cannot be an empty string in .pageview()');
-	    return;
-	  }
-
-	  var extraFields = {};
-	  if (title) {
-	    extraFields.title = title;
-	  }
-
-	  if (typeof ga === 'function') {
-	    _gaCommand(trackerNames, 'send', _extends({
-	      hitType: 'pageview',
-	      page: path
-	    }, extraFields));
-
-	    if (_debug) {
-	      (0, _log2.default)('called ga(\'send\', \'pageview\', path);');
-	      var extraLog = '';
-	      if (title) {
-	        extraLog = ' and title: ' + title;
-	      }
-	      (0, _log2.default)('with path: ' + path + extraLog);
-	    }
-	  }
-	}
-
-	/**
-	 * modalview:
-	 * a proxy to basic GA pageview tracking to consistently track
-	 * modal views that are an equivalent UX to a traditional pageview
-	 * @param  {String} modalName e.g. 'add-or-edit-club'
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function modalview(rawModalName, trackerNames) {
-	  if (!rawModalName) {
-	    (0, _warn2.default)('modalName is required in .modalview(modalName)');
-	    return;
-	  }
-
-	  var modalName = (0, _removeLeadingSlash2.default)((0, _trim2.default)(rawModalName));
-
-	  if (modalName === '') {
-	    (0, _warn2.default)('modalName cannot be an empty string or a single / in .modalview()');
-	    return;
-	  }
-
-	  if (typeof ga === 'function') {
-	    var path = '/modal/' + modalName;
-	    _gaCommand(trackerNames, 'send', 'pageview', path);
-
-	    if (_debug) {
-	      (0, _log2.default)('called ga(\'send\', \'pageview\', path);');
-	      (0, _log2.default)('with path: ' + path);
-	    }
-	  }
-	}
-
-	/**
-	 * timing:
-	 * GA timing
-	 * @param args.category {String} required
-	 * @param args.variable {String} required
-	 * @param args.value  {Int}  required
-	 * @param args.label  {String} required
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function timing() {
-	  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-	      category = _ref.category,
-	      variable = _ref.variable,
-	      value = _ref.value,
-	      label = _ref.label;
-
-	  var trackerNames = arguments[1];
-
-	  if (typeof ga === 'function') {
-	    if (!category || !variable || !value || typeof value !== 'number') {
-	      (0, _warn2.default)('args.category, args.variable ' + 'AND args.value are required in timing() ' + 'AND args.value has to be a number');
-	      return;
-	    }
-
-	    // Required Fields
-	    var fieldObject = {
-	      hitType: 'timing',
-	      timingCategory: _format(category),
-	      timingVar: _format(variable),
-	      timingValue: value
-	    };
-
-	    if (label) {
-	      fieldObject.timingLabel = _format(label);
-	    }
-
-	    send(fieldObject, trackerNames);
-	  }
-	}
-
-	/**
-	 * event:
-	 * GA event tracking
-	 * @param args.category {String} required
-	 * @param args.action {String} required
-	 * @param args.label {String} optional
-	 * @param args.value {Int} optional
-	 * @param args.nonInteraction {boolean} optional
-	 * @param args.transport {string} optional
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function event() {
-	  var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	  var trackerNames = arguments[1];
-
-	  var category = _ref2.category,
-	      action = _ref2.action,
-	      label = _ref2.label,
-	      value = _ref2.value,
-	      nonInteraction = _ref2.nonInteraction,
-	      transport = _ref2.transport,
-	      args = _objectWithoutProperties(_ref2, ['category', 'action', 'label', 'value', 'nonInteraction', 'transport']);
-
-	  if (typeof ga === 'function') {
-	    // Simple Validation
-	    if (!category || !action) {
-	      (0, _warn2.default)('args.category AND args.action are required in event()');
-	      return;
-	    }
-
-	    // Required Fields
-	    var fieldObject = {
-	      hitType: 'event',
-	      eventCategory: _format(category),
-	      eventAction: _format(action)
-	    };
-
-	    // Optional Fields
-	    if (label) {
-	      fieldObject.eventLabel = _format(label);
-	    }
-
-	    if (typeof value !== 'undefined') {
-	      if (typeof value !== 'number') {
-	        (0, _warn2.default)('Expected `args.value` arg to be a Number.');
-	      } else {
-	        fieldObject.eventValue = value;
-	      }
-	    }
-
-	    if (typeof nonInteraction !== 'undefined') {
-	      if (typeof nonInteraction !== 'boolean') {
-	        (0, _warn2.default)('`args.nonInteraction` must be a boolean.');
-	      } else {
-	        fieldObject.nonInteraction = nonInteraction;
-	      }
-	    }
-
-	    if (typeof transport !== 'undefined') {
-	      if (typeof transport !== 'string') {
-	        (0, _warn2.default)('`args.transport` must be a string.');
-	      } else {
-	        if (['beacon', 'xhr', 'image'].indexOf(transport) === -1) {
-	          (0, _warn2.default)('`args.transport` must be either one of these values: `beacon`, `xhr` or `image`');
-	        }
-
-	        fieldObject.transport = transport;
-	      }
-	    }
-
-	    Object.keys(args).filter(function (key) {
-	      return key.substr(0, 'dimension'.length) === 'dimension';
-	    }).forEach(function (key) {
-	      fieldObject[key] = args[key];
-	    });
-
-	    Object.keys(args).filter(function (key) {
-	      return key.substr(0, 'metric'.length) === 'metric';
-	    }).forEach(function (key) {
-	      fieldObject[key] = args[key];
-	    });
-
-	    // Send to GA
-	    send(fieldObject, trackerNames);
-	  }
-	}
-
-	/**
-	 * exception:
-	 * GA exception tracking
-	 * @param args.description {String} optional
-	 * @param args.fatal {boolean} optional
-	 * @param {Array} trackerNames - (optional) a list of extra trackers to run the command on
-	 */
-	function exception(_ref3, trackerNames) {
-	  var description = _ref3.description,
-	      fatal = _ref3.fatal;
-
-	  if (typeof ga === 'function') {
-	    // Required Fields
-	    var fieldObject = {
-	      hitType: 'exception'
-	    };
-
-	    // Optional Fields
-	    if (description) {
-	      fieldObject.exDescription = _format(description);
-	    }
-
-	    if (typeof fatal !== 'undefined') {
-	      if (typeof fatal !== 'boolean') {
-	        (0, _warn2.default)('`args.fatal` must be a boolean.');
-	      } else {
-	        fieldObject.exFatal = fatal;
-	      }
-	    }
-
-	    // Send to GA
-	    send(fieldObject, trackerNames);
-	  }
-	}
-
-	var plugin = exports.plugin = {
-	  /**
-	   * require:
-	   * GA requires a plugin
-	   * @param name {String} e.g. 'ecommerce' or 'myplugin'
-	   * @param options {Object} optional e.g {path: '/log', debug: true}
-	   */
-	  require: function require(rawName, options) {
-	    if (typeof ga === 'function') {
-	      // Required Fields
-	      if (!rawName) {
-	        (0, _warn2.default)('`name` is required in .require()');
-	        return;
-	      }
-
-	      var name = (0, _trim2.default)(rawName);
-	      if (name === '') {
-	        (0, _warn2.default)('`name` cannot be an empty string in .require()');
-	        return;
-	      }
-
-	      // Optional Fields
-	      if (options) {
-	        if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== 'object') {
-	          (0, _warn2.default)('Expected `options` arg to be an Object');
-	          return;
-	        }
-
-	        if (Object.keys(options).length === 0) {
-	          (0, _warn2.default)('Empty `options` given to .require()');
-	        }
-
-	        ga('require', name, options);
-
-	        if (_debug) {
-	          (0, _log2.default)('called ga(\'require\', \'' + name + '\', ' + JSON.stringify(options));
-	        }
-	      } else {
-	        ga('require', name);
-
-	        if (_debug) {
-	          (0, _log2.default)('called ga(\'require\', \'' + name + '\');');
-	        }
-	      }
-	    }
-	  },
-
-	  /**
-	   * execute:
-	   * GA execute action for plugin
-	   * Takes variable number of arguments
-	   * @param pluginName {String} e.g. 'ecommerce' or 'myplugin'
-	   * @param action {String} e.g. 'addItem' or 'myCustomAction'
-	   * @param actionType {String} optional e.g. 'detail'
-	   * @param payload {Object} optional e.g { id: '1x5e', name : 'My product to track' }
-	   */
-	  execute: function execute(pluginName, action) {
-	    var payload = void 0;
-	    var actionType = void 0;
-
-	    if ((arguments.length <= 2 ? 0 : arguments.length - 2) === 1) {
-	      payload = arguments.length <= 2 ? undefined : arguments[2];
-	    } else {
-	      actionType = arguments.length <= 2 ? undefined : arguments[2];
-	      payload = arguments.length <= 3 ? undefined : arguments[3];
-	    }
-
-	    if (typeof ga === 'function') {
-	      if (typeof pluginName !== 'string') {
-	        (0, _warn2.default)('Expected `pluginName` arg to be a String.');
-	      } else if (typeof action !== 'string') {
-	        (0, _warn2.default)('Expected `action` arg to be a String.');
-	      } else {
-	        var command = pluginName + ':' + action;
-	        payload = payload || null;
-	        if (actionType && payload) {
-	          ga(command, actionType, payload);
-	          if (_debug) {
-	            (0, _log2.default)('called ga(\'' + command + '\');');
-	            (0, _log2.default)('actionType: "' + actionType + '" with payload: ' + JSON.stringify(payload));
-	          }
-	        } else if (payload) {
-	          ga(command, payload);
-	          if (_debug) {
-	            (0, _log2.default)('called ga(\'' + command + '\');');
-	            (0, _log2.default)('with payload: ' + JSON.stringify(payload));
-	          }
-	        } else {
-	          ga(command);
-	          if (_debug) {
-	            (0, _log2.default)('called ga(\'' + command + '\');');
-	          }
-	        }
-	      }
-	    }
-	  }
-	};
-
-	/**
-	 * outboundLink:
-	 * GA outboundLink tracking
-	 * @param args.label {String} e.g. url, or 'Create an Account'
-	 * @param {function} hitCallback - Called after processing a hit.
-	 */
-	function outboundLink(args, hitCallback, trackerNames) {
-	  if (typeof hitCallback !== 'function') {
-	    (0, _warn2.default)('hitCallback function is required');
-	    return;
-	  }
-
-	  if (typeof ga === 'function') {
-	    // Simple Validation
-	    if (!args || !args.label) {
-	      (0, _warn2.default)('args.label is required in outboundLink()');
-	      return;
-	    }
-
-	    // Required Fields
-	    var fieldObject = {
-	      hitType: 'event',
-	      eventCategory: 'Outbound',
-	      eventAction: 'Click',
-	      eventLabel: _format(args.label)
-	    };
-
-	    var safetyCallbackCalled = false;
-	    var safetyCallback = function safetyCallback() {
-	      // This prevents a delayed response from GA
-	      // causing hitCallback from being fired twice
-	      safetyCallbackCalled = true;
-
-	      hitCallback();
-	    };
-
-	    // Using a timeout to ensure the execution of critical application code
-	    // in the case when the GA server might be down
-	    // or an ad blocker prevents sending the data
-
-	    // register safety net timeout:
-	    var t = setTimeout(safetyCallback, 250);
-
-	    var clearableCallbackForGA = function clearableCallbackForGA() {
-	      clearTimeout(t);
-	      if (!safetyCallbackCalled) {
-	        hitCallback();
-	      }
-	    };
-
-	    fieldObject.hitCallback = clearableCallbackForGA;
-
-	    // Send to GA
-	    send(fieldObject, trackerNames);
-	  } else {
-	    // if ga is not defined, return the callback so the application
-	    // continues to work as expected
-	    setTimeout(hitCallback, 0);
-	  }
-	}
-
-	_OutboundLink2.default.origTrackLink = _OutboundLink2.default.trackLink;
-	_OutboundLink2.default.trackLink = outboundLink;
-	var OutboundLink = exports.OutboundLink = _OutboundLink2.default;
-	var testModeAPI = exports.testModeAPI = _testModeAPI2.default;
-
-	exports.default = {
-	  initialize: initialize,
-	  ga: ga,
-	  set: set,
-	  send: send,
-	  pageview: pageview,
-	  modalview: modalview,
-	  timing: timing,
-	  event: event,
-	  exception: exception,
-	  plugin: plugin,
-	  outboundLink: outboundLink,
-	  OutboundLink: OutboundLink,
-	  testModeAPI: _testModeAPI2.default
-	};
-
-	/***/ }),
-	/* 3 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = format;
-
-	var _mightBeEmail = __webpack_require__(4);
-
-	var _mightBeEmail2 = _interopRequireDefault(_mightBeEmail);
-
-	var _toTitleCase = __webpack_require__(5);
-
-	var _toTitleCase2 = _interopRequireDefault(_toTitleCase);
-
-	var _warn = __webpack_require__(0);
-
-	var _warn2 = _interopRequireDefault(_warn);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var redacted = 'REDACTED (Potential Email Address)';
-
-	function format(s, titleCase) {
-	  if ((0, _mightBeEmail2.default)(s)) {
-	    (0, _warn2.default)('This arg looks like an email address, redacting.');
-	    return redacted;
-	  }
-
-	  if (titleCase) {
-	    return (0, _toTitleCase2.default)(s);
-	  }
-
-	  return s;
-	}
-
-	/***/ }),
-	/* 4 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = mightBeEmail;
-	// See if s could be an email address. We don't want to send personal data like email.
-	// https://support.google.com/analytics/answer/2795983?hl=en
-	function mightBeEmail(s) {
-	  // There's no point trying to validate rfc822 fully, just look for ...@...
-	  return (/[^@]+@[^@]+/.test(s)
-	  );
-	}
-
-	/***/ }),
-	/* 5 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = toTitleCase;
-
-	var _trim = __webpack_require__(1);
-
-	var _trim2 = _interopRequireDefault(_trim);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var smallWords = /^(a|an|and|as|at|but|by|en|for|if|in|nor|of|on|or|per|the|to|vs?\.?|via)$/i; /**
-	                                                                                                * To Title Case 2.1 - http://individed.com/code/to-title-case/
-	                                                                                                * Copyright 2008-2013 David Gouch. Licensed under the MIT License.
-	                                                                                                * https://github.com/gouch/to-title-case
-	                                                                                                */
-
-	function toTitleCase(string) {
-	  return (0, _trim2.default)(string).replace(/[A-Za-z0-9\u00C0-\u00FF]+[^\s-]*/g, function (match, index, title) {
-	    if (index > 0 && index + match.length !== title.length && match.search(smallWords) > -1 && title.charAt(index - 2) !== ':' && (title.charAt(index + match.length) !== '-' || title.charAt(index - 1) === '-') && title.charAt(index - 1).search(/[^\s-]/) < 0) {
-	      return match.toLowerCase();
-	    }
-
-	    if (match.substr(1).search(/[A-Z]|\../) > -1) {
-	      return match;
-	    }
-
-	    return match.charAt(0).toUpperCase() + match.substr(1);
-	  });
-	}
-
-	/***/ }),
-	/* 6 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = removeLeadingSlash;
-	function removeLeadingSlash(string) {
-	  if (string.substring(0, 1) === '/') {
-	    return string.substring(1);
-	  }
-
-	  return string;
-	}
-
-	/***/ }),
-	/* 7 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	exports.default = function (options) {
-	  // https://developers.google.com/analytics/devguides/collection/analyticsjs/
-	  /* eslint-disable */
-	  (function (i, s, o, g, r, a, m) {
-	    i['GoogleAnalyticsObject'] = r;
-	    i[r] = i[r] || function () {
-	      (i[r].q = i[r].q || []).push(arguments);
-	    }, i[r].l = 1 * new Date();
-	    a = s.createElement(o), m = s.getElementsByTagName(o)[0];
-	    a.async = 1;
-	    a.src = g;
-	    m.parentNode.insertBefore(a, m);
-	  })(window, document, 'script', options && options.gaAddress ? options.gaAddress : 'https://www.google-analytics.com/analytics.js', 'ga');
-	  /* eslint-enable */
-	};
-
-	/***/ }),
-	/* 8 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = log;
-	function log(s) {
-	  console.info('[react-ga]', s);
-	}
-
-	/***/ }),
-	/* 9 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var gaCalls = exports.gaCalls = [];
-
-	exports.default = {
-	  calls: gaCalls,
-	  ga: function ga() {
-	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	      args[_key] = arguments[_key];
-	    }
-
-	    gaCalls.push([].concat(args));
-	  }
-	};
-
-	/***/ }),
-	/* 10 */
-	/***/ (function(module, exports, __webpack_require__) {
-
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(11);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _propTypes = __webpack_require__(12);
-
-	var _propTypes2 = _interopRequireDefault(_propTypes);
-
-	var _warn = __webpack_require__(0);
-
-	var _warn2 = _interopRequireDefault(_warn);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var NEWTAB = '_blank';
-	var MIDDLECLICK = 1;
-
-	var OutboundLink = function (_Component) {
-	  _inherits(OutboundLink, _Component);
-
-	  function OutboundLink() {
-	    var _ref;
-
-	    var _temp, _this, _ret;
-
-	    _classCallCheck(this, OutboundLink);
-
-	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	      args[_key] = arguments[_key];
-	    }
-
-	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = OutboundLink.__proto__ || Object.getPrototypeOf(OutboundLink)).call.apply(_ref, [this].concat(args))), _this), _this.handleClick = function (event) {
-	      var _this$props = _this.props,
-	          target = _this$props.target,
-	          eventLabel = _this$props.eventLabel,
-	          to = _this$props.to,
-	          onClick = _this$props.onClick;
-
-	      var eventMeta = { label: eventLabel };
-	      var sameTarget = target !== NEWTAB;
-	      var normalClick = !(event.ctrlKey || event.shiftKey || event.metaKey || event.button === MIDDLECLICK);
-
-	      if (sameTarget && normalClick) {
-	        event.preventDefault();
-	        OutboundLink.trackLink(eventMeta, function () {
-	          window.location.href = to;
-	        });
-	      } else {
-	        OutboundLink.trackLink(eventMeta, function () {});
-	      }
-
-	      if (onClick) {
-	        onClick(event);
-	      }
-	    }, _temp), _possibleConstructorReturn(_this, _ret);
-	  }
-
-	  _createClass(OutboundLink, [{
-	    key: 'render',
-	    value: function render() {
-	      var props = _extends({}, this.props, {
-	        href: this.props.to,
-	        onClick: this.handleClick
-	      });
-	      delete props.eventLabel;
-	      return _react2.default.createElement('a', props);
-	    }
-	  }]);
-
-	  return OutboundLink;
-	}(_react.Component);
-
-	OutboundLink.propTypes = {
-	  eventLabel: _propTypes2.default.string.isRequired,
-	  target: _propTypes2.default.string,
-	  to: _propTypes2.default.string,
-	  onClick: _propTypes2.default.func
-	};
-	OutboundLink.defaultProps = {
-	  target: null,
-	  to: null,
-	  onClick: null
-	};
-
-	OutboundLink.trackLink = function () {
-	  (0, _warn2.default)('ga tracking not enabled');
-	};
-
-	exports.default = OutboundLink;
-
-	/***/ }),
-	/* 11 */
-	/***/ (function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_11__;
-
-	/***/ }),
-	/* 12 */
-	/***/ (function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_12__;
-
-	/***/ })
-	/******/ ]);
-	});
-	});
-
-	var ReactGA = unwrapExports(reactGa);
-
-	const initialize = () => {
-	  return;
-	  ReactGA.initialize(TRACKING_ID, {
-	    debug: true
-	  }); // Remove failing protocol check. @see: http://stackoverflow.com/a/22152353/1958200
-
-	  ReactGA.ga('set', 'checkProtocolTask', () => {});
-	  ReactGA.pageview('/');
-	  console.info('%cAnalytics is active', 'color: blue');
-	};
-
 	const dark = styles_2({
 	  palette: {
 	    type: 'dark'
@@ -68967,7 +68434,6 @@
 	  }
 	});
 
-	initialize();
 	const App = react.createElement(Provider, {
 	  store: store
 	}, react.createElement(PersistGate, {
